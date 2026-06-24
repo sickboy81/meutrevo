@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - TURSO_CONNECTION_URL=${TURSO_CONNECTION_URL}
+      - TURSO_AUTH_TOKEN=${TURSO_AUTH_TOKEN}
+      - JWT_SECRET=${JWT_SECRET}
+      - PIXGO_API_KEY=${PIXGO_API_KEY}
+      - PIXGO_WEBHOOK_SECRET=${PIXGO_WEBHOOK_SECRET}
+    env_file:
+      - .env.local
+    restart: unless-stopped
