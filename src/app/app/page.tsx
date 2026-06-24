@@ -523,7 +523,7 @@ export default function Home() {
   const [showCamera, setShowCamera] = useState<boolean>(false);
 
   const config = LOTTERY_CONFIGS[activeLottery];
-  const isPro = user?.role === 'pro';
+  const isPro = user?.role === 'pro' || user?.role === 'admin';
 
   useEffect(() => {
     return () => {
@@ -3405,6 +3405,10 @@ export default function Home() {
                     <QuickSimulator
                       initialResult={result}
                       initialLottery={activeLottery}
+                      history={history}
+                      isAuthenticated={Boolean(user)}
+                      isPro={isPro}
+                      onUpgrade={() => setShowUpgradeModal(true)}
                     />
                   </Suspense>
                 )}

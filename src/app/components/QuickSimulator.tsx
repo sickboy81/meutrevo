@@ -31,24 +31,42 @@ interface LotteryResult {
 interface QuickSimulatorProps {
   initialResult: LotteryResult | null;
   initialLottery: string;
+  history?: LotteryResult[];
+  isAuthenticated?: boolean;
+  isPro?: boolean;
+  onUpgrade?: () => void;
 }
 
 export default function QuickSimulator({
   initialResult,
   initialLottery,
+  history = [],
+  isAuthenticated = false,
+  isPro = false,
+  onUpgrade,
 }: QuickSimulatorProps) {
   const [activeLottery, setActiveLottery] = useState<string>(initialLottery);
   const [landingQuickNums, setLandingQuickNums] = useState<number[]>([]);
   const [landingQuickResult, setLandingQuickResult] = useState<string>('');
   const [result, setResult] = useState<LotteryResult | null>(initialResult);
+  const [localHistory, setLocalHistory] = useState<LotteryResult[]>(
+    history.length > 0 ? history : initialResult ? [initialResult] : []
+  );
 
   const config = LOTTERY_CONFIGS[activeLottery];
+  const availableHistory =
+    activeLottery === initialLottery && history.length > 0
+      ? history
+      : localHistory;
 
   // Fetch new result client-side if the active lottery changes
   useEffect(() => {
     if (activeLottery === initialLottery) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setResult(initialResult);
+      setLocalHistory(
+        history.length > 0 ? history : initialResult ? [initialResult] : []
+      );
       return;
     }
 
@@ -60,6 +78,7 @@ export default function QuickSimulator({
           const data = await res.json();
           const latest = data.latest || data;
           setResult(latest);
+          setLocalHistory(data.history || (latest ? [latest] : []));
         }
       } catch (err) {
         console.error(err);
@@ -69,7 +88,7 @@ export default function QuickSimulator({
     return () => {
       active = false;
     };
-  }, [activeLottery, initialLottery, initialResult]);
+  }, [activeLottery, history, initialLottery, initialResult]);
 
   // Real-time analysis for landing quick test board
   const landingQuickStats = useMemo(() => {
@@ -131,24 +150,83 @@ export default function QuickSimulator({
     }
   };
 
-  const handleTestLandingGame = () => {
+  const formatHits = (hits: number[]) =>
+    hits.length > 0
+      ? hits
+          .sort((a, b) => a - b)
+          .map((x) => String(x).padStart(2, '0'))
+          .join(', ')
+      : 'Nenhum';
+
+  const handleTestLandingGame = (mode: 'latest' | 'history' = 'latest') => {
     if (!result) return;
+
+    let message: string;
+    if (landingQuickNums.length === 0) {
+      message = 'Selecione dezenas no volante acima para testar!';
+      setLandingQuickResult(message);
+      return;
+    }
+
+    if (mode === 'history') {
+      if (!isAuthenticated) {
+        message =
+          'Entre no app para testar seu jogo contra o histórico de sorteios carregado.';
+        setLandingQuickResult(message);
+        return;
+      }
+
+      if (!isPro) {
+        message =
+          'O teste contra histórico é um recurso PRO. Assine para comparar seu jogo com todos os concursos carregados.';
+        setLandingQuickResult(message);
+        onUpgrade?.();
+        return;
+      }
+
+      const draws = availableHistory.filter(Boolean);
+      if (draws.length === 0) {
+        message =
+          'Ainda não há histórico carregado para esta modalidade. Tente novamente em alguns segundos.';
+        setLandingQuickResult(message);
+        return;
+      }
+
+      const results = draws.map((draw) => {
+        const cleanDrawn = getCleanDezenas(draw).map((x) => parseInt(x, 10));
+        const hits = landingQuickNums.filter((n) => cleanDrawn.includes(n));
+        return { draw, hits };
+      });
+      const best = results.reduce((currentBest, item) =>
+        item.hits.length > currentBest.hits.length ? item : currentBest
+      );
+      const hitDistribution = results.reduce<Record<number, number>>(
+        (acc, item) => {
+          acc[item.hits.length] = (acc[item.hits.length] || 0) + 1;
+          return acc;
+        },
+        {}
+      );
+      const distributionText = Object.entries(hitDistribution)
+        .sort(([a], [b]) => Number(b) - Number(a))
+        .map(([hits, count]) => `${hits} acertos: ${count}`)
+        .join(' | ');
+
+      message = `Histórico PRO: seu jogo foi comparado com ${draws.length} concursos carregados. Melhor resultado: ${best.hits.length} acertos no Concurso ${best.draw.numero} (${formatHits(best.hits)}). Distribuição: ${distributionText}.`;
+      setLandingQuickResult(message);
+      return;
+    }
+
     const cleanDrawn = getCleanDezenas(result).map((x) => parseInt(x, 10));
     const hits = landingQuickNums.filter((n) => cleanDrawn.includes(n));
 
-    let message = '';
-    if (landingQuickNums.length === 0) {
-      message = 'Selecione dezenas no volante acima para testar!';
-    } else {
-      message = `Você marcou ${landingQuickNums.length} números e acertou ${hits.length} no Concurso ${result.numero} (${
-        hits.length > 0
-          ? hits
-              .sort((a, b) => a - b)
-              .map((x) => String(x).padStart(2, '0'))
-              .join(', ')
-          : 'Nenhum'
-      }). Quer testar contra todo o histórico de sorteios da Caixa? Inicie no app!`;
-    }
+    const suffix = isAuthenticated
+      ? isPro
+        ? ' Use "Testar histórico PRO" para comparar com os concursos carregados.'
+        : ' Assine PRO para testar contra o histórico de concursos carregado.'
+      : ' Quer testar contra o histórico de sorteios da Caixa? Inicie no app!';
+
+    message = `Você marcou ${landingQuickNums.length} números e acertou ${hits.length} no Concurso ${result.numero} (${formatHits(hits)}).${suffix}`;
     setLandingQuickResult(message);
   };
 
@@ -332,7 +410,7 @@ export default function QuickSimulator({
             </button>
             <button
               className="btn-action"
-              onClick={handleTestLandingGame}
+              onClick={() => handleTestLandingGame('latest')}
               type="button"
               style={
                 {
@@ -347,6 +425,30 @@ export default function QuickSimulator({
             >
               📊 Testar jogo
             </button>
+            {isAuthenticated && (
+              <button
+                className={isPro ? 'btn-action' : 'theme-pill-btn'}
+                onClick={() => handleTestLandingGame('history')}
+                type="button"
+                style={
+                  {
+                    flex: 1.2,
+                    minHeight: '52px',
+                    padding: '0.75rem 0.9rem',
+                    fontSize: '0.82rem',
+                    '--accent-glow': config.accentColor,
+                    borderRadius: '10px',
+                    background: isPro ? undefined : 'rgba(255,255,255,0.04)',
+                    border: isPro ? undefined : '1px solid var(--glass-border)',
+                    color: isPro ? undefined : 'white',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                  } as React.CSSProperties
+                }
+              >
+                {isPro ? '📈 Testar histórico PRO' : '👑 Histórico PRO'}
+              </button>
+            )}
           </div>
         </div>
 
