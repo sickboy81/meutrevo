@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+import { db, isMissingDbEnvError } from '@/lib/db';
 import Link from 'next/link';
 import QuickSimulator from '../components/QuickSimulator';
 import type { Metadata } from 'next';
@@ -52,7 +52,9 @@ async function getCachedResult(
       return JSON.parse(res.rows[0].data_json as string) as LotteryResult;
     }
   } catch (e) {
-    console.error(`Failed to fetch cache for ${lotteryId}:`, e);
+    if (!isMissingDbEnvError(e)) {
+      console.error(`Failed to fetch cache for ${lotteryId}:`, e);
+    }
   }
   return null;
 }
