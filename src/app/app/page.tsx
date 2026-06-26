@@ -797,6 +797,7 @@ export default function Home() {
           const data = await authResult.value.json();
           setUser(data.user);
           setShowInRanking(data.user?.show_in_ranking !== false);
+          syncProfileDrafts(data.user);
           fetchSavedGames();
         }
 

@@ -10,8 +10,29 @@ import { sanitize } from '../../../../lib/sanitize';
 import { validateBody } from '../../../../lib/validate';
 import { updateSchema } from '../../../../schemas/auth';
 
+async function ensureUserProfileColumns() {
+  try {
+    await db.execute("ALTER TABLE users ADD COLUMN avatar TEXT DEFAULT '👤'");
+  } catch {}
+  try {
+    await db.execute(
+      "ALTER TABLE users ADD COLUMN favorite_lottery TEXT DEFAULT 'megasena'"
+    );
+  } catch {}
+  try {
+    await db.execute('ALTER TABLE users ADD COLUMN cpf_cnpj TEXT');
+  } catch {}
+  try {
+    await db.execute('ALTER TABLE users ADD COLUMN city TEXT');
+  } catch {}
+  try {
+    await db.execute('ALTER TABLE users ADD COLUMN state TEXT');
+  } catch {}
+}
+
 export async function POST(request: Request) {
   try {
+    await ensureUserProfileColumns();
     const { user, response } = await requireAuthenticatedUser();
     if (response || !user) return response;
 

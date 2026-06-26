@@ -23,6 +23,17 @@ async function ensureUserRoleColumns() {
   try {
     await db.execute('ALTER TABLE users ADD COLUMN cpf_cnpj TEXT');
   } catch {}
+  try {
+    await db.execute('ALTER TABLE users ADD COLUMN city TEXT');
+  } catch {}
+  try {
+    await db.execute('ALTER TABLE users ADD COLUMN state TEXT');
+  } catch {}
+  try {
+    await db.execute(
+      'ALTER TABLE users ADD COLUMN show_in_ranking INTEGER DEFAULT 1'
+    );
+  } catch {}
 }
 
 export async function GET() {
