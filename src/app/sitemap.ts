@@ -22,10 +22,10 @@ const publicRoutes = [
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date();
+  const lastModified = new Date().toISOString().slice(0, 10);
 
   return publicRoutes.map((route) => ({
-    url: `${SITE_URL}${route.path}`,
+    url: `${SITE_URL}${route.path || '/'}`,
     lastModified,
     changeFrequency: route.changeFrequency,
     priority: route.priority,
