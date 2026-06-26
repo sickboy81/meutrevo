@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import Link from 'next/link';
+import AppEntryLink from './AppEntryLink';
 import QuickSimulator from './QuickSimulator';
 
 interface LotteryResult {
@@ -189,8 +190,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
             >
               Voltar
             </Link>
-            <Link
-              href="/app"
+            <AppEntryLink
               className="theme-pill-btn active"
               style={{
                 fontSize: '0.8rem',
@@ -201,7 +201,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
               }}
             >
               Entrar no App ⚡
-            </Link>
+            </AppEntryLink>
           </div>
         </header>
 
@@ -237,8 +237,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
             </div>
 
             <div className="landing-cta-group landing-hero-actions">
-              <Link
-                href="/app"
+              <AppEntryLink
                 className="landing-btn-primary"
                 style={{
                   textDecoration: 'none',
@@ -250,7 +249,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                 }}
               >
                 Começar no App {props.name}
-              </Link>
+              </AppEntryLink>
               <Link
                 href="/"
                 className="landing-btn-secondary"
@@ -398,8 +397,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
             estratégias com dados reais históricos e geração de fechamentos
             simplificados no painel PRO.
           </p>
-          <Link
-            href="/app"
+          <AppEntryLink
             className="landing-btn-primary"
             style={{
               textDecoration: 'none',
@@ -410,7 +408,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
             }}
           >
             Assinar Meu Trevo Pro ⚡
-          </Link>
+          </AppEntryLink>
         </section>
 
         <footer
@@ -661,8 +659,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                   </Link>
                 </li>
                 <li>
-                  <Link
-                    href="/app"
+                  <AppEntryLink
                     style={{
                       color: 'var(--text-muted)',
                       textDecoration: 'none',
@@ -670,7 +667,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                     className="hover-glow-text"
                   >
                     Entrar no App ⚡
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
                   <Link

@@ -1,5 +1,6 @@
 import { db, isMissingDbEnvError } from '@/lib/db';
 import Link from 'next/link';
+import AppEntryLink from './components/AppEntryLink';
 import QuickSimulator from './components/QuickSimulator';
 
 interface LotteryResult {
@@ -264,8 +265,7 @@ export default async function LandingHome() {
               Lotomania
             </Link>
           </nav>
-          <Link
-            href="/app"
+          <AppEntryLink
             className="theme-pill-btn active landing-header-app-link"
             style={{
               fontSize: '0.8rem',
@@ -279,7 +279,7 @@ export default async function LandingHome() {
             }}
           >
             Entrar no App ⚡
-          </Link>
+          </AppEntryLink>
         </header>
 
         {/* Hero Section */}
@@ -311,8 +311,7 @@ export default async function LandingHome() {
             </div>
 
             <div className="landing-cta-group landing-hero-actions">
-              <Link
-                href="/app"
+              <AppEntryLink
                 className="landing-btn-primary"
                 style={{
                   textDecoration: 'none',
@@ -322,7 +321,7 @@ export default async function LandingHome() {
                 }}
               >
                 Começar grátis
-              </Link>
+              </AppEntryLink>
               <a
                 href="#testador-anchor"
                 className="landing-btn-secondary"
@@ -722,8 +721,7 @@ export default async function LandingHome() {
                   </li>
                 </ul>
               </div>
-              <Link
-                href="/app"
+              <AppEntryLink
                 className="landing-btn-secondary"
                 style={{
                   textDecoration: 'none',
@@ -734,7 +732,7 @@ export default async function LandingHome() {
                 }}
               >
                 Começar grátis
-              </Link>
+              </AppEntryLink>
             </div>
 
             {/* Pro Plan */}
@@ -785,8 +783,7 @@ export default async function LandingHome() {
                   </li>
                 </ul>
               </div>
-              <Link
-                href="/app"
+              <AppEntryLink
                 className="landing-btn-primary"
                 style={{
                   textDecoration: 'none',
@@ -797,7 +794,7 @@ export default async function LandingHome() {
                 }}
               >
                 Assinar PRO
-              </Link>
+              </AppEntryLink>
             </div>
           </div>
         </section>
@@ -1129,8 +1126,7 @@ export default async function LandingHome() {
                   </Link>
                 </li>
                 <li>
-                  <Link
-                    href="/app"
+                  <AppEntryLink
                     style={{
                       color: 'var(--text-muted)',
                       textDecoration: 'none',
@@ -1139,7 +1135,7 @@ export default async function LandingHome() {
                     className="hover-glow-text"
                   >
                     Entrar no App ⚡
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
                   <Link

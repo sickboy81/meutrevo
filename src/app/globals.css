@@ -1408,8 +1408,12 @@ body {
 }
 
 .landing-header-app-link {
+  position: relative;
+  z-index: 101;
   min-height: 42px;
   white-space: nowrap;
+  pointer-events: auto;
+  touch-action: manipulation;
 }
 
 .landing-hero {
