@@ -94,19 +94,19 @@ export default async function QuinaLanding() {
             '@graph': [
               {
                 '@type': 'BreadcrumbList',
-                '@id': 'https://meutrevo.com.br/quina/#breadcrumb',
+                '@id': 'https://www.meutrevo.com/quina/#breadcrumb',
                 itemListElement: [
                   {
                     '@type': 'ListItem',
                     position: 1,
                     name: 'Início',
-                    item: 'https://meutrevo.com.br',
+                    item: 'https://www.meutrevo.com',
                   },
                   {
                     '@type': 'ListItem',
                     position: 2,
                     name: 'Quina',
-                    item: 'https://meutrevo.com.br/quina',
+                    item: 'https://www.meutrevo.com/quina',
                   },
                 ],
               },

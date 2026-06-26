@@ -86,19 +86,19 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
             '@graph': [
               {
                 '@type': 'BreadcrumbList',
-                '@id': `https://meutrevo.com.br${props.canonical}/#breadcrumb`,
+                '@id': `https://www.meutrevo.com${props.canonical}/#breadcrumb`,
                 itemListElement: [
                   {
                     '@type': 'ListItem',
                     position: 1,
                     name: 'Início',
-                    item: 'https://meutrevo.com.br',
+                    item: 'https://www.meutrevo.com',
                   },
                   {
                     '@type': 'ListItem',
                     position: 2,
                     name: props.name,
-                    item: `https://meutrevo.com.br${props.canonical}`,
+                    item: `https://www.meutrevo.com${props.canonical}`,
                   },
                 ],
               },

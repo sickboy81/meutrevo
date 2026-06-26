@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://meutrevo.com.br'),
+  metadataBase: new URL('https://www.meutrevo.com'),
   alternates: {
     canonical: '/',
   },
@@ -62,10 +62,18 @@ export const metadata: Metadata = {
     title: 'Meu Trevo - Assistente Lotérico Inteligente & Resultados da Caixa',
     description:
       'Resultados em tempo real e gerador de apostas baseado em inteligência estatística e fechamentos matemáticos reais.',
-    url: 'https://meutrevo.com.br',
+    url: 'https://www.meutrevo.com',
     siteName: 'Meu Trevo',
     locale: 'pt_BR',
     type: 'website',
+    images: [
+      {
+        url: '/icon.png',
+        width: 1024,
+        height: 1024,
+        alt: 'Meu Trevo',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
@@ -73,6 +81,7 @@ export const metadata: Metadata = {
     description:
       'Resultados em tempo real e desdobramentos combinatórios otimizados.',
     creator: '@meutrevo',
+    images: ['/icon.png'],
   },
   robots: {
     index: true,

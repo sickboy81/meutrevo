@@ -94,19 +94,19 @@ export default async function MegaSenaLanding() {
             '@graph': [
               {
                 '@type': 'BreadcrumbList',
-                '@id': 'https://meutrevo.com.br/megasena/#breadcrumb',
+                '@id': 'https://www.meutrevo.com/megasena/#breadcrumb',
                 itemListElement: [
                   {
                     '@type': 'ListItem',
                     position: 1,
                     name: 'Início',
-                    item: 'https://meutrevo.com.br',
+                    item: 'https://www.meutrevo.com',
                   },
                   {
                     '@type': 'ListItem',
                     position: 2,
                     name: 'Mega-Sena',
-                    item: 'https://meutrevo.com.br/megasena',
+                    item: 'https://www.meutrevo.com/megasena',
                   },
                 ],
               },

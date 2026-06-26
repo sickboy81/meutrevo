@@ -310,7 +310,7 @@ export default function ExportImportModal({
             <textarea
               value={importText}
               onChange={(e) => setImportText(e.target.value)}
-              placeholder="https://meutrevo.com.br/jogo?g=... ou código base64"
+              placeholder="https://www.meutrevo.com/jogo?g=... ou código base64"
               style={{
                 background: 'rgba(0,0,0,0.3)',
                 border: '1px solid rgba(255,255,255,0.1)',

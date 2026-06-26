@@ -110,19 +110,19 @@ export default async function LotofacilLanding() {
             '@graph': [
               {
                 '@type': 'BreadcrumbList',
-                '@id': 'https://meutrevo.com.br/lotofacil/#breadcrumb',
+                '@id': 'https://www.meutrevo.com/lotofacil/#breadcrumb',
                 itemListElement: [
                   {
                     '@type': 'ListItem',
                     position: 1,
                     name: 'Início',
-                    item: 'https://meutrevo.com.br',
+                    item: 'https://www.meutrevo.com',
                   },
                   {
                     '@type': 'ListItem',
                     position: 2,
                     name: 'Lotofácil',
-                    item: 'https://meutrevo.com.br/lotofacil',
+                    item: 'https://www.meutrevo.com/lotofacil',
                   },
                 ],
               },

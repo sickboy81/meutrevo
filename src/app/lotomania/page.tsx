@@ -115,19 +115,19 @@ export default async function LotomaniaLanding() {
             '@graph': [
               {
                 '@type': 'BreadcrumbList',
-                '@id': 'https://meutrevo.com.br/lotomania/#breadcrumb',
+                '@id': 'https://www.meutrevo.com/lotomania/#breadcrumb',
                 itemListElement: [
                   {
                     '@type': 'ListItem',
                     position: 1,
                     name: 'Início',
-                    item: 'https://meutrevo.com.br',
+                    item: 'https://www.meutrevo.com',
                   },
                   {
                     '@type': 'ListItem',
                     position: 2,
                     name: 'Lotomania',
-                    item: 'https://meutrevo.com.br/lotomania',
+                    item: 'https://www.meutrevo.com/lotomania',
                   },
                 ],
               },

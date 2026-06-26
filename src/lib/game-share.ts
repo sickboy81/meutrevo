@@ -43,14 +43,14 @@ export function generateGameURL(game: ShareableGame): string {
   const base =
     typeof window !== 'undefined'
       ? window.location.origin
-      : 'https://meutrevo.com.br';
+      : 'https://www.meutrevo.com';
   return `${base}/jogo?g=${encoded}`;
 }
 
 export function generateWhatsAppText(game: ShareableGame): string {
   const nums = game.numbers.join(' - ');
   const lotteryName = getLotteryFullName(game.lottery);
-  return `🍀 *Meu Trevo* 🍀\n\n📊 *${lotteryName}*\n🎰 Números: ${nums}${game.label ? `\n📝 ${game.label}` : ''}\n\nMonte o seu em: meutrevo.com.br`;
+  return `🍀 *Meu Trevo* 🍀\n\n📊 *${lotteryName}*\n🎰 Números: ${nums}${game.label ? `\n📝 ${game.label}` : ''}\n\nMonte o seu em: www.meutrevo.com`;
 }
 
 export function generateCSV(games: ShareableGame[]): string {

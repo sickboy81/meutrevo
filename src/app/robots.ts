@@ -5,8 +5,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/api/', '/_next/'],
+      disallow: ['/api/'],
     },
-    sitemap: 'https://meutrevo.com.br/sitemap.xml',
+    sitemap: 'https://www.meutrevo.com/sitemap.xml',
   };
 }

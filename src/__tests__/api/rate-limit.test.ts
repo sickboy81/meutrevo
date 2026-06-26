@@ -17,7 +17,7 @@ describe('rate limit helper', () => {
       headers: new Headers({
         'x-forwarded-for': '203.0.113.10, 10.0.0.1',
       }),
-      url: 'https://meutrevo.com.br/api/auth/login',
+      url: 'https://www.meutrevo.com/api/auth/login',
       method: 'POST',
     };
 
@@ -29,7 +29,7 @@ describe('rate limit helper', () => {
       headers: new Headers({
         'x-real-ip': '198.51.100.20',
       }),
-      url: 'https://meutrevo.com.br/api/auth/login',
+      url: 'https://www.meutrevo.com/api/auth/login',
       method: 'POST',
     };
 
@@ -42,7 +42,7 @@ describe('rate limit helper', () => {
       headers: new Headers({
         'x-real-ip': '198.51.100.20',
       }),
-      url: 'https://meutrevo.com.br/api/auth/login',
+      url: 'https://www.meutrevo.com/api/auth/login',
       method: 'POST',
     };
 
@@ -72,7 +72,7 @@ describe('rate limit helper', () => {
       headers: new Headers({
         'x-real-ip': '192.0.2.1',
       }),
-      url: 'https://meutrevo.com.br/api/config',
+      url: 'https://www.meutrevo.com/api/config',
     };
 
     const getResult = await consumeRateLimit(
@@ -93,7 +93,7 @@ describe('rate limit helper', () => {
       headers: new Headers({
         'x-real-ip': '192.0.2.55',
       }),
-      url: 'https://meutrevo.com.br/api/bets',
+      url: 'https://www.meutrevo.com/api/bets',
       method: 'POST',
     };
 

@@ -267,7 +267,7 @@ export default function BolaoPanel({
     }
 
     if (bolao.share_code) {
-      msg += `\n🔗 *Entre pelo link:*\nmeutrevo.com.br/bolao?c=${bolao.share_code}\n`;
+      msg += `\n🔗 *Entre pelo link:*\nwww.meutrevo.com/bolao?c=${bolao.share_code}\n`;
     }
 
     msg += `\n🤖 Montado no Meu Trevo — IA + Estatística`;

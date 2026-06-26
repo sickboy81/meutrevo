@@ -96,21 +96,21 @@ export default async function LandingHome() {
             '@graph': [
               {
                 '@type': 'WebSite',
-                '@id': 'https://meutrevo.com.br/#website',
-                url: 'https://meutrevo.com.br',
+                '@id': 'https://www.meutrevo.com/#website',
+                url: 'https://www.meutrevo.com',
                 name: 'Meu Trevo',
                 description:
                   'Resultados em tempo real e gerador de dezenas estatístico para loterias do Brasil.',
                 publisher: {
-                  '@id': 'https://meutrevo.com.br/#organization',
+                  '@id': 'https://www.meutrevo.com/#organization',
                 },
                 inLanguage: 'pt-BR',
               },
               {
                 '@type': 'SoftwareApplication',
-                '@id': 'https://meutrevo.com.br/#software',
+                '@id': 'https://www.meutrevo.com/#software',
                 name: 'Meu Trevo',
-                url: 'https://meutrevo.com.br',
+                url: 'https://www.meutrevo.com',
                 applicationCategory: 'BusinessApplication',
                 operatingSystem: 'Web',
                 offers: {
