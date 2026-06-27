@@ -2,11 +2,21 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getErrorMessage } from '@/lib/api-auth';
 import { fetchOfficialLotteryResult } from '@/lib/caixa';
+import { decorateLotteryResult } from '@/lib/lottery-results';
 
 type LotteryApiData = Record<string, unknown> & {
   numero?: number;
   dataApuracao?: string;
 };
+
+function decorateResults(
+  lotteryId: string,
+  items: LotteryApiData[]
+): LotteryApiData[] {
+  return items.map(
+    (item) => decorateLotteryResult(lotteryId, item as never) as LotteryApiData
+  );
+}
 
 // Ensure the cache table is initialized (idempotent)
 async function ensureCacheTable() {
@@ -183,7 +193,7 @@ export async function GET(
     // 1. Check DB first — no TTL needed for historical data
     const cached = await getContestFromDB(type, contestNumVal);
     if (cached) {
-      return NextResponse.json(cached, {
+      return NextResponse.json(decorateLotteryResult(type, cached as never), {
         headers: { 'X-Cache': 'HIT', 'X-Cache-Source': 'db' },
       });
     }
@@ -191,7 +201,7 @@ export async function GET(
     // 2. Not in cache → fetch from Caixa and persist forever
     const data = await fetchAndCacheContest(type, contestNumVal);
     if (data) {
-      return NextResponse.json(data, {
+      return NextResponse.json(decorateLotteryResult(type, data as never), {
         headers: { 'X-Cache': 'MISS', 'X-Cache-Source': 'caixa' },
       });
     }
@@ -223,7 +233,10 @@ export async function GET(
     const localHistory = await getHistoryFromDB(type, limit, filters);
     if (localHistory.length > 0) {
       return NextResponse.json(
-        { latest: localHistory[0], history: localHistory },
+        {
+          latest: decorateLotteryResult(type, localHistory[0] as never),
+          history: decorateResults(type, localHistory),
+        },
         { headers: { 'X-Cache': 'HIT', 'X-Cache-Source': 'db-fresh' } }
       );
     }
@@ -280,8 +293,14 @@ export async function GET(
     const history = await getHistoryFromDB(type, limit, filters);
     return NextResponse.json(
       {
-        latest: history[0] || latestData,
-        history: history.length > 0 ? history : [latestData],
+        latest: decorateLotteryResult(
+          type,
+          (history[0] || latestData) as never
+        ),
+        history: decorateResults(
+          type,
+          history.length > 0 ? history : [latestData]
+        ),
       },
       { headers: { 'X-Cache': 'MISS', 'X-Cache-Source': 'caixa' } }
     );
@@ -293,7 +312,10 @@ export async function GET(
     const cachedHistory = await getHistoryFromDB(type, limit, filters);
     if (cachedHistory.length > 0) {
       return NextResponse.json(
-        { latest: cachedHistory[0], history: cachedHistory },
+        {
+          latest: decorateLotteryResult(type, cachedHistory[0] as never),
+          history: decorateResults(type, cachedHistory),
+        },
         { headers: { 'X-Cache': 'HIT', 'X-Cache-Source': 'db-fallback' } }
       );
     }

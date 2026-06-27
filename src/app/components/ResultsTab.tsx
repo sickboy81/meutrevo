@@ -89,6 +89,55 @@ export default React.memo(function ResultsTab({
           >
             Data oficial do sorteio: <strong>{result.dataApuracao}</strong>
           </p>
+          {result.statusNotice && (
+            <div
+              style={{
+                marginTop: '0.65rem',
+                padding: '0.8rem 0.9rem',
+                borderRadius: '12px',
+                background: 'rgba(255, 214, 0, 0.08)',
+                border: '1px solid rgba(255, 214, 0, 0.22)',
+                color: '#ffe082',
+                lineHeight: 1.5,
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  marginBottom: '0.35rem',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <strong style={{ color: '#fff' }}>
+                  {result.statusNotice.title}
+                </strong>
+                <span className="contest-badge">
+                  {result.statusNotice.badge}
+                </span>
+              </div>
+              <p style={{ margin: 0, fontSize: '0.8rem' }}>
+                {result.statusNotice.message}
+              </p>
+              {result.statusNotice.officialUrl && (
+                <a
+                  href={result.statusNotice.officialUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    display: 'inline-block',
+                    marginTop: '0.45rem',
+                    color: '#fff176',
+                    fontSize: '0.78rem',
+                    textDecoration: 'underline',
+                  }}
+                >
+                  Ver comunicado oficial da CAIXA
+                </a>
+              )}
+            </div>
+          )}
           {hasSameDayNextDraw && (
             <p
               style={{

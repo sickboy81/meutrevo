@@ -214,6 +214,63 @@ export default async function QuinaLanding() {
               distribuição de quadrantes e gere palpites de forma científica
               para concursos diários.
             </p>
+            {result?.statusNotice && (
+              <div
+                style={{
+                  marginTop: '1rem',
+                  padding: '0.95rem 1rem',
+                  borderRadius: '14px',
+                  background: 'rgba(255, 214, 0, 0.08)',
+                  border: '1px solid rgba(255, 214, 0, 0.22)',
+                  color: '#ffe082',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    flexWrap: 'wrap',
+                    marginBottom: '0.35rem',
+                  }}
+                >
+                  <strong style={{ color: '#fff' }}>
+                    {result.statusNotice.title}
+                  </strong>
+                  <span
+                    style={{
+                      borderRadius: '999px',
+                      padding: '0.22rem 0.55rem',
+                      fontSize: '0.72rem',
+                      fontWeight: 800,
+                      background: 'rgba(255, 214, 0, 0.14)',
+                      border: '1px solid rgba(255, 214, 0, 0.28)',
+                      color: '#fff176',
+                    }}
+                  >
+                    {result.statusNotice.badge}
+                  </span>
+                </div>
+                <p style={{ margin: 0, lineHeight: 1.55 }}>
+                  {result.statusNotice.message}
+                </p>
+                {result.statusNotice.officialUrl && (
+                  <a
+                    href={result.statusNotice.officialUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      display: 'inline-block',
+                      marginTop: '0.55rem',
+                      color: '#fff176',
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    Acompanhar comunicado oficial da CAIXA
+                  </a>
+                )}
+              </div>
+            )}
 
             <div className="landing-proof-row" aria-label="Destaques Quina">
               <span>
@@ -305,8 +362,16 @@ export default async function QuinaLanding() {
                 <strong>{result?.dataApuracao || 'Recente'}</strong>
               </div>
               <div>
-                <span>Próximo Concurso</span>
-                <strong>{result?.dataProximoConcurso || 'Em breve'}</strong>
+                <span>
+                  {result?.statusNotice
+                    ? 'Concurso Especial'
+                    : 'Próximo Concurso'}
+                </span>
+                <strong>
+                  {result?.statusNotice
+                    ? `#${result.numeroConcursoProximo ?? result.numero + 1}`
+                    : result?.dataProximoConcurso || 'Em breve'}
+                </strong>
               </div>
             </div>
           </div>

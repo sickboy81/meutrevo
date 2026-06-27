@@ -16,6 +16,13 @@ export interface LotteryResult {
     numeroDeGanhadores: number;
     valorPremio: number;
   }[];
+  statusNotice?: {
+    kind: 'special-draw';
+    title: string;
+    message: string;
+    badge: string;
+    officialUrl?: string;
+  };
 }
 
 export interface User {

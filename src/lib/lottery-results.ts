@@ -3,6 +3,7 @@ import { fetchOfficialLotteryResult } from '@/lib/caixa';
 
 export type LotteryResult = {
   numero: number;
+  numeroConcursoProximo?: number;
   dataApuracao: string;
   dataProximoConcurso: string;
   dezenasSorteadasOrdemSorteio: string[];
@@ -18,6 +19,15 @@ export type LotteryResult = {
     numeroDeGanhadores: number;
     valorPremio: number;
   }[];
+  statusNotice?: LotteryStatusNotice;
+};
+
+export type LotteryStatusNotice = {
+  kind: 'special-draw';
+  title: string;
+  message: string;
+  badge: string;
+  officialUrl?: string;
 };
 
 async function getCachedResult(
@@ -39,13 +49,61 @@ async function getCachedResult(
   return null;
 }
 
+function parseBrazilDate(date: string | undefined): Date | null {
+  if (!date) return null;
+  const [day, month, year] = date.split('/').map(Number);
+  if (!day || !month || !year) return null;
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+export function decorateLotteryResult(
+  lotteryId: string,
+  result: LotteryResult | null
+): LotteryResult | null {
+  if (!result) return null;
+
+  if (lotteryId !== 'quina') {
+    return result;
+  }
+
+  const drawDate = parseBrazilDate(result.dataApuracao);
+  const nextDrawDate = parseBrazilDate(result.dataProximoConcurso);
+  const hasLongGap =
+    drawDate && nextDrawDate
+      ? Math.round(
+          (nextDrawDate.getTime() - drawDate.getTime()) / (1000 * 60 * 60 * 24)
+        ) >= 7
+      : false;
+  const looksLikeSpecialDraw =
+    result.valorEstimadoProximoConcurso >= 100_000_000 || hasLongGap;
+
+  if (!looksLikeSpecialDraw) {
+    return result;
+  }
+
+  const nextContest = result.numeroConcursoProximo ?? result.numero + 1;
+
+  return {
+    ...result,
+    numeroConcursoProximo: nextContest,
+    statusNotice: {
+      kind: 'special-draw',
+      badge: 'Quina de Sao Joao',
+      title: `Quina em calendario especial da CAIXA`,
+      message: `Os sorteios regulares da Quina estao temporariamente pausados para concentrar as apostas no concurso especial ${nextContest}. Por isso, o ultimo concurso regular continua aparecendo como ${result.numero} em ${result.dataApuracao}.`,
+      officialUrl:
+        'https://www.caixa.gov.br/loterias/comunicados-importantes/Paginas/default.aspx',
+    },
+  };
+}
+
 export async function getLatestLotteryResult(
   lotteryId: string
 ): Promise<LotteryResult | null> {
   const officialResult = await fetchOfficialLotteryResult(lotteryId);
   if (officialResult) {
-    return officialResult as LotteryResult;
+    return decorateLotteryResult(lotteryId, officialResult as LotteryResult);
   }
 
-  return getCachedResult(lotteryId);
+  return decorateLotteryResult(lotteryId, await getCachedResult(lotteryId));
 }
