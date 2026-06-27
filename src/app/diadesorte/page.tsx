@@ -1,6 +1,8 @@
 import LoteriaLanding, { LoteriaPageProps } from '../components/LoteriaLanding';
 import type { Metadata } from 'next';
 
+export const revalidate = 300;
+
 export const metadata: Metadata = {
   title: 'Dia de Sorte - Resultados, Estatísticas & Gerador Inteligente',
   description:

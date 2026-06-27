@@ -1,43 +1,10 @@
-import { db } from '@/lib/db';
+import {
+  getLatestLotteryResult,
+  type LotteryResult,
+} from '@/lib/lottery-results';
 import Link from 'next/link';
 import AppEntryLink from './AppEntryLink';
 import QuickSimulator from './QuickSimulator';
-
-interface LotteryResult {
-  numero: number;
-  dataApuracao: string;
-  dataProximoConcurso: string;
-  dezenasSorteadasOrdemSorteio: string[];
-  listaDezenas: string[];
-  trevosSorteados?: string[];
-  valorEstimadoProximoConcurso: number;
-  acumulado: boolean;
-  nomeMunicipioUFSorteio?: string;
-  localSorteio?: string;
-  listaRateioPremio?: {
-    descricaoFaixa: string;
-    faixa: number;
-    numeroDeGanhadores: number;
-    valorPremio: number;
-  }[];
-}
-
-async function getCachedResult(
-  lotteryId: string
-): Promise<LotteryResult | null> {
-  try {
-    const res = await db.execute({
-      sql: 'SELECT data_json FROM lottery_cache WHERE lottery = ? ORDER BY contest_num DESC LIMIT 1',
-      args: [lotteryId],
-    });
-    if (res.rows.length > 0) {
-      return JSON.parse(res.rows[0].data_json as string) as LotteryResult;
-    }
-  } catch {
-    // ignore
-  }
-  return null;
-}
 
 export interface LoteriaPageProps {
   lotteryId: string;
@@ -56,7 +23,7 @@ export interface LoteriaPageProps {
 }
 
 export default async function LoteriaLanding(props: LoteriaPageProps) {
-  const result = await getCachedResult(props.lotteryId);
+  const result = await getLatestLotteryResult(props.lotteryId);
 
   const getCleanDezenas = (lotResult: LotteryResult) => {
     const list =
@@ -119,7 +86,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
       <div className="landing-container animate-fade-in">
         <header className="landing-header">
           <div className="logo-container">
-            <Link
+            <AppEntryLink
               href="/"
               style={{
                 textDecoration: 'none',
@@ -174,13 +141,13 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
               >
                 Meu Trevo
               </span>
-            </Link>
+            </AppEntryLink>
             <span className="badge-live" style={{ animationDuration: '1s' }}>
               {props.name.toUpperCase()}
             </span>
           </div>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <Link
+            <AppEntryLink
               href="/"
               style={{
                 color: '#fff',
@@ -189,7 +156,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
               }}
             >
               Voltar
-            </Link>
+            </AppEntryLink>
             <AppEntryLink
               className="theme-pill-btn active"
               style={{
@@ -250,7 +217,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
               >
                 Começar no App {props.name}
               </AppEntryLink>
-              <Link
+              <AppEntryLink
                 href="/"
                 className="landing-btn-secondary"
                 style={{
@@ -261,7 +228,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                 }}
               >
                 Ver Loterias
-              </Link>
+              </AppEntryLink>
             </div>
           </div>
 
@@ -524,7 +491,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                 }}
               >
                 <li>
-                  <Link
+                  <AppEntryLink
                     href="/megasena"
                     style={{
                       color: 'var(--text-muted)',
@@ -533,10 +500,10 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                     className="hover-glow-text"
                   >
                     Mega-Sena
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
-                  <Link
+                  <AppEntryLink
                     href="/lotofacil"
                     style={{
                       color: 'var(--text-muted)',
@@ -545,10 +512,10 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                     className="hover-glow-text"
                   >
                     Lotofácil
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
-                  <Link
+                  <AppEntryLink
                     href="/quina"
                     style={{
                       color: 'var(--text-muted)',
@@ -557,10 +524,10 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                     className="hover-glow-text"
                   >
                     Quina
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
-                  <Link
+                  <AppEntryLink
                     href="/lotomania"
                     style={{
                       color: 'var(--text-muted)',
@@ -569,10 +536,10 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                     className="hover-glow-text"
                   >
                     Lotomania
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
-                  <Link
+                  <AppEntryLink
                     href="/duplasena"
                     style={{
                       color: 'var(--text-muted)',
@@ -581,10 +548,10 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                     className="hover-glow-text"
                   >
                     Dupla Sena
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
-                  <Link
+                  <AppEntryLink
                     href="/diadesorte"
                     style={{
                       color: 'var(--text-muted)',
@@ -593,10 +560,10 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                     className="hover-glow-text"
                   >
                     Dia de Sorte
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
-                  <Link
+                  <AppEntryLink
                     href="/timemania"
                     style={{
                       color: 'var(--text-muted)',
@@ -605,10 +572,10 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                     className="hover-glow-text"
                   >
                     Timemania
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
-                  <Link
+                  <AppEntryLink
                     href="/supersete"
                     style={{
                       color: 'var(--text-muted)',
@@ -617,7 +584,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                     className="hover-glow-text"
                   >
                     Super Sete
-                  </Link>
+                  </AppEntryLink>
                 </li>
               </ul>
             </div>
@@ -647,7 +614,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                 }}
               >
                 <li>
-                  <Link
+                  <AppEntryLink
                     href="/"
                     style={{
                       color: 'var(--text-muted)',
@@ -656,7 +623,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                     className="hover-glow-text"
                   >
                     Página Inicial
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
                   <AppEntryLink
@@ -670,7 +637,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                   </AppEntryLink>
                 </li>
                 <li>
-                  <Link
+                  <AppEntryLink
                     href="/terms"
                     style={{
                       color: 'var(--text-muted)',
@@ -679,10 +646,10 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                     className="hover-glow-text"
                   >
                     Termos de Uso
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
-                  <Link
+                  <AppEntryLink
                     href="/privacy"
                     style={{
                       color: 'var(--text-muted)',
@@ -691,7 +658,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                     className="hover-glow-text"
                   >
                     Privacidade
-                  </Link>
+                  </AppEntryLink>
                 </li>
               </ul>
             </div>

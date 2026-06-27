@@ -1,11 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireRole, internalServerError } from '@/lib/api-auth';
-
-const CAIXA_HEADERS = {
-  'User-Agent':
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-};
+import { fetchOfficialLotteryResult } from '@/lib/caixa';
 
 const LOTTERIES = [
   'megasena',
@@ -47,12 +43,7 @@ async function fetchContest(
   contestNum: number
 ): Promise<LotteryApiData | null> {
   try {
-    const res = await fetch(
-      `https://servicebus2.caixa.gov.br/portaldeloterias/api/${lotteryId}/${contestNum}`,
-      { headers: CAIXA_HEADERS, signal: AbortSignal.timeout(8000) }
-    );
-    if (!res.ok) return null;
-    return (await res.json()) as LotteryApiData;
+    return await fetchOfficialLotteryResult(lotteryId, contestNum);
   } catch {
     return null;
   }
@@ -90,16 +81,8 @@ export async function POST(request: Request) {
       // 1. Fetch the latest contest to know the current contest number
       let latestNum: number;
       try {
-        const latestRes = await fetch(
-          `https://servicebus2.caixa.gov.br/portaldeloterias/api/${lottery}`,
-          { headers: CAIXA_HEADERS, signal: AbortSignal.timeout(10000) }
-        );
-        if (!latestRes.ok) {
-          report[lottery].errors++;
-          continue;
-        }
-        const latestData = (await latestRes.json()) as LotteryApiData;
-        if (!latestData.numero) {
+        const latestData = await fetchOfficialLotteryResult(lottery);
+        if (!latestData?.numero) {
           report[lottery].errors++;
           continue;
         }

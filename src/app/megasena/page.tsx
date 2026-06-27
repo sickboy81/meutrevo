@@ -1,7 +1,12 @@
-import { db, isMissingDbEnvError } from '@/lib/db';
+import {
+  getLatestLotteryResult,
+  type LotteryResult,
+} from '@/lib/lottery-results';
 import Link from 'next/link';
 import QuickSimulator from '../components/QuickSimulator';
 import type { Metadata } from 'next';
+
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: 'Mega-Sena - Resultados, Estatísticas & Gerador Inteligente',
@@ -21,46 +26,8 @@ export const metadata: Metadata = {
   },
 };
 
-interface LotteryResult {
-  numero: number;
-  dataApuracao: string;
-  dataProximoConcurso: string;
-  dezenasSorteadasOrdemSorteio: string[];
-  listaDezenas: string[];
-  trevosSorteados?: string[];
-  valorEstimadoProximoConcurso: number;
-  acumulado: boolean;
-  nomeMunicipioUFSorteio?: string;
-  localSorteio?: string;
-  listaRateioPremio?: {
-    descricaoFaixa: string;
-    faixa: number;
-    numeroDeGanhadores: number;
-    valorPremio: number;
-  }[];
-}
-
-async function getCachedResult(
-  lotteryId: string
-): Promise<LotteryResult | null> {
-  try {
-    const res = await db.execute({
-      sql: 'SELECT data_json FROM lottery_cache WHERE lottery = ? ORDER BY contest_num DESC LIMIT 1',
-      args: [lotteryId],
-    });
-    if (res.rows.length > 0) {
-      return JSON.parse(res.rows[0].data_json as string) as LotteryResult;
-    }
-  } catch (e) {
-    if (!isMissingDbEnvError(e)) {
-      console.error(`Failed to fetch cache for ${lotteryId}:`, e);
-    }
-  }
-  return null;
-}
-
 export default async function MegaSenaLanding() {
-  const result = await getCachedResult('megasena');
+  const result = await getLatestLotteryResult('megasena');
 
   const getCleanDezenas = (lotResult: LotteryResult) => {
     const list =

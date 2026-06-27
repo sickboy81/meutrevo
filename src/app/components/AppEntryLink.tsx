@@ -5,12 +5,14 @@ import type { CSSProperties, MouseEvent, ReactNode } from 'react';
 
 type AppEntryLinkProps = {
   children: ReactNode;
+  href?: string;
   className?: string;
   style?: CSSProperties;
 };
 
 export default function AppEntryLink({
   children,
+  href = '/app',
   className,
   style,
 }: AppEntryLinkProps) {
@@ -27,11 +29,11 @@ export default function AppEntryLink({
     }
 
     event.preventDefault();
-    window.location.assign('/app');
+    window.location.assign(href);
   };
 
   return (
-    <Link href="/app" className={className} style={style} onClick={handleClick}>
+    <Link href={href} className={className} style={style} onClick={handleClick}>
       {children}
     </Link>
   );

@@ -1,15 +1,11 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getErrorMessage } from '@/lib/api-auth';
+import { fetchOfficialLotteryResult } from '@/lib/caixa';
 
 type LotteryApiData = Record<string, unknown> & {
   numero?: number;
   dataApuracao?: string;
-};
-
-const CAIXA_HEADERS = {
-  'User-Agent':
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
 };
 
 // Ensure the cache table is initialized (idempotent)
@@ -141,12 +137,8 @@ async function fetchAndCacheContest(
   contestNum: number
 ): Promise<LotteryApiData | null> {
   try {
-    const res = await fetch(
-      `https://servicebus2.caixa.gov.br/portaldeloterias/api/${lotteryId}/${contestNum}`,
-      { headers: CAIXA_HEADERS, signal: AbortSignal.timeout(8000) }
-    );
-    if (!res.ok) return null;
-    const data = (await res.json()) as LotteryApiData;
+    const data = await fetchOfficialLotteryResult(lotteryId, contestNum);
+    if (!data) return null;
     if (data.numero) {
       await saveToCache(lotteryId, data.numero, data.dataApuracao || '', data);
     }
@@ -239,14 +231,10 @@ export async function GET(
 
   // STALE or EMPTY: check Caixa for the latest
   try {
-    const latestRes = await fetch(
-      `https://servicebus2.caixa.gov.br/portaldeloterias/api/${type}`,
-      { headers: CAIXA_HEADERS, signal: AbortSignal.timeout(10000) }
-    );
-
-    if (!latestRes.ok) throw new Error(`Caixa API status ${latestRes.status}`);
-
-    const latestData = (await latestRes.json()) as LotteryApiData;
+    const latestData = await fetchOfficialLotteryResult(type);
+    if (!latestData) {
+      throw new Error('Nao foi possivel obter o ultimo concurso na Caixa');
+    }
 
     if (latestData.numero) {
       const latestNum = latestData.numero;

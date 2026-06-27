@@ -1,45 +1,13 @@
 import { db, isMissingDbEnvError } from '@/lib/db';
+import {
+  getLatestLotteryResult,
+  type LotteryResult,
+} from '@/lib/lottery-results';
 import Link from 'next/link';
 import AppEntryLink from './components/AppEntryLink';
 import QuickSimulator from './components/QuickSimulator';
 
-interface LotteryResult {
-  numero: number;
-  dataApuracao: string;
-  dataProximoConcurso: string;
-  dezenasSorteadasOrdemSorteio: string[];
-  listaDezenas: string[];
-  trevosSorteados?: string[];
-  valorEstimadoProximoConcurso: number;
-  acumulado: boolean;
-  nomeMunicipioUFSorteio?: string;
-  localSorteio?: string;
-  listaRateioPremio?: {
-    descricaoFaixa: string;
-    faixa: number;
-    numeroDeGanhadores: number;
-    valorPremio: number;
-  }[];
-}
-
-async function getCachedResult(
-  lotteryId: string
-): Promise<LotteryResult | null> {
-  try {
-    const res = await db.execute({
-      sql: 'SELECT data_json FROM lottery_cache WHERE lottery = ? ORDER BY contest_num DESC LIMIT 1',
-      args: [lotteryId],
-    });
-    if (res.rows.length > 0) {
-      return JSON.parse(res.rows[0].data_json as string) as LotteryResult;
-    }
-  } catch (e) {
-    if (!isMissingDbEnvError(e)) {
-      console.error(`Failed to fetch cache for ${lotteryId}:`, e);
-    }
-  }
-  return null;
-}
+export const revalidate = 300;
 
 async function getPriceConfig(
   key: string,
@@ -62,7 +30,7 @@ async function getPriceConfig(
 }
 
 export default async function LandingHome() {
-  const result = await getCachedResult('megasena');
+  const result = await getLatestLotteryResult('megasena');
   const priceMonthly = await getPriceConfig('price_monthly', 14.9);
 
   const getCleanDezenas = (lotResult: LotteryResult) => {
@@ -220,7 +188,7 @@ export default async function LandingHome() {
             style={{ display: 'flex', gap: '1.2rem', alignItems: 'center' }}
             className="landing-nav-links"
           >
-            <Link
+            <AppEntryLink
               href="/megasena"
               style={{
                 color: '#fff',
@@ -230,8 +198,8 @@ export default async function LandingHome() {
               }}
             >
               Mega-Sena
-            </Link>
-            <Link
+            </AppEntryLink>
+            <AppEntryLink
               href="/lotofacil"
               style={{
                 color: '#fff',
@@ -241,8 +209,8 @@ export default async function LandingHome() {
               }}
             >
               Lotofácil
-            </Link>
-            <Link
+            </AppEntryLink>
+            <AppEntryLink
               href="/quina"
               style={{
                 color: '#fff',
@@ -252,8 +220,8 @@ export default async function LandingHome() {
               }}
             >
               Quina
-            </Link>
-            <Link
+            </AppEntryLink>
+            <AppEntryLink
               href="/lotomania"
               style={{
                 color: '#fff',
@@ -263,7 +231,7 @@ export default async function LandingHome() {
               }}
             >
               Lotomania
-            </Link>
+            </AppEntryLink>
           </nav>
           <AppEntryLink
             className="theme-pill-btn active landing-header-app-link"
@@ -969,7 +937,7 @@ export default async function LandingHome() {
                 }}
               >
                 <li>
-                  <Link
+                  <AppEntryLink
                     href="/megasena"
                     style={{
                       color: 'var(--text-muted)',
@@ -979,10 +947,10 @@ export default async function LandingHome() {
                     className="hover-glow-text"
                   >
                     Mega-Sena
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
-                  <Link
+                  <AppEntryLink
                     href="/lotofacil"
                     style={{
                       color: 'var(--text-muted)',
@@ -992,10 +960,10 @@ export default async function LandingHome() {
                     className="hover-glow-text"
                   >
                     Lotofácil
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
-                  <Link
+                  <AppEntryLink
                     href="/quina"
                     style={{
                       color: 'var(--text-muted)',
@@ -1005,10 +973,10 @@ export default async function LandingHome() {
                     className="hover-glow-text"
                   >
                     Quina
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
-                  <Link
+                  <AppEntryLink
                     href="/lotomania"
                     style={{
                       color: 'var(--text-muted)',
@@ -1018,10 +986,10 @@ export default async function LandingHome() {
                     className="hover-glow-text"
                   >
                     Lotomania
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
-                  <Link
+                  <AppEntryLink
                     href="/duplasena"
                     style={{
                       color: 'var(--text-muted)',
@@ -1031,10 +999,10 @@ export default async function LandingHome() {
                     className="hover-glow-text"
                   >
                     Dupla Sena
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
-                  <Link
+                  <AppEntryLink
                     href="/diadesorte"
                     style={{
                       color: 'var(--text-muted)',
@@ -1044,10 +1012,10 @@ export default async function LandingHome() {
                     className="hover-glow-text"
                   >
                     Dia de Sorte
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
-                  <Link
+                  <AppEntryLink
                     href="/timemania"
                     style={{
                       color: 'var(--text-muted)',
@@ -1057,10 +1025,10 @@ export default async function LandingHome() {
                     className="hover-glow-text"
                   >
                     Timemania
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
-                  <Link
+                  <AppEntryLink
                     href="/supersete"
                     style={{
                       color: 'var(--text-muted)',
@@ -1070,10 +1038,10 @@ export default async function LandingHome() {
                     className="hover-glow-text"
                   >
                     Super Sete
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
-                  <Link
+                  <AppEntryLink
                     href="/maismilionaria"
                     style={{
                       color: 'var(--text-muted)',
@@ -1083,7 +1051,7 @@ export default async function LandingHome() {
                     className="hover-glow-text"
                   >
                     +Milionária
-                  </Link>
+                  </AppEntryLink>
                 </li>
               </ul>
             </div>
@@ -1113,7 +1081,7 @@ export default async function LandingHome() {
                 }}
               >
                 <li>
-                  <Link
+                  <AppEntryLink
                     href="/"
                     style={{
                       color: 'var(--text-muted)',
@@ -1123,7 +1091,7 @@ export default async function LandingHome() {
                     className="hover-glow-text"
                   >
                     Página Inicial
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
                   <AppEntryLink
@@ -1138,7 +1106,7 @@ export default async function LandingHome() {
                   </AppEntryLink>
                 </li>
                 <li>
-                  <Link
+                  <AppEntryLink
                     href="/terms"
                     style={{
                       color: 'var(--text-muted)',
@@ -1148,10 +1116,10 @@ export default async function LandingHome() {
                     className="hover-glow-text"
                   >
                     Termos de Uso
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
-                  <Link
+                  <AppEntryLink
                     href="/privacy"
                     style={{
                       color: 'var(--text-muted)',
@@ -1161,7 +1129,7 @@ export default async function LandingHome() {
                     className="hover-glow-text"
                   >
                     Privacidade
-                  </Link>
+                  </AppEntryLink>
                 </li>
               </ul>
             </div>

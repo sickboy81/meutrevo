@@ -1,18 +1,11 @@
 // Meu Trevo - Service Worker
 // Handles: PWA install, offline caching, push notifications
 
-const CACHE_NAME = 'meu-trevo-v1';
-const RESULTS_CACHE = 'meu-trevo-results-v1';
+const CACHE_NAME = 'meu-trevo-v2';
+const RESULTS_CACHE = 'meu-trevo-results-v2';
 
 // App shell files to cache
 const APP_SHELL = [
-  '/',
-  '/megasena',
-  '/lotofacil',
-  '/quina',
-  '/lotomania',
-  '/diadesorte',
-  '/timemania',
   '/terms',
   '/privacy',
 ];
