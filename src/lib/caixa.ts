@@ -5,6 +5,7 @@ type LotteryApiData = Record<string, unknown> & {
 
 const CAIXA_API_BASE = 'https://servicebus2.caixa.gov.br/portaldeloterias/api';
 const CAIXA_PORTAL_BASE = 'https://loterias.caixa.gov.br';
+const CAIXA_PARAMS_URL = `${CAIXA_PORTAL_BASE}/Style%20Library/json/params.txt`;
 
 const CAIXA_API_HEADERS = {
   'User-Agent':
@@ -37,6 +38,36 @@ const CAIXA_PAGE_BY_LOTTERY: Record<string, string> = {
   timemania: '/Paginas/Timemania.aspx',
   supersete: '/Paginas/Super-Sete.aspx',
 };
+
+async function getCaixaApiBases(): Promise<string[]> {
+  const bases = new Set<string>([
+    'https://servicebus3.caixa.gov.br/portaldeloterias',
+    'https://servicebus2.caixa.gov.br/portaldeloterias',
+  ]);
+
+  try {
+    const response = await fetch(CAIXA_PARAMS_URL, {
+      headers: {
+        'User-Agent': CAIXA_API_HEADERS['User-Agent'],
+        Accept: 'application/json, text/plain, */*',
+        'Accept-Language': CAIXA_API_HEADERS['Accept-Language'],
+        Pragma: 'no-cache',
+        'Cache-Control': 'no-cache',
+      },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(12000),
+    });
+
+    if (response.ok) {
+      const data = (await response.json()) as { urlapiloterias?: string };
+      if (data.urlapiloterias) {
+        bases.add(data.urlapiloterias);
+      }
+    }
+  } catch {}
+
+  return [...bases];
+}
 
 function getSetCookieHeader(response: Response): string | null {
   const withGetSetCookie = response.headers as Headers & {
@@ -81,13 +112,17 @@ export async function fetchOfficialLotteryResult(
   lotteryId: string,
   contestNum?: number
 ): Promise<LotteryApiData | null> {
-  const apiUrl = contestNum
-    ? `${CAIXA_API_BASE}/${lotteryId}/${contestNum}`
-    : `${CAIXA_API_BASE}/${lotteryId}`;
+  const apiBases = await getCaixaApiBases();
 
-  try {
-    return await fetchCaixaJson(apiUrl, { ...CAIXA_API_HEADERS });
-  } catch {}
+  for (const base of apiBases) {
+    const apiUrl = contestNum
+      ? `${base}/api/${lotteryId}/${contestNum}`
+      : `${base}/api/${lotteryId}`;
+
+    try {
+      return await fetchCaixaJson(apiUrl, { ...CAIXA_API_HEADERS });
+    } catch {}
+  }
 
   const pagePath = CAIXA_PAGE_BY_LOTTERY[lotteryId];
   if (!pagePath) {
@@ -106,7 +141,17 @@ export async function fetchOfficialLotteryResult(
       ? { ...CAIXA_API_HEADERS, Cookie: cookieHeader }
       : { ...CAIXA_API_HEADERS };
 
-    return await fetchCaixaJson(apiUrl, headers);
+    for (const base of apiBases) {
+      const apiUrl = contestNum
+        ? `${base}/api/${lotteryId}/${contestNum}`
+        : `${base}/api/${lotteryId}`;
+
+      try {
+        return await fetchCaixaJson(apiUrl, headers);
+      } catch {}
+    }
+
+    return null;
   } catch {
     return null;
   }
