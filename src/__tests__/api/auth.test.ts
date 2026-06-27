@@ -6,6 +6,7 @@ describe('Auth Schemas', () => {
     const result = registerSchema.safeParse({
       email: 'teste@teste.com',
       password: '123456',
+      cpf_cnpj: '12345678901',
     });
     expect(result.success).toBe(true);
   });

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getErrorMessage } from '@/lib/api-auth';
-import { fetchOfficialLotteryResult } from '@/lib/caixa';
+import { canServeCachedLatest, fetchOfficialLotteryResult } from '@/lib/caixa';
 import { decorateLotteryResult } from '@/lib/lottery-results';
 
 type LotteryApiData = Record<string, unknown> & {
@@ -125,19 +125,24 @@ async function getContestFromDB(
 }
 
 // Get how old (in ms) our latest cached entry is
-async function getLatestCacheAge(lotteryId: string): Promise<number> {
+async function getLatestCacheState(
+  lotteryId: string
+): Promise<{ age: number; source?: unknown }> {
   try {
     const res = await db.execute({
-      sql: `SELECT cached_at FROM lottery_cache WHERE lottery = ? ORDER BY contest_num DESC LIMIT 1`,
+      sql: `SELECT cached_at, data_json FROM lottery_cache WHERE lottery = ? ORDER BY contest_num DESC LIMIT 1`,
       args: [lotteryId],
     });
     if (res.rows.length > 0 && res.rows[0].cached_at) {
       const cachedAt = new Date(res.rows[0].cached_at as string).getTime();
-      return Date.now() - cachedAt;
+      const data = JSON.parse(
+        res.rows[0].data_json as string
+      ) as LotteryApiData;
+      return { age: Date.now() - cachedAt, source: data.fonteDados };
     }
-    return Infinity; // no cache at all → very stale
+    return { age: Infinity };
   } catch {
-    return Infinity;
+    return { age: Infinity };
   }
 }
 
@@ -216,20 +221,19 @@ export async function GET(
   // PATH B: Latest + history request (e.g. ?limit=30)
   //
   // Strategy:
-  //   1. If our latest cached entry is FRESH (< 2 hours old), serve entirely
+  //   1. If our latest cached entry is verified and fresh (< 5 minutes), serve
   //      from DB — no Caixa call needed.
-  //   2. If stale (≥ 2 hours), call Caixa for the latest contest number only.
+  //   2. If stale (>= 5 minutes), call the upstream providers for the latest.
   //      - If the latest contest number is ALREADY in our DB, the only thing
   //        that could have changed is valorEstimadoProximoConcurso — update it.
   //      - If it's a NEW contest number, cache it and backfill any gaps.
   //   3. If Caixa is offline, always fall back to DB gracefully.
   // ─────────────────────────────────────────────────────────────────────────
 
-  const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
-  const cacheAge = await getLatestCacheAge(type);
+  const cacheState = await getLatestCacheState(type);
 
-  // FAST PATH: cache is fresh, serve entirely from DB
-  if (cacheAge < TWO_HOURS_MS) {
+  // Old rows without provider provenance must be checked upstream immediately.
+  if (canServeCachedLatest(cacheState.age, cacheState.source)) {
     const localHistory = await getHistoryFromDB(type, limit, filters);
     if (localHistory.length > 0) {
       return NextResponse.json(
