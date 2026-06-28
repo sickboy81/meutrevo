@@ -3,6 +3,7 @@
 import { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import AppEntryLink from '../components/AppEntryLink';
 import { fetchWithCsrf } from '@/lib/fetch';
 
 function ResetPasswordForm() {
@@ -91,8 +92,7 @@ function ResetPasswordForm() {
           Este link está incompleto ou expirou. Solicite um novo link de
           recuperação de senha através da tela de login.
         </p>
-        <Link
-          href="/app"
+        <AppEntryLink
           style={{
             color: 'var(--accent-color)',
             textDecoration: 'underline',
@@ -100,7 +100,7 @@ function ResetPasswordForm() {
           }}
         >
           Voltar para o App
-        </Link>
+        </AppEntryLink>
       </div>
     );
   }
@@ -346,8 +346,7 @@ export default function ResetPasswordPage() {
             </span>
           </div>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <Link
-              href="/app"
+            <AppEntryLink
               style={{
                 color: '#fff',
                 textDecoration: 'none',
@@ -355,7 +354,7 @@ export default function ResetPasswordPage() {
               }}
             >
               Voltar ao App
-            </Link>
+            </AppEntryLink>
           </div>
         </header>
 

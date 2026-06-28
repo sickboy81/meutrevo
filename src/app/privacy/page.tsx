@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import AppEntryLink from '../components/AppEntryLink';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -57,8 +58,7 @@ export default function PrivacyPage() {
             >
               Voltar
             </Link>
-            <Link
-              href="/app"
+            <AppEntryLink
               className="theme-pill-btn active"
               style={{
                 fontSize: '0.8rem',
@@ -69,7 +69,7 @@ export default function PrivacyPage() {
               }}
             >
               Entrar no App ⚡
-            </Link>
+            </AppEntryLink>
           </div>
         </header>
 
@@ -367,8 +367,7 @@ export default function PrivacyPage() {
                   </Link>
                 </li>
                 <li>
-                  <Link
-                    href="/app"
+                  <AppEntryLink
                     style={{
                       color: 'var(--text-muted)',
                       textDecoration: 'none',
@@ -377,7 +376,7 @@ export default function PrivacyPage() {
                     className="hover-glow-text"
                   >
                     Entrar no App ⚡
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
                   <Link

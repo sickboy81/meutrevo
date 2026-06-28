@@ -3,6 +3,7 @@ import {
   type LotteryResult,
 } from '@/lib/lottery-results';
 import Link from 'next/link';
+import AppEntryLink from '../components/AppEntryLink';
 import QuickSimulator from '../components/QuickSimulator';
 import type { Metadata } from 'next';
 
@@ -202,8 +203,7 @@ export default async function LotomaniaLanding() {
             >
               Voltar
             </Link>
-            <Link
-              href="/app"
+            <AppEntryLink
               className="theme-pill-btn active"
               style={{
                 fontSize: '0.8rem',
@@ -214,7 +214,7 @@ export default async function LotomaniaLanding() {
               }}
             >
               Entrar no App ⚡
-            </Link>
+            </AppEntryLink>
           </div>
         </header>
 
@@ -249,8 +249,7 @@ export default async function LotomaniaLanding() {
             </div>
 
             <div className="landing-cta-group landing-hero-actions">
-              <Link
-                href="/app"
+              <AppEntryLink
                 className="landing-btn-primary"
                 style={{
                   textDecoration: 'none',
@@ -262,7 +261,7 @@ export default async function LotomaniaLanding() {
                 }}
               >
                 Começar no App Lotomania
-              </Link>
+              </AppEntryLink>
               <Link
                 href="/"
                 className="landing-btn-secondary"
@@ -468,8 +467,7 @@ export default async function LotomaniaLanding() {
             exporte seus fechamentos de 50 dezenas de forma profissional com a
             nossa assinatura PRO.
           </p>
-          <Link
-            href="/app"
+          <AppEntryLink
             className="landing-btn-primary"
             style={{
               textDecoration: 'none',
@@ -480,7 +478,7 @@ export default async function LotomaniaLanding() {
             }}
           >
             Assinar Meu Trevo Pro ⚡
-          </Link>
+          </AppEntryLink>
         </section>
 
         {/* Premium Footer */}
@@ -689,8 +687,7 @@ export default async function LotomaniaLanding() {
                   </Link>
                 </li>
                 <li>
-                  <Link
-                    href="/app"
+                  <AppEntryLink
                     style={{
                       color: 'var(--text-muted)',
                       textDecoration: 'none',
@@ -699,7 +696,7 @@ export default async function LotomaniaLanding() {
                     className="hover-glow-text"
                   >
                     Entrar no App ⚡
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
                   <Link

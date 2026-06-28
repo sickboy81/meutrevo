@@ -3,6 +3,7 @@ import {
   type LotteryResult,
 } from '@/lib/lottery-results';
 import Link from 'next/link';
+import AppEntryLink from '../components/AppEntryLink';
 import QuickSimulator from '../components/QuickSimulator';
 import type { Metadata } from 'next';
 
@@ -181,8 +182,7 @@ export default async function QuinaLanding() {
             >
               Voltar
             </Link>
-            <Link
-              href="/app"
+            <AppEntryLink
               className="theme-pill-btn active"
               style={{
                 fontSize: '0.8rem',
@@ -193,7 +193,7 @@ export default async function QuinaLanding() {
               }}
             >
               Entrar no App ⚡
-            </Link>
+            </AppEntryLink>
           </div>
         </header>
 
@@ -285,8 +285,7 @@ export default async function QuinaLanding() {
             </div>
 
             <div className="landing-cta-group landing-hero-actions">
-              <Link
-                href="/app"
+              <AppEntryLink
                 className="landing-btn-primary"
                 style={{
                   textDecoration: 'none',
@@ -298,7 +297,7 @@ export default async function QuinaLanding() {
                 }}
               >
                 Começar no App Quina
-              </Link>
+              </AppEntryLink>
               <Link
                 href="/"
                 className="landing-btn-secondary"
@@ -499,8 +498,7 @@ export default async function QuinaLanding() {
             Acesse as ferramentas premium de geração e exportação de bolões
             otimizados e ciclos estatísticos da Quina no Meu Trevo Pro.
           </p>
-          <Link
-            href="/app"
+          <AppEntryLink
             className="landing-btn-primary"
             style={{
               textDecoration: 'none',
@@ -511,7 +509,7 @@ export default async function QuinaLanding() {
             }}
           >
             Assinar Meu Trevo Pro ⚡
-          </Link>
+          </AppEntryLink>
         </section>
 
         {/* Premium Footer */}
@@ -720,8 +718,7 @@ export default async function QuinaLanding() {
                   </Link>
                 </li>
                 <li>
-                  <Link
-                    href="/app"
+                  <AppEntryLink
                     style={{
                       color: 'var(--text-muted)',
                       textDecoration: 'none',
@@ -730,7 +727,7 @@ export default async function QuinaLanding() {
                     className="hover-glow-text"
                   >
                     Entrar no App ⚡
-                  </Link>
+                  </AppEntryLink>
                 </li>
                 <li>
                   <Link
