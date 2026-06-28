@@ -29,12 +29,16 @@ async function init() {
         password TEXT NOT NULL,
         cpf_cnpj TEXT,
         role TEXT DEFAULT 'free',
+        blocked INTEGER DEFAULT 0,
         premium_until DATETIME,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
     `);
     await db
       .execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'free'")
+      .catch(() => {});
+    await db
+      .execute('ALTER TABLE users ADD COLUMN blocked INTEGER DEFAULT 0')
       .catch(() => {});
     await db
       .execute('ALTER TABLE users ADD COLUMN premium_until DATETIME')

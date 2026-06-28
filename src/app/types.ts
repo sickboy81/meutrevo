@@ -58,6 +58,7 @@ export interface AdminUser {
   name: string;
   email: string;
   role: 'free' | 'pro' | 'admin';
+  blocked?: boolean;
   created_at: string;
 }
 

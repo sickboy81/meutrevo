@@ -24,13 +24,14 @@ export async function GET() {
 
     // List all users (excluding passwords)
     const usersQuery = await db.execute(
-      'SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC'
+      'SELECT id, name, email, role, blocked, created_at FROM users ORDER BY created_at DESC'
     );
     const users = usersQuery.rows.map((row) => ({
       id: row.id,
       name: row.name,
       email: row.email,
       role: row.role || 'free',
+      blocked: Number(row.blocked || 0) === 1,
       created_at: row.created_at,
     }));
 

@@ -43,3 +43,35 @@ export async function sendResetPasswordEmail(
     html: html,
   });
 }
+
+export async function sendCustomEmail(
+  toEmail: string,
+  subject: string,
+  name: string,
+  messageHtml: string
+) {
+  const from = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1a1a24; background-color: #fafafa; border-radius: 12px; border: 1px solid #e2e8f0;">
+      <div style="text-align: center; margin-bottom: 20px; padding: 10px; background-color: #08080f; border-radius: 8px;">
+        <span style="color: #00ff88; font-size: 24px; font-weight: bold; font-family: monospace;">Meu Trevo</span>
+      </div>
+      <p>Olá, <strong>${name}</strong>,</p>
+      <div style="line-height: 1.6; font-size: 1rem; color: #2d3748; margin-top: 20px; margin-bottom: 20px; white-space: pre-line;">
+        ${messageHtml}
+      </div>
+      <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
+      <p style="font-size: 0.8rem; color: #a0aec0; text-align: center;">
+        Meu Trevo &copy; ${new Date().getFullYear()} - Resultados & Estatísticas Inteligentes de Loterias
+      </p>
+    </div>
+  `;
+
+  return resend.emails.send({
+    from: from,
+    to: toEmail,
+    subject: subject,
+    html: html,
+  });
+}

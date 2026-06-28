@@ -65,6 +65,23 @@ export async function requireAuthenticatedUser() {
     };
   }
 
+  // Verificar se o usuário está bloqueado no banco
+  try {
+    const result = await db.execute({
+      sql: 'SELECT blocked FROM users WHERE id = ? LIMIT 1',
+      args: [user.id],
+    });
+    if (result.rows.length > 0 && Number(result.rows[0].blocked) === 1) {
+      return {
+        user: null,
+        response: NextResponse.json(
+          { error: 'Sua conta foi suspensa' },
+          { status: 403 }
+        ),
+      };
+    }
+  } catch {}
+
   return { user, response: null };
 }
 

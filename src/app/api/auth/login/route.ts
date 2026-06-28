@@ -76,6 +76,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (Number(user.blocked) === 1) {
+      return NextResponse.json(
+        { error: 'Sua conta está suspensa. Entre em contato com o suporte.' },
+        { status: 403 }
+      );
+    }
+
     const userId = user.id as string;
     const name = user.name as string;
     const role = (user.role as string) || 'free';
