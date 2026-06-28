@@ -88,9 +88,9 @@ export function decorateLotteryResult(
     numeroConcursoProximo: nextContest,
     statusNotice: {
       kind: 'special-draw',
-      badge: 'Quina de Sao Joao',
-      title: `Quina em calendario especial da CAIXA`,
-      message: `Os sorteios regulares da Quina estao temporariamente pausados para concentrar as apostas no concurso especial ${nextContest}. Por isso, o ultimo concurso regular continua aparecendo como ${result.numero} em ${result.dataApuracao}.`,
+      badge: 'Quina de São João 🌽',
+      title: 'Calendário Especial: Quina de São João',
+      message: `Os sorteios diários regulares da Quina estão temporariamente suspensos para o período de apostas exclusivas da Quina de São João (Concurso ${nextContest}), que tem sorteio agendado para hoje, domingo (28/06/2026), a partir das 14h. Assim que a CAIXA realizar a apuração, os novos números e ganhadores aparecerão aqui automaticamente.`,
       officialUrl:
         'https://www.caixa.gov.br/loterias/comunicados-importantes/Paginas/default.aspx',
     },
