@@ -1,8 +1,8 @@
+/* eslint-disable @next/next/no-html-link-for-pages */
 import {
   getLatestLotteryResult,
   type LotteryResult,
 } from '@/lib/lottery-results';
-import Link from 'next/link';
 import AppEntryLink from '../components/AppEntryLink';
 import QuickSimulator from '../components/QuickSimulator';
 import type { Metadata } from 'next';
@@ -124,7 +124,7 @@ export default async function LotofacilLanding() {
         {/* Navigation / Header */}
         <header className="landing-header">
           <div className="logo-container">
-            <Link
+            <a
               href="/"
               style={{
                 textDecoration: 'none',
@@ -179,7 +179,7 @@ export default async function LotofacilLanding() {
               >
                 Meu Trevo
               </span>
-            </Link>
+            </a>
             <span
               className="badge-live"
               style={{ animationDuration: '1s', background: '#93098f' }}
@@ -188,7 +188,7 @@ export default async function LotofacilLanding() {
             </span>
           </div>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <Link
+            <a
               href="/"
               style={{
                 color: '#fff',
@@ -197,7 +197,7 @@ export default async function LotofacilLanding() {
               }}
             >
               Voltar
-            </Link>
+            </a>
             <AppEntryLink
               className="theme-pill-btn active"
               style={{
@@ -257,7 +257,7 @@ export default async function LotofacilLanding() {
               >
                 Começar no App Lotofácil
               </AppEntryLink>
-              <Link
+              <a
                 href="/"
                 className="landing-btn-secondary"
                 style={{
@@ -268,7 +268,7 @@ export default async function LotofacilLanding() {
                 }}
               >
                 Ver Loterias
-              </Link>
+              </a>
             </div>
           </div>
 
@@ -589,7 +589,7 @@ export default async function LotofacilLanding() {
                 }}
               >
                 <li>
-                  <Link
+                  <a
                     href="/megasena"
                     style={{
                       color: 'var(--text-muted)',
@@ -599,10 +599,10 @@ export default async function LotofacilLanding() {
                     className="hover-glow-text"
                   >
                     Mega-Sena
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link
+                  <a
                     href="/lotofacil"
                     style={{
                       color: 'var(--text-muted)',
@@ -612,10 +612,10 @@ export default async function LotofacilLanding() {
                     className="hover-glow-text"
                   >
                     Lotofácil
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link
+                  <a
                     href="/quina"
                     style={{
                       color: 'var(--text-muted)',
@@ -625,10 +625,10 @@ export default async function LotofacilLanding() {
                     className="hover-glow-text"
                   >
                     Quina
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link
+                  <a
                     href="/lotomania"
                     style={{
                       color: 'var(--text-muted)',
@@ -638,7 +638,7 @@ export default async function LotofacilLanding() {
                     className="hover-glow-text"
                   >
                     Lotomania
-                  </Link>
+                  </a>
                 </li>
               </ul>
             </div>
@@ -668,7 +668,7 @@ export default async function LotofacilLanding() {
                 }}
               >
                 <li>
-                  <Link
+                  <a
                     href="/"
                     style={{
                       color: 'var(--text-muted)',
@@ -678,7 +678,7 @@ export default async function LotofacilLanding() {
                     className="hover-glow-text"
                   >
                     Página Inicial
-                  </Link>
+                  </a>
                 </li>
                 <li>
                   <AppEntryLink
@@ -693,7 +693,7 @@ export default async function LotofacilLanding() {
                   </AppEntryLink>
                 </li>
                 <li>
-                  <Link
+                  <a
                     href="/terms"
                     style={{
                       color: 'var(--text-muted)',
@@ -703,10 +703,10 @@ export default async function LotofacilLanding() {
                     className="hover-glow-text"
                   >
                     Termos de Uso
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link
+                  <a
                     href="/privacy"
                     style={{
                       color: 'var(--text-muted)',
@@ -716,7 +716,7 @@ export default async function LotofacilLanding() {
                     className="hover-glow-text"
                   >
                     Privacidade
-                  </Link>
+                  </a>
                 </li>
               </ul>
             </div>
