@@ -823,6 +823,26 @@ export default function Home() {
           }));
         }
         setLoading(false);
+
+        // Buscar as outras loterias em segundo plano para preencher a comparação dos jogos salvos
+        const otherLotteries = Object.keys(LOTTERY_CONFIGS).filter(
+          (id) => id !== activeLottery
+        );
+        for (const lotteryId of otherLotteries) {
+          fetchWithCsrf(`/api/loteria/${lotteryId}`)
+            .then(async (res) => {
+              if (res.ok) {
+                const data = await res.json();
+                if (data.latest) {
+                  setLatestResultsMap((prev) => ({
+                    ...prev,
+                    [lotteryId]: data.latest,
+                  }));
+                }
+              }
+            })
+            .catch(() => {});
+        }
       })();
     }, 0);
 
