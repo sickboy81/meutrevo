@@ -1936,18 +1936,6 @@ export default function Home() {
                 </svg>
                 <div className="logo-text">Meu Trevo</div>
               </Link>
-              <span
-                style={{
-                  fontSize: '0.75rem',
-                  color: 'var(--text-muted)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                }}
-                className="desktop-user-name"
-              >
-                {user ? `${user.avatar || '👤'} Olá, ${user.name}` : ''}
-              </span>
             </div>
 
             {/* Centered Desktop Top Navigation */}
@@ -3333,6 +3321,32 @@ export default function Home() {
               </button>
             ))}
           </div>
+
+          {/* Welcome User Banner */}
+          {user && (
+            <div
+              style={{
+                maxWidth: '1200px',
+                margin: '0.75rem auto 0 auto',
+                padding: '0 1rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                fontSize: '0.8rem',
+                color: 'var(--text-muted)',
+                animation: 'fade-in 0.3s ease-out',
+              }}
+            >
+              <span>{user.avatar || '👤'}</span>
+              <span>
+                Olá,{' '}
+                <strong style={{ color: 'var(--text-main)' }}>
+                  {user.name}
+                </strong>
+                ! Bem-vindo ao seu painel.
+              </span>
+            </div>
+          )}
 
           {/* Main Content Area */}
           <div className="main-content">
