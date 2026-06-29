@@ -394,44 +394,72 @@ export default function AdminPanel({
               alignItems: 'center',
             }}
           >
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Preço Anual Total (R$)
-            </span>
-            <div style={{ display: 'flex', gap: '0.25rem' }}>
-              <input
-                type="number"
-                step="0.01"
-                value={localAnnual}
-                onChange={(e) =>
-                  setLocalAnnual(parseFloat(e.target.value) || 0)
-                }
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                Preço Anual Total (R$)
+              </span>
+              <span
                 style={{
-                  width: '80px',
-                  background: 'rgba(0,0,0,0.2)',
-                  border: '1px solid var(--glass-border)',
-                  borderRadius: '6px',
-                  color: 'white',
-                  fontSize: '0.8rem',
-                  padding: '0.4rem',
-                }}
-              />
-              <button
-                onClick={() =>
-                  handleUpdatePrice('price_annual', String(localAnnual))
-                }
-                style={{
-                  background: 'var(--accent-color)',
-                  border: 'none',
-                  color: 'black',
+                  fontSize: '0.62rem',
+                  color: '#00e676',
                   fontWeight: 'bold',
-                  fontSize: '0.7rem',
-                  padding: '0.4rem 0.6rem',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
                 }}
               >
-                Salvar
-              </button>
+                Cobrado de uma vez só
+              </span>
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-end',
+                gap: '0.25rem',
+              }}
+            >
+              <div style={{ display: 'flex', gap: '0.25rem' }}>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={localAnnual}
+                  onChange={(e) =>
+                    setLocalAnnual(parseFloat(e.target.value) || 0)
+                  }
+                  style={{
+                    width: '80px',
+                    background: 'rgba(0,0,0,0.2)',
+                    border: '1px solid var(--glass-border)',
+                    borderRadius: '6px',
+                    color: 'white',
+                    fontSize: '0.8rem',
+                    padding: '0.4rem',
+                  }}
+                />
+                <button
+                  onClick={() =>
+                    handleUpdatePrice('price_annual', String(localAnnual))
+                  }
+                  style={{
+                    background: 'var(--accent-color)',
+                    border: 'none',
+                    color: 'black',
+                    fontWeight: 'bold',
+                    fontSize: '0.7rem',
+                    padding: '0.4rem 0.6rem',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Salvar
+                </button>
+              </div>
+              {localAnnual > 0 && (
+                <span
+                  style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}
+                >
+                  Equivale a R${' '}
+                  {(localAnnual / 12).toFixed(2).replace('.', ',')}/mês
+                </span>
+              )}
             </div>
           </div>
         </div>
