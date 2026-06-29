@@ -5,7 +5,7 @@ const cspHeader = [
   `default-src 'self'`,
   `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.vercel.live https://vercel.live https://vercel.speed-insights.com https://va.vercel-scripts.com`,
   `style-src 'self' 'unsafe-inline'`,
-  `img-src 'self' blob: data: https://em-content.zobj.net https://cdn-icons-png.flaticon.com`,
+  `img-src 'self' blob: data: https://em-content.zobj.net https://cdn-icons-png.flaticon.com https://pixgo.org https://*.pixgo.com.br`,
   `font-src 'self' data:`,
   `connect-src 'self' https://*.turso.io wss://*.turso.io https://api.resend.com https://api.pixgo.com.br http://localhost:*`,
   `frame-src 'none'`,
