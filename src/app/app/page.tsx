@@ -3327,7 +3327,7 @@ export default function Home() {
             <div
               style={{
                 maxWidth: '1200px',
-                margin: '0.75rem auto 0 auto',
+                margin: '0.75rem auto 1.25rem auto',
                 padding: '0 1rem',
                 display: 'flex',
                 alignItems: 'center',
