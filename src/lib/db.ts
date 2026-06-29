@@ -31,6 +31,10 @@ export const db = {
     (getDbClient().execute as (...params: unknown[]) => unknown)(
       ...args
     )) as DbClient['execute'],
+  batch: ((...args: unknown[]) =>
+    (getDbClient().batch as (...params: unknown[]) => unknown)(
+      ...args
+    )) as DbClient['batch'],
   close: ((...args: unknown[]) =>
     (getDbClient().close as (...params: unknown[]) => unknown)(
       ...args
