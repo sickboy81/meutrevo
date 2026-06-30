@@ -75,6 +75,7 @@ const CAIXA_PAGE_BY_LOTTERY: Record<string, string> = {
   diadesorte: '/Paginas/Dia-de-Sorte.aspx',
   timemania: '/Paginas/Timemania.aspx',
   supersete: '/Paginas/Super-Sete.aspx',
+  federal: '/Paginas/Federal.aspx',
 };
 
 async function getCaixaApiBases(): Promise<string[]> {
@@ -329,21 +330,22 @@ export async function fetchOfficialLotteryResult(
   lotteryId: string,
   contestNum?: number
 ): Promise<LotteryApiData | null> {
+  const apiId = lotteryId === 'loteriafederal' ? 'federal' : lotteryId;
   const apiBases = await getCaixaApiBases();
 
   for (const base of apiBases) {
     const apiUrl = contestNum
-      ? `${base}/api/${lotteryId}/${contestNum}`
-      : `${base}/api/${lotteryId}`;
+      ? `${base}/api/${apiId}/${contestNum}`
+      : `${base}/api/${apiId}`;
 
     try {
       return await fetchCaixaJson(apiUrl, { ...CAIXA_API_HEADERS });
     } catch {}
   }
 
-  const pagePath = CAIXA_PAGE_BY_LOTTERY[lotteryId];
+  const pagePath = CAIXA_PAGE_BY_LOTTERY[apiId];
   if (!pagePath) {
-    return fetchMirrorLotteryResult(lotteryId, contestNum);
+    return fetchMirrorLotteryResult(apiId, contestNum);
   }
 
   try {
@@ -360,16 +362,16 @@ export async function fetchOfficialLotteryResult(
 
     for (const base of apiBases) {
       const apiUrl = contestNum
-        ? `${base}/api/${lotteryId}/${contestNum}`
-        : `${base}/api/${lotteryId}`;
+        ? `${base}/api/${apiId}/${contestNum}`
+        : `${base}/api/${apiId}`;
 
       try {
         return await fetchCaixaJson(apiUrl, headers);
       } catch {}
     }
 
-    return fetchMirrorLotteryResult(lotteryId, contestNum);
+    return fetchMirrorLotteryResult(apiId, contestNum);
   } catch {
-    return fetchMirrorLotteryResult(lotteryId, contestNum);
+    return fetchMirrorLotteryResult(apiId, contestNum);
   }
 }
