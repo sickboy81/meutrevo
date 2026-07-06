@@ -191,6 +191,20 @@ async function init() {
     `);
     console.log('✓ Tabela "push_subscriptions" validada/criada com sucesso.');
 
+    // 9. Tabela de rate limits (persistente)
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS rate_limits (
+        key TEXT PRIMARY KEY,
+        count INTEGER NOT NULL DEFAULT 1,
+        reset_at INTEGER NOT NULL
+      );
+    `);
+    // Index para sweep automático
+    await db.execute(`
+      CREATE INDEX IF NOT EXISTS idx_rate_limits_reset_at ON rate_limits(reset_at);
+    `);
+    console.log('✓ Tabela "rate_limits" validada/criada com sucesso.');
+
     console.log('Banco de dados inicializado com sucesso!');
   } catch (err) {
     console.error('Erro ao inicializar o banco:', err);

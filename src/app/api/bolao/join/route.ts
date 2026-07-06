@@ -47,16 +47,28 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check if full
-    if ((bolao.cotas_taken as number) >= (bolao.cotas_total as number)) {
+    const cotasTaken = bolao.cotas_taken as number;
+    const cotasTotal = bolao.cotas_total as number;
+    const totalCost = bolao.total_cost as number;
+
+    if (cotasTaken >= cotasTotal) {
       return NextResponse.json({ error: 'Bolão lotado!' }, { status: 400 });
     }
 
-    const nextCota = (bolao.cotas_taken as number) + 1;
-    const amountDue =
-      (bolao.total_cost as number) / (bolao.cotas_total as number);
+    // Atomic claim: only succeeds if cotas_taken hasn't changed since read
+    const claimed = await db.execute({
+      sql: `UPDATE boloes SET cotas_taken = cotas_taken + 1, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ? AND cotas_taken = ? AND cotas_taken < cotas_total`,
+      args: [bolao.id, cotasTaken],
+    });
 
-    // Join
+    if (claimed.rowsAffected === 0) {
+      return NextResponse.json({ error: 'Bolão lotado!' }, { status: 400 });
+    }
+
+    const nextCota = cotasTaken + 1;
+    const amountDue = totalCost / cotasTotal;
+
     await db.execute({
       sql: `INSERT INTO bolao_participants (id, bolao_id, user_id, cota_num, name, amount_due)
             VALUES (?, ?, ?, ?, ?, ?)`,
@@ -68,11 +80,6 @@ export async function POST(req: Request) {
         user.name,
         amountDue,
       ],
-    });
-
-    await db.execute({
-      sql: `UPDATE boloes SET cotas_taken = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-      args: [nextCota, bolao.id],
     });
 
     return NextResponse.json({

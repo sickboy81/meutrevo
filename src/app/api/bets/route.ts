@@ -2,6 +2,15 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { db } from '../../../lib/db';
 import { internalServerError, requireRole } from '../../../lib/api-auth';
+import { z } from 'zod';
+
+const createBetSchema = z.object({
+  lottery: z.string().min(1).max(30),
+  numbers: z.string().min(1),
+  contest_num: z.number().int().positive(),
+  cost: z.number().positive().max(10000),
+  prize_won: z.number().min(0).max(500000000),
+});
 
 // 1. Listar apostas registradas do usuário
 export async function GET() {
@@ -25,18 +34,17 @@ export async function POST(request: Request) {
     const { user, response } = await requireRole(['pro', 'admin']);
     if (response || !user) return response;
 
-    const { lottery, numbers, contest_num, cost, prize_won } =
-      await request.json();
+    const body = await request.json();
+    const parsed = createBetSchema.safeParse(body);
 
-    if (
-      !lottery ||
-      !numbers ||
-      contest_num === undefined ||
-      cost === undefined ||
-      prize_won === undefined
-    ) {
-      return NextResponse.json({ error: 'Dados incompletos' }, { status: 400 });
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Dados inválidos', details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
+
+    const { lottery, numbers, contest_num, cost, prize_won } = parsed.data;
 
     const betId = crypto.randomUUID();
 

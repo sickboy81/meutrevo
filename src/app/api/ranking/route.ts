@@ -125,11 +125,50 @@ export async function POST(req: Request) {
   }
 
   try {
+    if (user.role === 'free') {
+      return NextResponse.json(
+        { error: 'Apenas assinantes PRO podem registrar resultados' },
+        { status: 403 }
+      );
+    }
+
     const { lottery, contest_num, numbers_played, hits, prize_won } =
       await req.json();
 
-    if (!lottery || !contest_num || !numbers_played) {
-      return NextResponse.json({ error: 'Dados incompletos' }, { status: 400 });
+    const allowed = [
+      'megasena',
+      'lotofacil',
+      'quina',
+      'lotomania',
+      'maismilionaria',
+      'diadesorte',
+      'duplasena',
+      'timemania',
+    ];
+    if (
+      !lottery ||
+      !contest_num ||
+      !numbers_played ||
+      !allowed.includes(lottery)
+    ) {
+      return NextResponse.json(
+        { error: 'Dados incompletos ou loteria inválida' },
+        { status: 400 }
+      );
+    }
+
+    const contestNum = Number(contest_num);
+    const hitsNum = Number(hits) || 0;
+    const prizeNum = Number(prize_won) || 0;
+
+    if (!Number.isFinite(contestNum) || contestNum < 1) {
+      return NextResponse.json({ error: 'Concurso inválido' }, { status: 400 });
+    }
+    if (hitsNum < 0 || hitsNum > 15 || !Number.isFinite(hitsNum)) {
+      return NextResponse.json({ error: 'Acertos inválidos' }, { status: 400 });
+    }
+    if (prizeNum < 0 || prizeNum > 500000000 || !Number.isFinite(prizeNum)) {
+      return NextResponse.json({ error: 'Prêmio inválido' }, { status: 400 });
     }
 
     const id = `rank_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -141,10 +180,10 @@ export async function POST(req: Request) {
         id,
         user.id,
         lottery,
-        contest_num,
+        contestNum,
         numbers_played,
-        hits || 0,
-        prize_won || 0,
+        hitsNum,
+        prizeNum,
       ],
     });
 

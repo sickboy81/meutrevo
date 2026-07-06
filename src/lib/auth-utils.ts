@@ -10,8 +10,6 @@ export interface AuthUser {
   role: UserRole;
 }
 
-const DEVELOPMENT_JWT_SECRET = 'trevo_ia_default_secret_key_vibecode';
-
 function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET;
 
@@ -25,7 +23,7 @@ function getJwtSecret(): string {
     );
   }
 
-  return DEVELOPMENT_JWT_SECRET;
+  return crypto.randomBytes(64).toString('hex');
 }
 
 export function hashPassword(password: string): string {

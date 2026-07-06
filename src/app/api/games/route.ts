@@ -5,6 +5,7 @@ import {
   internalServerError,
   requireAuthenticatedUser,
 } from '../../../lib/api-auth';
+import { createGameSchema } from '@/schemas/games';
 
 // 1. Listar jogos salvos do usuário
 export async function GET() {
@@ -28,17 +29,24 @@ export async function POST(request: Request) {
     const { user, response } = await requireAuthenticatedUser();
     if (response || !user) return response;
 
-    const { lottery, numbers } = await request.json();
+    const body = await request.json();
+    const parsed = createGameSchema.safeParse(body);
 
-    if (!lottery || !numbers) {
-      return NextResponse.json({ error: 'Dados incompletos' }, { status: 400 });
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Dados inválidos', details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
+
+    const { lottery, numbers } = parsed.data;
+    const numbersJson = JSON.stringify(numbers);
 
     const gameId = crypto.randomUUID();
 
     await db.execute({
       sql: 'INSERT INTO saved_games (id, user_id, lottery, numbers) VALUES (?, ?, ?, ?)',
-      args: [gameId, user.id, lottery, numbers],
+      args: [gameId, user.id, lottery, numbersJson],
     });
 
     return NextResponse.json({ success: true, gameId });

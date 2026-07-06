@@ -158,6 +158,22 @@ export async function DELETE(req: Request) {
   }
 
   try {
+    const ownership = await db.execute({
+      sql: `SELECT creator_id FROM boloes WHERE id = ?`,
+      args: [id],
+    });
+
+    if (ownership.rows.length === 0) {
+      return NextResponse.json(
+        { error: 'Bolão não encontrado' },
+        { status: 404 }
+      );
+    }
+
+    if (ownership.rows[0].creator_id !== user.id) {
+      return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
+    }
+
     await db.execute({
       sql: `DELETE FROM bolao_participants WHERE bolao_id = ?`,
       args: [id],

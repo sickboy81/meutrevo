@@ -4,8 +4,18 @@ import {
   applyRateLimitHeaders,
   consumeRateLimit,
   createRateLimitExceededResponse,
+  setRateLimitStore,
   type RateLimitConfig,
 } from '@/lib/rate-limit';
+
+// Initialize persistent rate limit store (Turso)
+// Falls back to in-memory if Turso is unavailable
+try {
+  const { TursoRateLimitStore } = await import('@/lib/rate-limit');
+  setRateLimitStore(new TursoRateLimitStore());
+} catch {
+  // Keep in-memory store as fallback
+}
 
 const AUTH_BURST_LIMIT: RateLimitConfig = { maxRequests: 5, windowMs: 60_000 };
 const AUTH_SESSION_LIMIT: RateLimitConfig = {
@@ -210,11 +220,17 @@ const CSRF_PROTECTED_ROUTES = [
   '/api/auth/update',
   '/api/auth/delete',
   '/api/auth/reset',
+  '/api/auth/recover',
+  '/api/auth/logout',
   '/api/games',
   '/api/bets',
   '/api/simulations',
   '/api/payments/checkout',
   '/api/config',
+  '/api/bolao',
+  '/api/bolao/join',
+  '/api/ranking',
+  '/api/push/subscribe',
 ];
 
 function verifyCsrfToken(request: NextRequest): boolean {

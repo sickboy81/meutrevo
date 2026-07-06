@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import {
   useState,
   useEffect,
@@ -140,34 +141,42 @@ export default function Home() {
   >({});
 
   // Tab navigation: 'results' | 'generator' | 'simulator' | 'stats' | 'profile'
-  const [activeTab, setActiveTab] = useState<ActiveTab>('results');
+  // Restore from sessionStorage in initializer to avoid useEffect setState
+  const [activeTab, setActiveTab] = useState<ActiveTab>(() => {
+    const validTabs: ActiveTab[] = [
+      'results',
+      'generator',
+      'games',
+      'simulator',
+      'stats',
+      'profile',
+      'admin',
+      'finance',
+      'ranking',
+    ];
+    const stored = sessionStorage.getItem('meu-trevo-activetab');
+    return stored && validTabs.includes(stored as ActiveTab)
+      ? (stored as ActiveTab)
+      : 'results';
+  });
   const [settingsSubTab, setSettingsSubTab] = useState<
     'config' | 'profile' | 'tools'
   >('config');
   const settingsRef = useRef<HTMLDivElement | null>(null);
 
   // Sub-tab for generator: 'smart' | 'wheeling' | 'mystic' | 'bolao'
-  const [genSubTab, setGenSubTab] = useState<GeneratorTab>('smart');
-
-  useEffect(() => {
-    const storedActiveTab = sessionStorage.getItem(
-      'meu-trevo-activetab'
-    ) as ActiveTab | null;
-    const storedGenSubTab = sessionStorage.getItem(
-      'meu-trevo-gensubtab'
-    ) as GeneratorTab | null;
-    const frame = window.requestAnimationFrame(() => {
-      if (storedActiveTab) {
-        setActiveTab(storedActiveTab);
-      }
-
-      if (storedGenSubTab) {
-        setGenSubTab(storedGenSubTab);
-      }
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
+  const [genSubTab, setGenSubTab] = useState<GeneratorTab>(() => {
+    const validGenTabs: GeneratorTab[] = [
+      'smart',
+      'wheeling',
+      'mystic',
+      'bolao',
+    ];
+    const stored = sessionStorage.getItem('meu-trevo-gensubtab');
+    return stored && validGenTabs.includes(stored as GeneratorTab)
+      ? (stored as GeneratorTab)
+      : 'smart';
+  });
 
   // Persist tab state across hot reloads
   useEffect(() => {
@@ -933,7 +942,7 @@ export default function Home() {
       }, 0);
       return () => clearTimeout(timer);
     }
-  }, [activeTab, user]);
+  }, [activeTab, user?.role]);
 
   useEffect(() => {
     if (activeTab === 'finance' && (isPro || user?.role === 'admin')) {
@@ -947,9 +956,10 @@ export default function Home() {
       }, 0);
       return () => clearTimeout(timer);
     }
-  }, [activeTab, isPro, user]);
+  }, [activeTab, isPro, user?.role]);
 
   useEffect(() => {
+    const abort = { cancelled: false };
     const timer = setTimeout(() => {
       void (async () => {
         setLoading(true);
@@ -957,7 +967,7 @@ export default function Home() {
           const res = await fetchWithCsrf(
             `/api/loteria/${activeLottery}?limit=${historyLimit}`
           );
-          if (res.ok) {
+          if (!abort.cancelled && res.ok) {
             const data = await res.json();
             setResult(data.latest);
             setHistory(data.history || [data.latest]);
@@ -969,11 +979,14 @@ export default function Home() {
         } catch (e) {
           console.error(e);
         } finally {
-          setLoading(false);
+          if (!abort.cancelled) setLoading(false);
         }
       })();
     }, 0);
-    return () => clearTimeout(timer);
+    return () => {
+      abort.cancelled = true;
+      clearTimeout(timer);
+    };
   }, [activeLottery, historyLimit]);
 
   useEffect(() => {

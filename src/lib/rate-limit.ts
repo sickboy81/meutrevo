@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { db } from '@/lib/db';
 
 export interface RateLimitConfig {
   maxRequests: number;
@@ -75,6 +76,82 @@ class MemoryRateLimitStore implements RateLimitStore {
 
   clear() {
     this.buckets.clear();
+  }
+}
+
+export class TursoRateLimitStore implements RateLimitStore {
+  private sweepInterval: ReturnType<typeof setInterval> | null = null;
+
+  constructor() {
+    // Sweep expired entries every 5 minutes
+    this.sweepInterval = setInterval(
+      () => {
+        this.sweep(Date.now());
+      },
+      5 * 60 * 1000
+    );
+  }
+
+  async get(key: string): Promise<RateLimitEntry | undefined> {
+    try {
+      const result = await db.execute({
+        sql: 'SELECT count, reset_at FROM rate_limits WHERE key = ?',
+        args: [key],
+      });
+      if (result.rows.length === 0) return undefined;
+      const row = result.rows[0];
+      return { count: Number(row.count), resetAt: Number(row.reset_at) };
+    } catch {
+      return undefined;
+    }
+  }
+
+  async set(key: string, value: RateLimitEntry): Promise<void> {
+    try {
+      await db.execute({
+        sql: 'INSERT OR REPLACE INTO rate_limits (key, count, reset_at) VALUES (?, ?, ?)',
+        args: [key, value.count, value.resetAt],
+      });
+    } catch {
+      // Silently fail - fallback to allowing the request
+    }
+  }
+
+  async delete(key: string): Promise<void> {
+    try {
+      await db.execute({
+        sql: 'DELETE FROM rate_limits WHERE key = ?',
+        args: [key],
+      });
+    } catch {
+      // Silently fail
+    }
+  }
+
+  async sweep(now: number): Promise<void> {
+    try {
+      await db.execute({
+        sql: 'DELETE FROM rate_limits WHERE reset_at < ?',
+        args: [now],
+      });
+    } catch {
+      // Silently fail
+    }
+  }
+
+  async clear(): Promise<void> {
+    try {
+      await db.execute({ sql: 'DELETE FROM rate_limits', args: [] });
+    } catch {
+      // Silently fail
+    }
+  }
+
+  destroy() {
+    if (this.sweepInterval) {
+      clearInterval(this.sweepInterval);
+      this.sweepInterval = null;
+    }
   }
 }
 

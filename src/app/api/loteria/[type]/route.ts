@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { getErrorMessage } from '@/lib/api-auth';
 import { canServeCachedLatest, fetchOfficialLotteryResult } from '@/lib/caixa';
 import { decorateLotteryResult } from '@/lib/lottery-results';
+import { LOTTERY_CONFIGS } from '@/lib/lottery-math';
 
 type LotteryApiData = Record<string, unknown> & {
   numero?: number;
@@ -170,6 +171,17 @@ export async function GET(
   await ensureCacheTable();
 
   const { type } = await params;
+
+  // Validate lottery type
+  if (!LOTTERY_CONFIGS[type]) {
+    return NextResponse.json(
+      {
+        error: `Lottery type '${type}' is not supported. Valid types: ${Object.keys(LOTTERY_CONFIGS).join(', ')}`,
+      },
+      { status: 400 }
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const concurso = searchParams.get('concurso');
   const limitStr = searchParams.get('limit');

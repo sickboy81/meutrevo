@@ -88,7 +88,7 @@ export default function QuickSimulator({
     return () => {
       active = false;
     };
-  }, [activeLottery, history, initialLottery, initialResult]);
+  }, [activeLottery, initialLottery, initialResult]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Real-time analysis for landing quick test board
   const landingQuickStats = useMemo(() => {
