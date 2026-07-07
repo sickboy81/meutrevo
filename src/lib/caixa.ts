@@ -45,7 +45,7 @@ export function canServeCachedLatest(
   );
 }
 
-const CAIXA_API_HEADERS = {
+export const CAIXA_API_HEADERS = {
   'User-Agent':
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
   Accept: 'application/json, text/plain, */*',
@@ -79,7 +79,7 @@ const CAIXA_PAGE_BY_LOTTERY: Record<string, string> = {
   loteca: '/Paginas/Loteca.aspx',
 };
 
-async function getCaixaApiBases(): Promise<string[]> {
+export async function getCaixaApiBases(): Promise<string[]> {
   const bases = new Set<string>([
     'https://servicebus2.caixa.gov.br/portaldeloterias',
     'https://servicebus3.caixa.gov.br/portaldeloterias',
@@ -438,7 +438,7 @@ export async function fetchOfficialLotteryResult(
  * try the Caixa API with retries to get listaResultadoEquipeEsportiva.
  * Production (Vercel) may have slower/timing-out connections to Caixa.
  */
-async function fetchWithRetry(
+export async function fetchWithRetry(
   url: string,
   headers: Record<string, string>,
   retries = 2,

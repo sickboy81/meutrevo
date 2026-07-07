@@ -5,6 +5,9 @@ import {
   canServeCachedLatest,
   fetchOfficialLotteryResult,
   enrichLotecaMatchData,
+  getCaixaApiBases,
+  fetchWithRetry,
+  CAIXA_API_HEADERS,
 } from '@/lib/caixa';
 import { decorateLotteryResult } from '@/lib/lottery-results';
 import { LOTTERY_CONFIGS } from '@/lib/lottery-math';
@@ -303,7 +306,24 @@ export async function GET(
   const cacheState = await getLatestCacheState(type);
 
   // Old rows without provider provenance must be checked upstream immediately.
-  if (canServeCachedLatest(cacheState.age, cacheState.source)) {
+  // For Loteca: also force upstream fetch when latest has empty listaDezenas
+  // (cached mirror data without results).
+  const lotecaCacheEmpty =
+    type === 'loteca' && canServeCachedLatest(cacheState.age, cacheState.source)
+      ? await (async () => {
+          const h = await getHistoryFromDB(type, 1);
+          if (h.length === 0) return false;
+          const d = (
+            decorateLotteryResult(type, h[0] as never) as LotteryApiData
+          ).listaDezenas as string[] | undefined;
+          return !d || d.length === 0;
+        })()
+      : false;
+
+  if (
+    canServeCachedLatest(cacheState.age, cacheState.source) &&
+    !lotecaCacheEmpty
+  ) {
     const localHistory = await getHistoryFromDB(type, limit, filters);
     if (localHistory.length > 0) {
       let latest = decorateLotteryResult(type, localHistory[0] as never);
@@ -312,8 +332,7 @@ export async function GET(
         const dezenas = (latest as LotteryApiData).listaDezenas as
           | string[]
           | undefined;
-        const needsEnrichment = !dezenas || dezenas.length === 0;
-        if (needsEnrichment) {
+        if (!dezenas || dezenas.length === 0) {
           const enriched = await enrichLotecaMatchData(
             latest as LotteryApiData
           );
@@ -327,23 +346,6 @@ export async function GET(
                 enriched as LotteryApiData
               );
             }
-          }
-        }
-        // If latest still has empty listaDezenas (draw in progress),
-        // use the first completed contest as the primary display
-        const latestDezenas = (latest as LotteryApiData).listaDezenas as
-          | string[]
-          | undefined;
-        if (!latestDezenas || latestDezenas.length === 0) {
-          const completedContest = localHistory.find((item) => {
-            const decorated = decorateLotteryResult(type, item as never);
-            const d = (decorated as LotteryApiData).listaDezenas as
-              | string[]
-              | undefined;
-            return d && d.length > 0;
-          });
-          if (completedContest) {
-            latest = decorateLotteryResult(type, completedContest as never);
           }
         }
       }
@@ -402,9 +404,45 @@ export async function GET(
     if (!rawLatest) {
       throw new Error('Nao foi possivel obter o ultimo concurso na Caixa');
     }
-    // For Loteca: if mirror returned empty results, try Caixa API again
+    // For Loteca: ensure we have listaResultadoEquipeEsportiva from Caixa API.
+    // The mirror doesn't provide this, and the latest endpoint may timeout.
+    // Fetch the specific contest directly with retries.
     if (type === 'loteca') {
-      rawLatest = await enrichLotecaMatchData(rawLatest);
+      const dezenas = (rawLatest as LotteryApiData).listaDezenas as
+        | string[]
+        | undefined;
+      if (!dezenas || dezenas.length === 0) {
+        const enriched = await enrichLotecaMatchData(rawLatest);
+        if (enriched) rawLatest = enriched;
+        // If still empty, try fetching the specific contest directly
+        const enrichedDezenas = (rawLatest as LotteryApiData).listaDezenas as
+          | string[]
+          | undefined;
+        const stillEmpty = !enrichedDezenas || enrichedDezenas.length === 0;
+        if (stillEmpty && rawLatest.numero) {
+          try {
+            const apiBases = await getCaixaApiBases();
+            for (const base of apiBases) {
+              try {
+                const specific = await fetchWithRetry(
+                  `${base}/api/loteca/${rawLatest.numero}`,
+                  { ...CAIXA_API_HEADERS },
+                  2,
+                  20000
+                );
+                if (
+                  specific &&
+                  (specific as Record<string, unknown>)
+                    .listaResultadoEquipeEsportiva
+                ) {
+                  rawLatest = specific;
+                  break;
+                }
+              } catch {}
+            }
+          } catch {}
+        }
+      }
     }
     // Decorate before caching so derived fields (e.g. Loteca listaDezenas) are persisted
     const latestData = decorateLotteryResult(
