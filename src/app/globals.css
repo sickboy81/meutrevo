@@ -259,6 +259,16 @@ body {
   overflow: hidden;
 }
 
+.ball-federal {
+  width: auto;
+  min-width: 64px;
+  height: 36px;
+  border-radius: 20px;
+  padding: 0 10px;
+  font-size: 0.72rem;
+  letter-spacing: 0.5px;
+}
+
 .ball::after {
   content: '';
   position: absolute;

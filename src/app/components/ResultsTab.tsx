@@ -158,7 +158,7 @@ export default React.memo(function ResultsTab({
           {getCleanDezenas(result).map((dezena, idx) => (
             <span
               key={idx}
-              className="ball neon"
+              className={`ball neon${activeLottery === 'loteriafederal' ? ' ball-federal' : ''}`}
               style={
                 {
                   '--ball-color': config.color,
@@ -562,9 +562,15 @@ export default React.memo(function ResultsTab({
                     <span
                       key={dIdx}
                       style={{
-                        width: '20px',
+                        width:
+                          activeLottery === 'loteriafederal' ? 'auto' : '20px',
+                        minWidth:
+                          activeLottery === 'loteriafederal' ? '40px' : '20px',
                         height: '20px',
-                        borderRadius: '50%',
+                        borderRadius:
+                          activeLottery === 'loteriafederal' ? '10px' : '50%',
+                        padding:
+                          activeLottery === 'loteriafederal' ? '0 4px' : '0',
                         background: 'rgba(255,255,255,0.03)',
                         border: `1px solid ${config.color}`,
                         color: 'white',

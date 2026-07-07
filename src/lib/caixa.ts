@@ -80,8 +80,8 @@ const CAIXA_PAGE_BY_LOTTERY: Record<string, string> = {
 
 async function getCaixaApiBases(): Promise<string[]> {
   const bases = new Set<string>([
-    'https://servicebus3.caixa.gov.br/portaldeloterias',
     'https://servicebus2.caixa.gov.br/portaldeloterias',
+    'https://servicebus3.caixa.gov.br/portaldeloterias',
   ]);
 
   try {
