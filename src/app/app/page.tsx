@@ -143,6 +143,7 @@ export default function Home() {
   // Tab navigation: 'results' | 'generator' | 'simulator' | 'stats' | 'profile'
   // Restore from sessionStorage in initializer to avoid useEffect setState
   const [activeTab, setActiveTab] = useState<ActiveTab>(() => {
+    if (typeof window === 'undefined') return 'results';
     const validTabs: ActiveTab[] = [
       'results',
       'generator',
@@ -166,6 +167,7 @@ export default function Home() {
 
   // Sub-tab for generator: 'smart' | 'wheeling' | 'mystic' | 'bolao'
   const [genSubTab, setGenSubTab] = useState<GeneratorTab>(() => {
+    if (typeof window === 'undefined') return 'smart';
     const validGenTabs: GeneratorTab[] = [
       'smart',
       'wheeling',
