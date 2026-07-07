@@ -361,19 +361,52 @@ export async function GET(
       { headers: { 'X-Cache': 'MISS', 'X-Cache-Source': 'caixa' } }
     );
   } catch (err: unknown) {
-    // Caixa is offline → always fall back to DB
+    // Caixa is offline → always fall back to DB, even with incomplete entries
     const message = getErrorMessage(err);
     console.warn(`Caixa API unavailable (${message}). Serving from DB cache.`);
 
-    const cachedHistory = await getHistoryFromDB(type, limit, filters);
-    if (cachedHistory.length > 0) {
-      return NextResponse.json(
-        {
-          latest: decorateLotteryResult(type, cachedHistory[0] as never),
-          history: decorateResults(type, cachedHistory),
-        },
-        { headers: { 'X-Cache': 'HIT', 'X-Cache-Source': 'db-fallback' } }
+    try {
+      let fbSql = `SELECT data_json FROM lottery_cache WHERE lottery = ?`;
+      const fbArgs: (string | number)[] = [type];
+      if (filters?.dateStart) {
+        fbSql += ` AND draw_date >= ?`;
+        fbArgs.push(filters.dateStart);
+      }
+      if (filters?.dateEnd) {
+        fbSql += ` AND draw_date <= ?`;
+        fbArgs.push(filters.dateEnd);
+      }
+      if (filters?.contestMin) {
+        fbSql += ` AND contest_num >= ?`;
+        fbArgs.push(filters.contestMin);
+      }
+      if (filters?.contestMax) {
+        fbSql += ` AND contest_num <= ?`;
+        fbArgs.push(filters.contestMax);
+      }
+      fbSql += ` ORDER BY contest_num DESC LIMIT ?`;
+      fbArgs.push(limit);
+
+      const fbRes = await db.execute({ sql: fbSql, args: fbArgs });
+      const cachedHistory = fbRes.rows.map(
+        (row) =>
+          decorateLotteryResult(
+            type,
+            JSON.parse(row.data_json as string) as never
+          ) as LotteryApiData
       );
+
+      if (cachedHistory.length > 0) {
+        return NextResponse.json(
+          {
+            latest: decorateLotteryResult(type, cachedHistory[0] as never),
+            history: decorateResults(type, cachedHistory),
+          },
+          { headers: { 'X-Cache': 'HIT', 'X-Cache-Source': 'db-fallback' } }
+        );
+      }
+    } catch {
+      // DB also failed — fall through to 503
     }
 
     return NextResponse.json(
