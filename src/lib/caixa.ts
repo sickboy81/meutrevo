@@ -343,10 +343,11 @@ async function fetchMirrorLotteryResult(
           }
           const html = await response.text();
           const parsed = source.parse(html);
+          const dezenasCount = Array.isArray(parsed?.listaDezenas)
+            ? parsed.listaDezenas.length
+            : 0;
           console.log(
-            `[LOTACA_DEBUG] ${source.url} parsed:`,
-            parsed?.listaDezenas?.length ?? 0,
-            'results'
+            `[LOTACA_DEBUG] ${source.url} parsed: ${dezenasCount} results`
           );
           if (!parsed || (contestNum && parsed.numero !== contestNum)) continue;
           return parsed;
