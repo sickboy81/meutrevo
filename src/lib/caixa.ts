@@ -335,8 +335,19 @@ async function fetchMirrorLotteryResult(
             cache: 'no-store',
             signal: AbortSignal.timeout(12000),
           });
-          if (!response.ok) continue;
-          const parsed = source.parse(await response.text());
+          if (!response.ok) {
+            console.warn(
+              `[LOTACA_DEBUG] ${source.url} returned ${response.status}`
+            );
+            continue;
+          }
+          const html = await response.text();
+          const parsed = source.parse(html);
+          console.log(
+            `[LOTACA_DEBUG] ${source.url} parsed:`,
+            parsed?.listaDezenas?.length ?? 0,
+            'results'
+          );
           if (!parsed || (contestNum && parsed.numero !== contestNum)) continue;
           return parsed;
         } catch {}

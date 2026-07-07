@@ -296,6 +296,12 @@ export async function GET(
   // STALE or EMPTY: check Caixa for the latest
   try {
     const rawLatest = await fetchOfficialLotteryResult(type);
+    console.log(
+      `[LOTACA_DEBUG] upstream result for ${type}:`,
+      rawLatest
+        ? `num=${rawLatest.numero}, dezenas=${Array.isArray(rawLatest.listaDezenas) ? rawLatest.listaDezenas.length : 'N/A'}`
+        : 'null'
+    );
     if (!rawLatest) {
       throw new Error('Nao foi possivel obter o ultimo concurso na Caixa');
     }
