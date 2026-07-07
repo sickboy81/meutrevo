@@ -388,13 +388,15 @@ export async function GET(
       fbArgs.push(limit);
 
       const fbRes = await db.execute({ sql: fbSql, args: fbArgs });
-      const cachedHistory = fbRes.rows.map(
-        (row) =>
-          decorateLotteryResult(
-            type,
-            JSON.parse(row.data_json as string) as never
-          ) as LotteryApiData
-      );
+      const cachedHistory = fbRes.rows
+        .map(
+          (row) =>
+            decorateLotteryResult(
+              type,
+              JSON.parse(row.data_json as string) as never
+            ) as LotteryApiData
+        )
+        .filter((item) => !isIncompleteCachedResult(type, item));
 
       if (cachedHistory.length > 0) {
         return NextResponse.json(

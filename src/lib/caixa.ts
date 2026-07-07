@@ -76,6 +76,7 @@ const CAIXA_PAGE_BY_LOTTERY: Record<string, string> = {
   timemania: '/Paginas/Timemania.aspx',
   supersete: '/Paginas/Super-Sete.aspx',
   federal: '/Paginas/Federal.aspx',
+  loteca: '/Paginas/Loteca.aspx',
 };
 
 async function getCaixaApiBases(): Promise<string[]> {
@@ -263,6 +264,20 @@ export function parseLotecaMirrorHtml(html: string): LotteryApiData | null {
     }
   }
 
+  const estimativaMatch = html.match(
+    /class="info-card-value">\s*R\$\s*([^<]+)<\/div>/i
+  );
+  let valorEstimado = 0;
+  if (estimativaMatch) {
+    valorEstimado =
+      Number(
+        estimativaMatch[1]
+          .replace(/[^\d,.]/g, '')
+          .replace(/\./g, '')
+          .replace(',', '.')
+      ) || 0;
+  }
+
   return {
     numero: contest,
     numeroConcursoProximo: contest + 1,
@@ -270,7 +285,7 @@ export function parseLotecaMirrorHtml(html: string): LotteryApiData | null {
     dataProximoConcurso: nextDateMatch?.[1] || '',
     dezenasSorteadasOrdemSorteio: matchResults,
     listaDezenas: matchResults,
-    valorEstimadoProximoConcurso: 0,
+    valorEstimadoProximoConcurso: valorEstimado,
     acumulado: prizes[0]?.numeroDeGanhadores === 0,
     listaRateioPremio: prizes,
     fonteDados: 'mirror',
@@ -287,6 +302,21 @@ export function parseLotecaNewsHtml(html: string): LotteryApiData | null {
   if (!contestMatch || !drawDateMatch) return null;
 
   const contest = Number(contestMatch[1]);
+
+  const estimativaMatch = html.match(
+    /class="detail-resp">\s*R\$\s*([^<]+)<\/p>/i
+  );
+  let valorEstimado = 0;
+  if (estimativaMatch) {
+    valorEstimado =
+      Number(
+        estimativaMatch[1]
+          .replace(/[^\d,.]/g, '')
+          .replace(/\./g, '')
+          .replace(',', '.')
+      ) || 0;
+  }
+
   return {
     numero: contest,
     numeroConcursoProximo: contest + 1,
@@ -294,7 +324,7 @@ export function parseLotecaNewsHtml(html: string): LotteryApiData | null {
     dataProximoConcurso: '',
     dezenasSorteadasOrdemSorteio: [],
     listaDezenas: [],
-    valorEstimadoProximoConcurso: 0,
+    valorEstimadoProximoConcurso: valorEstimado,
     acumulado: false,
     listaRateioPremio: [],
     fonteDados: 'mirror',

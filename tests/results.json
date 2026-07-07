@@ -1,0 +1,265 @@
+{
+  "summary": {
+    "passed": 49,
+    "failed": 0,
+    "warned": 2,
+    "total": 51
+  },
+  "results": [
+    {
+      "test": "Landing page carrega",
+      "status": "PASS",
+      "details": "3.7s"
+    },
+    {
+      "test": "Título correto",
+      "status": "PASS",
+      "details": "Meu Trevo - Resultados & Gerador Estatístico de Loterias"
+    },
+    {
+      "test": "Tempo de carregamento",
+      "status": "PASS",
+      "details": "3.7s"
+    },
+    {
+      "test": "Redireciona para login (app protegido)",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "test": "Formulário de login tem inputs",
+      "status": "PASS",
+      "details": "2 inputs"
+    },
+    {
+      "test": "Botão 'Entrar' existe",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "test": "Botão 'Cadastrar' existe",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "test": "GET /api/health - status 200",
+      "status": "PASS",
+      "details": "status=200"
+    },
+    {
+      "test": "GET /api/config - status 200",
+      "status": "PASS",
+      "details": "status=200"
+    },
+    {
+      "test": "GET /api/loteria/megasena - status 200",
+      "status": "PASS",
+      "details": "status=200"
+    },
+    {
+      "test": "API retorna dados de resultado",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "test": "GET /api/loteria/megasena - status 200",
+      "status": "PASS",
+      "details": "status=200"
+    },
+    {
+      "test": "GET /api/loteria/lotofacil - status 200",
+      "status": "PASS",
+      "details": "status=200"
+    },
+    {
+      "test": "GET /api/loteria/quina - status 200",
+      "status": "PASS",
+      "details": "status=200"
+    },
+    {
+      "test": "GET /api/loteria/lotomania - status 200",
+      "status": "PASS",
+      "details": "status=200"
+    },
+    {
+      "test": "GET /api/loteria/maismilionaria - status 200",
+      "status": "PASS",
+      "details": "status=200"
+    },
+    {
+      "test": "GET /api/loteria/diadesorte - status 200",
+      "status": "PASS",
+      "details": "status=200"
+    },
+    {
+      "test": "GET /api/loteria/duplasena - status 200",
+      "status": "PASS",
+      "details": "status=200"
+    },
+    {
+      "test": "GET /api/loteria/timemania - status 200",
+      "status": "PASS",
+      "details": "status=200"
+    },
+    {
+      "test": "GET /api/games (sem auth) - 401/403",
+      "status": "PASS",
+      "details": "status=401"
+    },
+    {
+      "test": "GET /api/bets (sem auth) - 401/403",
+      "status": "PASS",
+      "details": "status=401"
+    },
+    {
+      "test": "SQL injection bloqueado",
+      "status": "PASS",
+      "details": "status=400"
+    },
+    {
+      "test": "XSS injection bloqueado",
+      "status": "PASS",
+      "details": "status=400"
+    },
+    {
+      "test": "Lottery inválida - 400/404",
+      "status": "PASS",
+      "details": "status=400"
+    },
+    {
+      "test": "Limit excessivo tratado",
+      "status": "PASS",
+      "details": "status=200"
+    },
+    {
+      "test": "Login com credenciais inválidas - 401",
+      "status": "PASS",
+      "details": "status=401"
+    },
+    {
+      "test": "Tem <title>",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "test": "Tem meta description",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "test": "Tem meta keywords",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "test": "Tem manifest",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "test": "Menciona loterias",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "test": "Tem call-to-action",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "test": "Sem dangerouslySetInnerHTML no HTML",
+      "status": "WARN",
+      "details": ""
+    },
+    {
+      "test": "Scripts no HTML: 58",
+      "status": "WARN",
+      "details": ""
+    },
+    {
+      "test": "Tempo médio de carga landing: 1.28s",
+      "status": "PASS",
+      "details": "min=1.28s max=1.29s"
+    },
+    {
+      "test": "Mobile: viewport meta tag",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "test": "Mobile: conteúdo renderizado",
+      "status": "PASS",
+      "details": "100821 chars"
+    },
+    {
+      "test": "Sem erros de hydration",
+      "status": "PASS",
+      "details": "0 erros"
+    },
+    {
+      "test": "Sem erros críticos no console",
+      "status": "PASS",
+      "details": "0 erros"
+    },
+    {
+      "test": "Screenshot landing",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "test": "Screenshot login",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "test": "TypeScript compilation",
+      "status": "PASS",
+      "details": "verificado com tsc --noEmit (0 erros)"
+    },
+    {
+      "test": "SQL injection: todas queries parametrizadas",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "test": "XSS: dangerouslySetInnerHTML apenas em JSON-LD estático",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "test": "CSRF: Double Submit Cookie Pattern implementado",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "test": "Auth: rotas protegidas verificam sessão",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "test": "Rate limiting: proxy global + rotas críticas",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "test": "Secrets: .env em .gitignore",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "test": "Input validation: schemas Zod em auth routes",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "test": "Rate limiting persistente (Turso)",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "test": "CSRF: rotas bolao/ranking/push protegidas",
+      "status": "PASS",
+      "details": ""
+    }
+  ]
+}
