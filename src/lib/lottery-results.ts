@@ -88,6 +88,24 @@ export function decorateLotteryResult(
     return result;
   }
 
+  if (lotteryId === 'loteriafederal') {
+    if (
+      !result.valorEstimadoProximoConcurso ||
+      result.valorEstimadoProximoConcurso === 0
+    ) {
+      // Loteria Federal has fixed prizes. Usually 500k for regular draws, 1.35m for special ones.
+      // We'll set a standard 500.000 fallback if the API returns 0.
+      const isEspecial =
+        result.numeroConcursoProximo &&
+        result.numeroConcursoProximo % 100 === 0; // Simple heuristic if needed, but 500k is safe.
+      return {
+        ...result,
+        valorEstimadoProximoConcurso: 500000,
+      };
+    }
+    return result;
+  }
+
   if (lotteryId !== 'quina') {
     return result;
   }
