@@ -237,38 +237,29 @@ export function parseLotecaMirrorHtml(html: string): LotteryApiData | null {
     .filter((prize): prize is NonNullable<typeof prize> => prize !== null);
 
   // Extract match results (14 games, each result is 0, 1, or 2)
+  // lotocarva.com format: each game row has 3 td-palpite cells (1, X, 2)
+  // The cell with "palpite-selected" class is the winning prediction
   const matchResults: string[] = [];
   for (const row of rows) {
-    // Extract cells with their class attributes
-    const cellMatches = [...row[1].matchAll(/<td([^>]*)>([\s\S]*?)<\/td>/gi)];
-    if (cellMatches.length < 5) continue;
-    // Skip prize/summary rows
-    const firstText = decodeHtmlText(cellMatches[0][2]).trim();
-    if (/acertos/i.test(firstText)) continue;
+    const rowHtml = row[1];
+    const palpiteCells = rowHtml.match(
+      /<td[^>]*class="[^"]*td-palpite[^"]*"[^>]*>([^<]*)<\/td>/gi
+    );
+    if (!palpiteCells || palpiteCells.length < 3) continue;
 
-    // lotocarva.com format: <td class="td-palpite palpite-selected">N</td>
-    // where N is the result (0=draw, 1=home win, 2=away win)
-    let result = '';
-    for (const cell of cellMatches) {
-      const attrs = cell[1];
-      const text = decodeHtmlText(cell[2]).trim();
-      if (/palpite-selected/i.test(attrs) && /^[012]$/.test(text)) {
-        result = text;
+    // Find which of the 3 cells has palpite-selected
+    let selectedIdx = -1;
+    for (let i = 0; i < palpiteCells.length; i++) {
+      if (/palpite-selected/i.test(palpiteCells[i])) {
+        selectedIdx = i;
         break;
       }
     }
-    // Fallback: check if any cell contains just 0, 1, or 2
-    if (!result) {
-      for (const cell of cellMatches) {
-        const text = decodeHtmlText(cell[2]).trim();
-        if (/^[012]$/.test(text)) {
-          result = text;
-          break;
-        }
-      }
-    }
-    if (result) {
-      matchResults.push(result);
+    if (selectedIdx >= 0) {
+      // 0 = home win (1), 1 = draw (0), 2 = away win (2)
+      matchResults.push(
+        selectedIdx === 0 ? '1' : selectedIdx === 1 ? '0' : '2'
+      );
     }
   }
 
