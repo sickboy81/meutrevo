@@ -101,21 +101,18 @@ export function decorateLotteryResult(
 
     // Fallback next draw date: Loteria Federal draws Mon-Sat.
     // The API often returns empty string for dataProximoConcurso.
-    if (!result.dataProximoConcurso && result.dataApuracao) {
-      const parsed = parseBrazilDate(result.dataApuracao);
-      if (parsed) {
-        // Start from the day after the current draw
-        const next = new Date(parsed);
+    if (!result.dataProximoConcurso) {
+      // Calculate the next business day from today (never in the past)
+      const now = new Date();
+      const next = new Date(now);
+      // If today is Sunday, move to Monday; otherwise use today
+      if (next.getUTCDay() === 0) {
         next.setUTCDate(next.getUTCDate() + 1);
-        // Skip Sundays (0 = Sunday)
-        if (next.getUTCDay() === 0) {
-          next.setUTCDate(next.getUTCDate() + 1);
-        }
-        const dd = String(next.getUTCDate()).padStart(2, '0');
-        const mm = String(next.getUTCMonth() + 1).padStart(2, '0');
-        const yyyy = next.getUTCFullYear();
-        patch.dataProximoConcurso = `${dd}/${mm}/${yyyy}`;
       }
+      const dd = String(next.getUTCDate()).padStart(2, '0');
+      const mm = String(next.getUTCMonth() + 1).padStart(2, '0');
+      const yyyy = next.getUTCFullYear();
+      patch.dataProximoConcurso = `${dd}/${mm}/${yyyy}`;
     }
 
     if (Object.keys(patch).length > 0) {
