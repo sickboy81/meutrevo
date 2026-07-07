@@ -89,19 +89,37 @@ export function decorateLotteryResult(
   }
 
   if (lotteryId === 'loteriafederal') {
+    const patch: Partial<LotteryResult> = {};
+
+    // Fallback prize: Loteria Federal has fixed prizes (usually R$ 500.000)
     if (
       !result.valorEstimadoProximoConcurso ||
       result.valorEstimadoProximoConcurso === 0
     ) {
-      // Loteria Federal has fixed prizes. Usually 500k for regular draws, 1.35m for special ones.
-      // We'll set a standard 500.000 fallback if the API returns 0.
-      const isEspecial =
-        result.numeroConcursoProximo &&
-        result.numeroConcursoProximo % 100 === 0; // Simple heuristic if needed, but 500k is safe.
-      return {
-        ...result,
-        valorEstimadoProximoConcurso: 500000,
-      };
+      patch.valorEstimadoProximoConcurso = 500000;
+    }
+
+    // Fallback next draw date: Loteria Federal draws Mon-Sat.
+    // The API often returns empty string for dataProximoConcurso.
+    if (!result.dataProximoConcurso && result.dataApuracao) {
+      const parsed = parseBrazilDate(result.dataApuracao);
+      if (parsed) {
+        // Start from the day after the current draw
+        const next = new Date(parsed);
+        next.setUTCDate(next.getUTCDate() + 1);
+        // Skip Sundays (0 = Sunday)
+        if (next.getUTCDay() === 0) {
+          next.setUTCDate(next.getUTCDate() + 1);
+        }
+        const dd = String(next.getUTCDate()).padStart(2, '0');
+        const mm = String(next.getUTCMonth() + 1).padStart(2, '0');
+        const yyyy = next.getUTCFullYear();
+        patch.dataProximoConcurso = `${dd}/${mm}/${yyyy}`;
+      }
+    }
+
+    if (Object.keys(patch).length > 0) {
+      return { ...result, ...patch };
     }
     return result;
   }
