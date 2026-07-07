@@ -239,16 +239,36 @@ export function parseLotecaMirrorHtml(html: string): LotteryApiData | null {
   // Extract match results (14 games, each result is 0, 1, or 2)
   const matchResults: string[] = [];
   for (const row of rows) {
-    const cells = [...row[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map(
-      (cell) => decodeHtmlText(cell[1]).trim()
-    );
-    // Game result rows have 5+ cells; last cell is the result (0, 1, or 2)
-    // Prize rows contain "acertos" — skip those
-    if (cells.length >= 5 && !/acertos/i.test(cells[0])) {
-      const lastCell = cells[cells.length - 1];
-      if (/^[012]$/.test(lastCell)) {
-        matchResults.push(lastCell);
+    // Extract cells with their class attributes
+    const cellMatches = [...row[1].matchAll(/<td([^>]*)>([\s\S]*?)<\/td>/gi)];
+    if (cellMatches.length < 5) continue;
+    // Skip prize/summary rows
+    const firstText = decodeHtmlText(cellMatches[0][2]).trim();
+    if (/acertos/i.test(firstText)) continue;
+
+    // lotocarva.com format: <td class="td-palpite palpite-selected">N</td>
+    // where N is the result (0=draw, 1=home win, 2=away win)
+    let result = '';
+    for (const cell of cellMatches) {
+      const attrs = cell[1];
+      const text = decodeHtmlText(cell[2]).trim();
+      if (/palpite-selected/i.test(attrs) && /^[012]$/.test(text)) {
+        result = text;
+        break;
       }
+    }
+    // Fallback: check if any cell contains just 0, 1, or 2
+    if (!result) {
+      for (const cell of cellMatches) {
+        const text = decodeHtmlText(cell[2]).trim();
+        if (/^[012]$/.test(text)) {
+          result = text;
+          break;
+        }
+      }
+    }
+    if (result) {
+      matchResults.push(result);
     }
   }
 
