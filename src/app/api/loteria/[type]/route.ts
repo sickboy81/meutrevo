@@ -153,8 +153,13 @@ async function fetchAndCacheContest(
   contestNum: number
 ): Promise<LotteryApiData | null> {
   try {
-    const data = await fetchOfficialLotteryResult(lotteryId, contestNum);
-    if (!data) return null;
+    const raw = await fetchOfficialLotteryResult(lotteryId, contestNum);
+    if (!raw) return null;
+    // Decorate before caching so derived fields (e.g. Loteca listaDezenas) are persisted
+    const data = decorateLotteryResult(
+      lotteryId,
+      raw as never
+    ) as LotteryApiData;
     if (data.numero) {
       await saveToCache(lotteryId, data.numero, data.dataApuracao || '', data);
     }
@@ -260,10 +265,15 @@ export async function GET(
 
   // STALE or EMPTY: check Caixa for the latest
   try {
-    const latestData = await fetchOfficialLotteryResult(type);
-    if (!latestData) {
+    const rawLatest = await fetchOfficialLotteryResult(type);
+    if (!rawLatest) {
       throw new Error('Nao foi possivel obter o ultimo concurso na Caixa');
     }
+    // Decorate before caching so derived fields (e.g. Loteca listaDezenas) are persisted
+    const latestData = decorateLotteryResult(
+      type,
+      rawLatest as never
+    ) as LotteryApiData;
 
     if (latestData.numero) {
       const latestNum = latestData.numero;
