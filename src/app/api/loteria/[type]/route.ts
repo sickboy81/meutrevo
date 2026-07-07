@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getErrorMessage } from '@/lib/api-auth';
-import { canServeCachedLatest, fetchOfficialLotteryResult } from '@/lib/caixa';
+import {
+  canServeCachedLatest,
+  fetchOfficialLotteryResult,
+  enrichLotecaMatchData,
+} from '@/lib/caixa';
 import { decorateLotteryResult } from '@/lib/lottery-results';
 import { LOTTERY_CONFIGS } from '@/lib/lottery-math';
 
@@ -26,13 +30,11 @@ function isIncompleteCachedResult(
   if (!item) return true;
   if (lotteryId !== 'loteca') return false;
 
-  const dezenas = Array.isArray(item.listaDezenas)
-    ? item.listaDezenas
-    : Array.isArray(item.dezenasSorteadasOrdemSorteio)
-      ? item.dezenasSorteadasOrdemSorteio
-      : [];
+  // Only discard records that have no contest number at all (completely broken)
+  if (!item.numero) return true;
 
-  return dezenas.length < 14;
+  // Accept records even with partial dezenas — they're better than nothing for history
+  return false;
 }
 
 // Ensure the cache table is initialized (idempotent)
@@ -245,6 +247,27 @@ export async function GET(
     // 1. Check DB first — no TTL needed for historical data
     const cached = await getContestFromDB(type, contestNumVal);
     if (cached) {
+      // For Loteca: if cached data has empty listaDezenas, try Caixa API
+      if (type === 'loteca') {
+        const enriched = await enrichLotecaMatchData(cached);
+        if (enriched !== cached) {
+          await saveToCache(
+            type,
+            contestNumVal,
+            enriched?.dataApuracao || '',
+            enriched!
+          );
+          return NextResponse.json(
+            decorateLotteryResult(type, enriched as never),
+            {
+              headers: {
+                'X-Cache': 'ENRICHED',
+                'X-Cache-Source': 'caixa-retry',
+              },
+            }
+          );
+        }
+      }
       return NextResponse.json(decorateLotteryResult(type, cached as never), {
         headers: { 'X-Cache': 'HIT', 'X-Cache-Source': 'db' },
       });
@@ -283,9 +306,64 @@ export async function GET(
   if (canServeCachedLatest(cacheState.age, cacheState.source)) {
     const localHistory = await getHistoryFromDB(type, limit, filters);
     if (localHistory.length > 0) {
+      let latest = decorateLotteryResult(type, localHistory[0] as never);
+      // For Loteca: if cached data has empty listaDezenas, try Caixa API
+      if (type === 'loteca') {
+        const enriched = await enrichLotecaMatchData(latest as LotteryApiData);
+        if (enriched && enriched !== latest) {
+          latest = decorateLotteryResult(type, enriched as never);
+          if (enriched.numero) {
+            await saveToCache(
+              type,
+              enriched.numero,
+              enriched.dataApuracao || '',
+              enriched as LotteryApiData
+            );
+          }
+        }
+      }
+      // Fire-and-forget backfill when DB has fewer results than requested
+      if (
+        limit > 1 &&
+        localHistory.length < limit &&
+        !filters.dateStart &&
+        !filters.dateEnd &&
+        !filters.contestMin &&
+        !filters.contestMax
+      ) {
+        const latestNum = (localHistory[0] as LotteryApiData).numero;
+        if (latestNum) {
+          const rangeStart = Math.max(1, latestNum - limit + 1);
+          db.execute({
+            sql: `SELECT contest_num FROM lottery_cache WHERE lottery = ? AND contest_num >= ? AND contest_num <= ?`,
+            args: [type, rangeStart, latestNum],
+          })
+            .then((cachedNumsRes) => {
+              const cachedSet = new Set(
+                cachedNumsRes.rows.map((r) => r.contest_num as number)
+              );
+              const missing: number[] = [];
+              for (let n = latestNum - 1; n >= rangeStart; n--) {
+                if (!cachedSet.has(n)) missing.push(n);
+              }
+              if (missing.length > 0) {
+                const BATCH = 20;
+                const runBatch = (i: number) => {
+                  if (i >= missing.length) return;
+                  const batch = missing.slice(i, i + BATCH);
+                  Promise.all(
+                    batch.map((num) => fetchAndCacheContest(type, num))
+                  ).then(() => runBatch(i + BATCH));
+                };
+                runBatch(0);
+              }
+            })
+            .catch(() => {});
+        }
+      }
       return NextResponse.json(
         {
-          latest: decorateLotteryResult(type, localHistory[0] as never),
+          latest,
           history: decorateResults(type, localHistory),
         },
         { headers: { 'X-Cache': 'HIT', 'X-Cache-Source': 'db-fresh' } }
@@ -295,9 +373,13 @@ export async function GET(
 
   // STALE or EMPTY: check Caixa for the latest
   try {
-    const rawLatest = await fetchOfficialLotteryResult(type);
+    let rawLatest = await fetchOfficialLotteryResult(type);
     if (!rawLatest) {
       throw new Error('Nao foi possivel obter o ultimo concurso na Caixa');
+    }
+    // For Loteca: if mirror returned empty results, try Caixa API again
+    if (type === 'loteca') {
+      rawLatest = await enrichLotecaMatchData(rawLatest);
     }
     // Decorate before caching so derived fields (e.g. Loteca listaDezenas) are persisted
     const latestData = decorateLotteryResult(

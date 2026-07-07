@@ -300,7 +300,32 @@ export default React.memo(function ResultsTab({
           }}
         >
           <span>
-            Próximo sorteio: <strong>{result.dataProximoConcurso}</strong>
+            {(() => {
+              if (result.dataProximoConcurso) {
+                const [d, m, y] = result.dataProximoConcurso
+                  .split('/')
+                  .map(Number);
+                const nextDate = new Date(y, m - 1, d);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                if (nextDate < today) {
+                  return activeLottery === 'loteca' ? (
+                    <>
+                      <strong>Próximo Concurso em andamento</strong>
+                    </>
+                  ) : (
+                    <>
+                      <strong>Resultado em breve</strong>
+                    </>
+                  );
+                }
+              }
+              return (
+                <>
+                  Próximo sorteio: <strong>{result.dataProximoConcurso}</strong>
+                </>
+              );
+            })()}
           </span>
           {result.localSorteio && (
             <span>

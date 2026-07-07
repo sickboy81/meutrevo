@@ -202,10 +202,10 @@ function decodeHtmlText(value: string): string {
 export function parseLotecaMirrorHtml(html: string): LotteryApiData | null {
   const contestMatch = html.match(/Concurso\s+(\d{3,})/i);
   const drawDateMatch = html.match(
-    /Sorteio\s+realizado\s+em:\s*<strong>(\d{2}\/\d{2}\/\d{4})<\/strong>/i
+    /Sorteio\s+realizado\s+em:\s*(?:\*\*|<strong>)?(\d{2}\/\d{2}\/\d{4})(?:\*\*|<\/strong>)?/i
   );
   const nextDateMatch = html.match(
-    /Pr[oó]ximo\s+sorteio:\s*<strong>(\d{2}\/\d{2}\/\d{4})<\/strong>/i
+    /Pr[oó]ximo\s+sorteio:\s*(?:\*\*|<strong>)?(\d{2}\/\d{2}\/\d{4})(?:\*\*|<\/strong>)?/i
   );
 
   if (!contestMatch || !drawDateMatch) {
@@ -431,4 +431,38 @@ export async function fetchOfficialLotteryResult(
   } catch {
     return fetchMirrorLotteryResult(apiId, contestNum);
   }
+}
+
+/**
+ * For Loteca: when the mirror result has empty listaDezenas,
+ * try the Caixa API one more time to get listaResultadoEquipeEsportiva.
+ * This handles the case where the Caixa API was temporarily unavailable
+ * on the first attempt.
+ */
+export async function enrichLotecaMatchData(
+  result: LotteryApiData | null
+): Promise<LotteryApiData | null> {
+  if (!result) return null;
+  const dezenas = result.listaDezenas as string[] | undefined;
+  if (dezenas && dezenas.length > 0) return result;
+
+  try {
+    const apiBases = await getCaixaApiBases();
+    for (const base of apiBases) {
+      const apiUrl = `${base}/api/loteca/${result.numero}`;
+      try {
+        const caixaData = await fetchCaixaJson(apiUrl, {
+          ...CAIXA_API_HEADERS,
+        });
+        if (
+          caixaData &&
+          (caixaData as Record<string, unknown>).listaResultadoEquipeEsportiva
+        ) {
+          return caixaData;
+        }
+      } catch {}
+    }
+  } catch {}
+
+  return result;
 }
