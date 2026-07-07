@@ -1692,7 +1692,8 @@ export default function Home() {
     (lotResult: LotteryResult) => {
       const list =
         lotResult.listaDezenas || lotResult.dezenasSorteadasOrdemSorteio || [];
-      if (activeLottery === 'supersete') {
+      // Loteca & supersete: order matters, don't sort
+      if (activeLottery === 'supersete' || activeLottery === 'loteca') {
         return list;
       }
       return [...list]

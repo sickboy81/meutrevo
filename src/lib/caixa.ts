@@ -236,13 +236,29 @@ export function parseLotecaMirrorHtml(html: string): LotteryApiData | null {
     })
     .filter((prize): prize is NonNullable<typeof prize> => prize !== null);
 
+  // Extract match results (14 games, each result is 0, 1, or 2)
+  const matchResults: string[] = [];
+  for (const row of rows) {
+    const cells = [...row[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map(
+      (cell) => decodeHtmlText(cell[1]).trim()
+    );
+    // Game result rows have 5+ cells; last cell is the result (0, 1, or 2)
+    // Prize rows contain "acertos" — skip those
+    if (cells.length >= 5 && !/acertos/i.test(cells[0])) {
+      const lastCell = cells[cells.length - 1];
+      if (/^[012]$/.test(lastCell)) {
+        matchResults.push(lastCell);
+      }
+    }
+  }
+
   return {
     numero: contest,
     numeroConcursoProximo: contest + 1,
     dataApuracao: drawDateMatch[1],
     dataProximoConcurso: nextDateMatch?.[1] || '',
-    dezenasSorteadasOrdemSorteio: [],
-    listaDezenas: [],
+    dezenasSorteadasOrdemSorteio: matchResults,
+    listaDezenas: matchResults,
     valorEstimadoProximoConcurso: 0,
     acumulado: prizes[0]?.numeroDeGanhadores === 0,
     listaRateioPremio: prizes,

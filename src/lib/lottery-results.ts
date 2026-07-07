@@ -62,6 +62,32 @@ export function decorateLotteryResult(
 ): LotteryResult | null {
   if (!result) return null;
 
+  // Loteca: compute results from match scores (listaResultadoEquipeEsportiva)
+  if (lotteryId === 'loteca') {
+    const matches = (result as unknown as Record<string, unknown>)
+      .listaResultadoEquipeEsportiva as
+      | { nuGolEquipeUm: number; nuGolEquipeDois: number }[]
+      | undefined;
+    if (
+      matches &&
+      matches.length > 0 &&
+      (!result.listaDezenas || result.listaDezenas.length === 0)
+    ) {
+      // Loteca results: 1 = home win, 0 = draw, 2 = away win
+      const results = matches.map((m) => {
+        if (m.nuGolEquipeUm > m.nuGolEquipeDois) return '1';
+        if (m.nuGolEquipeUm === m.nuGolEquipeDois) return '0';
+        return '2';
+      });
+      return {
+        ...result,
+        listaDezenas: results,
+        dezenasSorteadasOrdemSorteio: results,
+      };
+    }
+    return result;
+  }
+
   if (lotteryId !== 'quina') {
     return result;
   }
