@@ -19,6 +19,22 @@ function decorateResults(
   );
 }
 
+function isIncompleteCachedResult(
+  lotteryId: string,
+  item: LotteryApiData | null
+): boolean {
+  if (!item) return true;
+  if (lotteryId !== 'loteca') return false;
+
+  const dezenas = Array.isArray(item.listaDezenas)
+    ? item.listaDezenas
+    : Array.isArray(item.dezenasSorteadasOrdemSorteio)
+      ? item.dezenasSorteadasOrdemSorteio
+      : [];
+
+  return dezenas.length < 14;
+}
+
 // Ensure the cache table is initialized (idempotent)
 async function ensureCacheTable() {
   try {
@@ -97,9 +113,15 @@ async function getHistoryFromDB(
     args.push(maxCount);
 
     const res = await db.execute({ sql, args });
-    return res.rows.map(
-      (row) => JSON.parse(row.data_json as string) as LotteryApiData
-    );
+    return res.rows
+      .map(
+        (row) =>
+          decorateLotteryResult(
+            lotteryId,
+            JSON.parse(row.data_json as string) as never
+          ) as LotteryApiData
+      )
+      .filter((item) => !isIncompleteCachedResult(lotteryId, item));
   } catch (e) {
     console.error('Error fetching history from DB:', e);
     return [];
@@ -117,7 +139,11 @@ async function getContestFromDB(
       args: [lotteryId, contestNum],
     });
     if (res.rows.length > 0) {
-      return JSON.parse(res.rows[0].data_json as string) as LotteryApiData;
+      const parsed = decorateLotteryResult(
+        lotteryId,
+        JSON.parse(res.rows[0].data_json as string) as never
+      ) as LotteryApiData;
+      return isIncompleteCachedResult(lotteryId, parsed) ? null : parsed;
     }
     return null;
   } catch {
@@ -136,9 +162,13 @@ async function getLatestCacheState(
     });
     if (res.rows.length > 0 && res.rows[0].cached_at) {
       const cachedAt = new Date(res.rows[0].cached_at as string).getTime();
-      const data = JSON.parse(
-        res.rows[0].data_json as string
+      const data = decorateLotteryResult(
+        lotteryId,
+        JSON.parse(res.rows[0].data_json as string) as never
       ) as LotteryApiData;
+      if (isIncompleteCachedResult(lotteryId, data)) {
+        return { age: Infinity };
+      }
       return { age: Date.now() - cachedAt, source: data.fonteDados };
     }
     return { age: Infinity };
