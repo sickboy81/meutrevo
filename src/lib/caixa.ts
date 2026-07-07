@@ -335,20 +335,8 @@ async function fetchMirrorLotteryResult(
             cache: 'no-store',
             signal: AbortSignal.timeout(12000),
           });
-          if (!response.ok) {
-            console.warn(
-              `[LOTACA_DEBUG] ${source.url} returned ${response.status}`
-            );
-            continue;
-          }
-          const html = await response.text();
-          const parsed = source.parse(html);
-          const dezenasCount = Array.isArray(parsed?.listaDezenas)
-            ? parsed.listaDezenas.length
-            : 0;
-          console.log(
-            `[LOTACA_DEBUG] ${source.url} parsed: ${dezenasCount} results`
-          );
+          if (!response.ok) continue;
+          const parsed = source.parse(await response.text());
           if (!parsed || (contestNum && parsed.numero !== contestNum)) continue;
           return parsed;
         } catch {}
