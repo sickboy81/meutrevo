@@ -71,7 +71,7 @@ export function decorateLotteryResult(
     if (
       matches &&
       matches.length > 0 &&
-      (!result.listaDezenas || result.listaDezenas.length === 0)
+      (!result.listaDezenas || result.listaDezenas.length < matches.length)
     ) {
       // Loteca results: 1 = home win, 0 = draw, 2 = away win
       const results = matches.map((m) => {
