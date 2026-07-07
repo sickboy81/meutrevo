@@ -443,7 +443,7 @@ async function fetchWithRetry(
   headers: Record<string, string>,
   retries = 2,
   timeoutMs = 15000
-): Promise<LotteryApiData> {
+): Promise<LotteryApiData | null> {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       return await fetchCaixaJson(url, headers, timeoutMs);
