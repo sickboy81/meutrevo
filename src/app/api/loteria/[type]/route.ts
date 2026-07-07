@@ -309,16 +309,41 @@ export async function GET(
       let latest = decorateLotteryResult(type, localHistory[0] as never);
       // For Loteca: if cached data has empty listaDezenas, try Caixa API
       if (type === 'loteca') {
-        const enriched = await enrichLotecaMatchData(latest as LotteryApiData);
-        if (enriched && enriched !== latest) {
-          latest = decorateLotteryResult(type, enriched as never);
-          if (enriched.numero) {
-            await saveToCache(
-              type,
-              enriched.numero,
-              enriched.dataApuracao || '',
-              enriched as LotteryApiData
-            );
+        const dezenas = (latest as LotteryApiData).listaDezenas as
+          | string[]
+          | undefined;
+        const needsEnrichment = !dezenas || dezenas.length === 0;
+        if (needsEnrichment) {
+          const enriched = await enrichLotecaMatchData(
+            latest as LotteryApiData
+          );
+          if (enriched && enriched !== latest) {
+            latest = decorateLotteryResult(type, enriched as never);
+            if (enriched.numero) {
+              await saveToCache(
+                type,
+                enriched.numero,
+                enriched.dataApuracao || '',
+                enriched as LotteryApiData
+              );
+            }
+          }
+        }
+        // If latest still has empty listaDezenas (draw in progress),
+        // use the first completed contest as the primary display
+        const latestDezenas = (latest as LotteryApiData).listaDezenas as
+          | string[]
+          | undefined;
+        if (!latestDezenas || latestDezenas.length === 0) {
+          const completedContest = localHistory.find((item) => {
+            const decorated = decorateLotteryResult(type, item as never);
+            const d = (decorated as LotteryApiData).listaDezenas as
+              | string[]
+              | undefined;
+            return d && d.length > 0;
+          });
+          if (completedContest) {
+            latest = decorateLotteryResult(type, completedContest as never);
           }
         }
       }
