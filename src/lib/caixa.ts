@@ -435,10 +435,29 @@ export async function fetchOfficialLotteryResult(
 
 /**
  * For Loteca: when the mirror result has empty listaDezenas,
- * try the Caixa API one more time to get listaResultadoEquipeEsportiva.
- * This handles the case where the Caixa API was temporarily unavailable
- * on the first attempt.
+ * try the Caixa API with retries to get listaResultadoEquipeEsportiva.
+ * Production (Vercel) may have slower/timing-out connections to Caixa.
  */
+async function fetchWithRetry(
+  url: string,
+  headers: Record<string, string>,
+  retries = 2,
+  timeoutMs = 15000
+): Promise<LotteryApiData> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fetchCaixaJson(url, headers, timeoutMs);
+    } catch (e) {
+      if (attempt < retries) {
+        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+      } else {
+        throw e;
+      }
+    }
+  }
+  throw new Error('fetchWithRetry: exhausted retries');
+}
+
 export async function enrichLotecaMatchData(
   result: LotteryApiData | null
 ): Promise<LotteryApiData | null> {
@@ -451,7 +470,7 @@ export async function enrichLotecaMatchData(
     for (const base of apiBases) {
       const apiUrl = `${base}/api/loteca/${result.numero}`;
       try {
-        const caixaData = await fetchCaixaJson(apiUrl, {
+        const caixaData = await fetchWithRetry(apiUrl, {
           ...CAIXA_API_HEADERS,
         });
         if (
