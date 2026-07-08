@@ -18,6 +18,11 @@ import {
   getCleanDezenas as getCleanDezenasHelper,
   toggleFilterStatus,
 } from '@/lib/lottery-helpers';
+import {
+  downloadTXT as downloadTXTFn,
+  downloadPDF as downloadPDFFn,
+  printGames as printGamesFn,
+} from '@/lib/lottery-exports';
 
 let _mathMod: typeof import('../../lib/lottery-math') | null = null;
 async function loadMath() {
@@ -1016,247 +1021,14 @@ export default function Home() {
     }
   };
 
-  const downloadTXT = (gamesList: number[][], nameSuffix = 'jogos') => {
-    playSound('success');
-    const textContent = gamesList
-      .map((game, idx) => {
-        return `Jogo ${idx + 1}: ${game.map((n) => String(n).padStart(2, '0')).join(' - ')}`;
-      })
-      .join('\n');
+  const downloadTXT = (gamesList: number[][], nameSuffix = 'jogos') =>
+    downloadTXTFn(gamesList, activeLottery, playSound, nameSuffix);
 
-    const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `meu-trevo-${activeLottery}-${nameSuffix}.txt`;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
+  const downloadPDF = (gamesList: number[][], title = 'Jogos Gerados') =>
+    downloadPDFFn(gamesList, activeLottery, playSound, title);
 
-  const downloadPDF = (gamesList: number[][], title = 'Jogos Gerados') => {
-    playSound('success');
-    const lotName =
-      LOTTERY_CONFIGS[activeLottery]?.name || activeLottery.toUpperCase();
-    const lotColor = LOTTERY_CONFIGS[activeLottery]?.color || '#209869';
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    const gamesHtml = gamesList
-      .map(
-        (game, idx) => `
-      <div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #ddd;border-radius:8px;page-break-inside:avoid;">
-        <div style="font-weight:bold;color:#666;min-width:40px;">#${idx + 1}</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          ${game.map((n) => `<span style="width:36px;height:36px;border-radius:50%;border:2px solid ${lotColor};display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px;color:${lotColor};">${String(n).padStart(2, '0')}</span>`).join('')}
-        </div>
-      </div>
-    `
-      )
-      .join('');
-
-    printWindow.document.write(`
-      <!DOCTYPE html><html><head><title>${title} - Meu Trevo</title>
-      <style>
-        body{font-family:Arial,sans-serif;padding:20px;color:#333;}
-        h1{font-size:18px;margin-bottom:4px;}h2{font-size:13px;color:#666;margin-bottom:20px;font-weight:normal;}
-        .footer{margin-top:30px;padding-top:10px;border-top:1px solid #ddd;font-size:10px;color:#999;text-align:center;}
-      </style></head><body>
-      <h1>Meu Trevo - ${lotName}</h1>
-      <h2>${title} • Gerado em ${new Date().toLocaleDateString('pt-BR')}</h2>
-      <div style="display:flex;flex-direction:column;gap:8px;">${gamesHtml}</div>
-      <div class="footer">Meu Trevo © ${new Date().getFullYear()} • Gerado automaticamente • Aviso: loteria é jogo de azar</div>
-      </body></html>
-    `);
-    printWindow.document.close();
-    setTimeout(() => printWindow.print(), 500);
-  };
-
-  const handlePrintGames = (gamesList: number[][]) => {
-    playSound('success');
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    const lotName =
-      LOTTERY_CONFIGS[activeLottery]?.name || activeLottery.toUpperCase();
-    const lotColor = LOTTERY_CONFIGS[activeLottery]?.color || '#209869';
-
-    const gamesHtml = gamesList
-      .map(
-        (game, idx) => `
-      <div class="ticket-card">
-        <div class="ticket-header">
-          <span class="ticket-title">JOGO ${String(idx + 1).padStart(2, '0')}</span>
-          <span class="ticket-badge" style="background-color: ${lotColor};">${lotName}</span>
-        </div>
-        <div class="ticket-balls">
-          ${game
-            .map(
-              (n) => `
-            <span class="ticket-ball" style="border-color: ${lotColor}; background-color: ${lotColor}15; color: ${lotColor};">
-              ${String(n).padStart(2, '0')}
-            </span>
-          `
-            )
-            .join('')}
-        </div>
-      </div>
-    `
-      )
-      .join('');
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Meu Trevo - Volantes para Impressão</title>
-          <link rel="preconnect" href="https://fonts.googleapis.com">
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-          <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
-          <style>
-            * { box-sizing: border-box; margin: 0; padding: 0; }
-            body {
-              font-family: 'Outfit', sans-serif;
-              color: #1e293b;
-              background-color: #ffffff;
-              padding: 40px 20px;
-              text-align: center;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
-            .no-print {
-              margin-bottom: 30px;
-              display: flex;
-              justify-content: center;
-              gap: 15px;
-            }
-            .btn {
-              padding: 10px 24px;
-              font-size: 0.95rem;
-              font-weight: bold;
-              border-radius: 8px;
-              cursor: pointer;
-              transition: all 0.2s;
-              border: none;
-            }
-            .btn-primary {
-              background-color: #0f172a;
-              color: white;
-            }
-            .btn-secondary {
-              background-color: #f1f5f9;
-              color: #475569;
-              border: 1px solid #cbd5e1;
-            }
-            .header {
-              margin-bottom: 35px;
-            }
-            .logo {
-              font-size: 1.8rem;
-              font-weight: 800;
-              letter-spacing: 1.5px;
-              background: linear-gradient(90deg, #0f172a, ${lotColor});
-              -webkit-background-clip: text;
-              -webkit-text-fill-color: transparent;
-              margin-bottom: 5px;
-            }
-            .subtitle {
-              font-size: 0.85rem;
-              color: #64748b;
-            }
-            .tickets-container {
-              max-width: 600px;
-              margin: 0 auto;
-              display: flex;
-              flex-direction: column;
-              gap: 20px;
-            }
-            .ticket-card {
-              border: 1.5px solid #e2e8f0;
-              border-radius: 12px;
-              padding: 20px;
-              text-align: left;
-              background-color: #fff;
-              page-break-inside: avoid;
-            }
-            .ticket-header {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 15px;
-              border-bottom: 1px solid #f1f5f9;
-              padding-bottom: 8px;
-            }
-            .ticket-title {
-              font-weight: 800;
-              font-size: 1rem;
-              color: #0f172a;
-              letter-spacing: 0.5px;
-            }
-            .ticket-badge {
-              font-size: 0.7rem;
-              font-weight: bold;
-              color: white;
-              padding: 3px 10px;
-              border-radius: 50px;
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-            }
-            .ticket-balls {
-              display: flex;
-              gap: 8px;
-              flex-wrap: wrap;
-            }
-            .ticket-ball {
-              width: 38px;
-              height: 38px;
-              border-radius: 50%;
-              border: 2px solid;
-              font-weight: bold;
-              font-size: 1rem;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            }
-            .footer {
-              margin-top: 40px;
-              font-size: 0.8rem;
-              color: #94a3b8;
-            }
-            @media print {
-              .no-print { display: none; }
-              body { padding: 0; }
-              .ticket-card {
-                border-color: #cbd5e1;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="no-print">
-            
-<button class="btn btn-primary" onclick="window.print();">Imprimir Volantes</button>
-            <button class="btn btn-secondary" onclick="window.close();">Fechar</button>
-          </div>
-          <div class="header">
-            <div class="logo">Meu Trevo</div>
-            <div class="subtitle">Volantes de Aposta Otimizados - Conferir e Registrar</div>
-          </div>
-          <div class="tickets-container">
-            ${gamesHtml}
-          </div>
-          <div class="footer">
-            Gerado de forma inteligente com matemática real no Meu Trevo Pro. Boa sorte!
-          </div>
-          <script>
-            window.onload = function() {
-              setTimeout(function() { window.print(); }, 300);
-            }
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-  };
+  const handlePrintGames = (gamesList: number[][]) =>
+    printGamesFn(gamesList, activeLottery, playSound);
 
   // Build Bolão/Pool sharing text and WhatsApp URL
   const handleBuildBolao = () => {
