@@ -12,15 +12,31 @@ import {
 } from 'react';
 import Link from 'next/link';
 import { fetchWithCsrf } from '@/lib/fetch';
-import {
-  LOTTERY_CONFIGS,
-  analyzeGame,
-  generateSmartGame,
-  generateWheelingGames,
-  estimateWheelingCount,
-  analyzeCoOccurrences,
-  type GameMetrics,
-} from '../../lib/lottery-math';
+import { LOTTERY_CONFIGS, type GameMetrics } from '../../lib/lottery-math';
+
+let _mathMod: typeof import('../../lib/lottery-math') | null = null;
+async function loadMath() {
+  if (!_mathMod) _mathMod = await import('../../lib/lottery-math');
+  return _mathMod;
+}
+
+function comb(n: number, k: number): number {
+  if (k > n) return 0;
+  if (k === 0 || k === n) return 1;
+  let r = 1;
+  for (let i = 0; i < k; i++) r = (r * (n - i)) / (i + 1);
+  return Math.round(r);
+}
+function inlineWheelCount(
+  n: number,
+  k: number,
+  g: 'full' | 'quadra' | 'quina'
+): number {
+  if (n < k) return 0;
+  if (g === 'full') return comb(n, k);
+  const t = g === 'quina' ? k - 1 : k - 2;
+  return Math.ceil(comb(n, t) / comb(k, t));
+}
 
 // Lazy-loaded components — only downloaded when tab/modal is opened
 const UpgradeModal = lazy(() => import('../components/UpgradeModal'));
@@ -289,21 +305,32 @@ export default function Home() {
   };
 
   // Generate a quick smart game on the landing page using actual logic
-  const handleGenerateLandingSmart = () => {
+  const handleGenerateLandingSmart = async () => {
     playSound('click');
-    const game = generateSmartGame(config, [], [], 'balanced', [], [], [], {});
+    const math = await loadMath();
+    const game = math.generateSmartGame(
+      config,
+      [],
+      [],
+      'balanced',
+      [],
+      [],
+      [],
+      {}
+    );
     setLandingQuickNums(game.numbers);
     setLandingQuickResult(
       'Números gerados pela nossa IA! Clique em "Testar Jogo" para conferir contra o último concurso.'
     );
   };
 
-  const handleGenerateSmart = () => {
+  const handleGenerateSmart = async () => {
     if (!user) {
       redirectToLogin();
       return;
     }
     playSound('click');
+    const math = await loadMath();
     const fixed = Object.entries(filtersMap)
       .filter(([, v]) => v === 'fixed')
       .map(([k]) => Number(k));
@@ -327,7 +354,7 @@ export default function Home() {
     };
     const games: { numbers: number[]; metrics: GameMetrics }[] = [];
     for (let i = 0; i < gameQuantity; i++) {
-      const game = generateSmartGame(
+      const game = math.generateSmartGame(
         config,
         hotNums,
         coldNums,
@@ -343,14 +370,15 @@ export default function Home() {
     setGeneratedGames(games);
   };
 
-  const handleGenerateWheel = () => {
+  const handleGenerateWheel = async () => {
     if (!user) {
       redirectToLogin();
       return;
     }
     playSound('click');
     if (wheelSelectedNums.length < config.drawCount) return;
-    const games = generateWheelingGames(
+    const math = await loadMath();
+    const games = math.generateWheelingGames(
       config,
       wheelSelectedNums,
       wheelGuarantee
@@ -834,32 +862,42 @@ export default function Home() {
           }));
         }
         setLoading(false);
-
-        // Buscar as outras loterias em segundo plano para preencher a comparação dos jogos salvos
-        const otherLotteries = Object.keys(LOTTERY_CONFIGS).filter(
-          (id) => id !== activeLottery
-        );
-        for (const lotteryId of otherLotteries) {
-          fetchWithCsrf(`/api/loteria/${lotteryId}`)
-            .then(async (res) => {
-              if (res.ok) {
-                const data = await res.json();
-                if (data.latest) {
-                  setLatestResultsMap((prev) => ({
-                    ...prev,
-                    [lotteryId]: data.latest,
-                  }));
-                }
-              }
-            })
-            .catch(() => {});
-        }
       })();
     }, 0);
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Lazy-load other lotteries only when games tab needs them
+  useEffect(() => {
+    if (activeTab !== 'games' || !savedGames.length) return;
+    const needed = new Set(savedGames.map((g) => g.lottery));
+    const missing = [...needed].filter(
+      (id) => id !== activeLottery && !latestResultsMap[id]
+    );
+    if (missing.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      for (const lotteryId of missing) {
+        try {
+          const res = await fetchWithCsrf(`/api/loteria/${lotteryId}`);
+          if (!cancelled && res.ok) {
+            const data = await res.json();
+            if (data.latest) {
+              setLatestResultsMap((prev) => ({
+                ...prev,
+                [lotteryId]: data.latest,
+              }));
+            }
+          }
+        } catch {}
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, savedGames, activeLottery, latestResultsMap]);
 
   // Click outside to close settings/profile dropdown
   useEffect(() => {
@@ -1004,14 +1042,29 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [activeLottery]);
 
-  // Handle co-occurrence calculation on fixed filter number change
   const partnerNumbers = (() => {
     const fixed = Object.entries(filtersMap)
       .filter(([, status]) => status === 'fixed')
       .map(([num]) => parseInt(num, 10));
 
     if (fixed.length > 0 && history.length > 0) {
-      const partners = analyzeCoOccurrences(fixed[0], history);
+      const target = fixed[0];
+      const counts: Record<number, number> = {};
+      history.forEach((draw) => {
+        const nums = (
+          draw.listaDezenas ||
+          draw.dezenasSorteadasOrdemSorteio ||
+          []
+        ).map(Number);
+        if (nums.includes(target)) {
+          nums.forEach((n) => {
+            if (n !== target && !isNaN(n)) counts[n] = (counts[n] || 0) + 1;
+          });
+        }
+      });
+      const partners = Object.entries(counts)
+        .map(([n, c]) => ({ num: Number(n), freq: c }))
+        .sort((a, b) => b.freq - a.freq);
       const availablePartners = partners.filter((p) => !fixed.includes(p.num));
       return availablePartners.slice(0, 8);
     }
@@ -4353,7 +4406,7 @@ export default function Home() {
                               },
                             ].map((opt) => {
                               const n = wheelSelectedNums.length;
-                              const est = estimateWheelingCount(
+                              const est = inlineWheelCount(
                                 n,
                                 config.drawCount,
                                 opt.value
@@ -4448,7 +4501,7 @@ export default function Home() {
                             <strong>
                               R${' '}
                               {(() => {
-                                const est = estimateWheelingCount(
+                                const est = inlineWheelCount(
                                   wheelSelectedNums.length,
                                   config.drawCount,
                                   wheelGuarantee
@@ -4486,7 +4539,7 @@ export default function Home() {
                       >
                         🔢 Gerar Fechamento
                         {wheelSelectedNums.length >= config.drawCount + 1 &&
-                          ` (~${estimateWheelingCount(wheelSelectedNums.length, config.drawCount, wheelGuarantee)} jogos)`}
+                          ` (~${inlineWheelCount(wheelSelectedNums.length, config.drawCount, wheelGuarantee)} jogos)`}
                       </button>
 
                       {/* Generated wheel games */}
@@ -4648,18 +4701,18 @@ export default function Home() {
                     <Suspense fallback={<TabFallback />}>
                       <MysticGenerator
                         activeLottery={activeLottery}
-                        onGenerated={(nums) => {
+                        onGenerated={async (nums) => {
                           const lastDrawNumbers = (
                             result?.listaDezenas ||
                             result?.dezenasSorteadasOrdemSorteio ||
                             []
                           ).map(Number);
-                          // Adiciona os números místicos como jogo gerado
+                          const math = await loadMath();
                           setGeneratedGames((prev) => [
                             ...prev,
                             {
                               numbers: nums,
-                              metrics: analyzeGame(
+                              metrics: math.analyzeGame(
                                 nums,
                                 config,
                                 lastDrawNumbers
