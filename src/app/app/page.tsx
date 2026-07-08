@@ -13,6 +13,11 @@ import {
 import Link from 'next/link';
 import { fetchWithCsrf } from '@/lib/fetch';
 import { LOTTERY_CONFIGS, type GameMetrics } from '../../lib/lottery-math';
+import { useSound } from '../hooks/useSound';
+import {
+  getCleanDezenas as getCleanDezenasHelper,
+  toggleFilterStatus,
+} from '@/lib/lottery-helpers';
 
 let _mathMod: typeof import('../../lib/lottery-math') | null = null;
 async function loadMath() {
@@ -69,18 +74,6 @@ function TabFallback() {
       <span className="loader" />
     </div>
   );
-}
-
-type AudioContextConstructor = typeof AudioContext;
-
-type WindowWithWebkitAudio = Window &
-  typeof globalThis & {
-    webkitAudioContext?: AudioContextConstructor;
-  };
-
-function getAudioContextClass(): AudioContextConstructor | undefined {
-  const audioWindow = window as WindowWithWebkitAudio;
-  return audioWindow.AudioContext || audioWindow.webkitAudioContext;
 }
 
 import type {
@@ -423,71 +416,7 @@ export default function Home() {
   };
 
   // Programmatic Synthesizer Audio Context
-
-  const playSound = useCallback(
-    (type: 'click' | 'success' | 'delete') => {
-      if (!enableSounds) return;
-      try {
-        const AudioContextClass = getAudioContextClass();
-        if (!AudioContextClass) return;
-        const ctx = new AudioContextClass();
-
-        if (type === 'click') {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(600, ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(
-            1200,
-            ctx.currentTime + 0.1
-          );
-          gain.gain.setValueAtTime(0.04, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-          osc.start();
-          osc.stop(ctx.currentTime + 0.1);
-        } else if (type === 'success') {
-          const playNote = (freq: number, start: number, duration: number) => {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
-            osc.frequency.exponentialRampToValueAtTime(
-              freq * 1.5,
-              ctx.currentTime + start + duration
-            );
-            gain.gain.setValueAtTime(0.06, ctx.currentTime + start);
-            gain.gain.exponentialRampToValueAtTime(
-              0.001,
-              ctx.currentTime + start + duration
-            );
-            osc.start(ctx.currentTime + start);
-            osc.stop(ctx.currentTime + start + duration);
-          };
-          playNote(523.25, 0, 0.15); // C5
-          playNote(783.99, 0.1, 0.25); // G5
-        } else if (type === 'delete') {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(800, ctx.currentTime);
-          osc.frequency.linearRampToValueAtTime(150, ctx.currentTime + 0.35);
-          gain.gain.setValueAtTime(0.04, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
-          osc.start();
-          osc.stop(ctx.currentTime + 0.35);
-        }
-      } catch (e) {
-        console.warn('Audio Context failed to play sound:', e);
-      }
-    },
-    [enableSounds]
-  );
+  const playSound = useSound(enableSounds);
 
   // --- AUTH / USER STATES ---
   const [user, setUser] = useState<User | null>(null);
@@ -1744,46 +1673,15 @@ export default function Home() {
   };
 
   const getCleanDezenas = useCallback(
-    (lotResult: LotteryResult) => {
-      const list =
-        lotResult.listaDezenas || lotResult.dezenasSorteadasOrdemSorteio || [];
-      // Loteca, supersete & loteriafederal: keep raw strings, don't parseInt/sort
-      if (
-        activeLottery === 'supersete' ||
-        activeLottery === 'loteca' ||
-        activeLottery === 'loteriafederal'
-      ) {
-        return list;
-      }
-      return [...list]
-        .map((x) => parseInt(x, 10))
-        .sort((a, b) => a - b)
-        .map((x) => String(x).padStart(2, '0'));
-    },
+    (lotResult: LotteryResult) =>
+      getCleanDezenasHelper(lotResult, activeLottery),
     [activeLottery]
   );
 
   // Cycle advanced filter status for a number
   const toggleFilterNumber = (num: number) => {
     playSound('click');
-    const currentStatus = filtersMap[num] || 'none';
-    let nextStatus: 'fixed' | 'excluded' | 'none' = 'none';
-
-    if (currentStatus === 'none') {
-      const fixedCount = Object.values(filtersMap).filter(
-        (v) => v === 'fixed'
-      ).length;
-      if (fixedCount < config.drawCount - 1) {
-        nextStatus = 'fixed';
-      } else {
-        nextStatus = 'excluded';
-      }
-    } else if (currentStatus === 'fixed') {
-      nextStatus = 'excluded';
-    } else {
-      nextStatus = 'none';
-    }
-
+    const nextStatus = toggleFilterStatus(num, filtersMap, config.drawCount);
     setFiltersMap((prev) => ({
       ...prev,
       [num]: nextStatus,
