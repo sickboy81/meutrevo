@@ -47,6 +47,16 @@ function getConfig(): NextConfig {
           ],
         },
         {
+          source: '/api/loteria/(.*)',
+          headers: [
+            {
+              key: 'Cache-Control',
+              value:
+                'public, s-maxage=300, maxage=60, stale-while-revalidate=600',
+            },
+          ],
+        },
+        {
           source: '/api/(.*)',
           headers: [
             {

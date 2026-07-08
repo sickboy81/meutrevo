@@ -3442,8 +3442,23 @@ export default function Home() {
           )}
 
           {/* Main Content Area */}
-          <div className="main-content">
-            {loading ? (
+          <div className="main-content" style={{ position: 'relative' }}>
+            {/* Subtle loading bar when switching lotteries (only if we already have data) */}
+            {loading && result && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: '2px',
+                  background: `linear-gradient(90deg, transparent, ${config?.accentColor || '#00f0ff'}, transparent)`,
+                  animation: 'loading-bar 1.2s ease-in-out infinite',
+                  zIndex: 10,
+                }}
+              />
+            )}
+            {!result ? (
               <div
                 style={{
                   display: 'flex',
@@ -3470,7 +3485,7 @@ export default function Home() {
                     fontSize: '0.85rem',
                   }}
                 >
-                  Analisando dados estatísticos...
+                  Carregando resultados...
                 </p>
               </div>
             ) : (
