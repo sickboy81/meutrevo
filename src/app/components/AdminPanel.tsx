@@ -1,30 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { fetchWithCsrf } from '@/lib/fetch';
 import type { AdminStats, AdminUser } from '../types';
 
 interface AdminPanelProps {
-  adminStats: AdminStats;
-  adminUsersList: AdminUser[];
-  priceMonthly: number;
-  priceAnnualEquivalent: number;
-  adminFeedback: string;
-  onSetAdminFeedback: (v: string) => void;
-  onRefresh: () => void;
   playSound: (type: 'click' | 'success' | 'delete') => void;
 }
 
-export default function AdminPanel({
-  adminStats,
-  adminUsersList,
-  priceMonthly,
-  priceAnnualEquivalent,
-  adminFeedback,
-  onSetAdminFeedback,
-  onRefresh,
-  playSound,
-}: AdminPanelProps) {
+const defaultStats: AdminStats = {
+  totalUsers: 0,
+  proUsers: 0,
+  adminUsers: 0,
+  freeUsers: 0,
+};
+
+export default function AdminPanel({ playSound }: AdminPanelProps) {
+  const [adminStats, setAdminStats] = useState<AdminStats>(defaultStats);
+  const [adminUsersList, setAdminUsersList] = useState<AdminUser[]>([]);
+  const [adminFeedback, setAdminFeedback] = useState<string>('');
+  const [priceMonthly, setPriceMonthly] = useState<number>(14.9);
+  const [priceAnnualEquivalent, setPriceAnnualEquivalent] =
+    useState<number>(129.9);
+
   const [adminSearch, setSearch] = useState('');
   const [localMonthly, setLocalMonthly] = useState(priceMonthly);
   const [localAnnual, setLocalAnnual] = useState(priceAnnualEquivalent);
@@ -36,6 +34,41 @@ export default function AdminPanel({
   const [emailMessage, setEmailMessage] = useState<string>('');
   const [sendingEmail, setSendingEmail] = useState<boolean>(false);
 
+  const fetchData = useCallback(async () => {
+    try {
+      const [statsRes, usersRes, configRes] = await Promise.all([
+        fetch('/api/admin/stats'),
+        fetch('/api/admin/users'),
+        fetch('/api/config'),
+      ]);
+      if (statsRes.ok) {
+        setAdminStats(await statsRes.json());
+      }
+      if (usersRes.ok) {
+        const d = await usersRes.json();
+        setAdminUsersList(d.users || []);
+      }
+      if (configRes.ok) {
+        const d = await configRes.json();
+        if (d.success && d.config) {
+          const monthly = parseFloat(d.config.price_monthly) || 14.9;
+          const annual = parseFloat(d.config.price_annual) || 129.9;
+          setPriceMonthly(monthly);
+          setPriceAnnualEquivalent(annual);
+          setLocalMonthly(monthly);
+          setLocalAnnual(annual);
+        }
+      }
+    } catch (e) {
+      console.error('Erro ao buscar dados admin:', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchData();
+  }, [fetchData]);
+
   const handleUpdatePrice = async (key: string, value: string) => {
     try {
       const res = await fetchWithCsrf('/api/config', {
@@ -45,16 +78,16 @@ export default function AdminPanel({
       });
       if (res.ok) {
         playSound('success');
-        onSetAdminFeedback('Tarifa atualizada com sucesso!');
-        setTimeout(() => onSetAdminFeedback(''), 3000);
-        onRefresh();
+        setAdminFeedback('Tarifa atualizada com sucesso!');
+        setTimeout(() => setAdminFeedback(''), 3000);
+        fetchData();
       } else {
         const data = await res.json();
-        onSetAdminFeedback(`Erro: ${data.error}`);
+        setAdminFeedback(`Erro: ${data.error}`);
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      onSetAdminFeedback(`Erro: ${msg}`);
+      setAdminFeedback(`Erro: ${msg}`);
     }
   };
 
@@ -67,16 +100,16 @@ export default function AdminPanel({
       });
       if (res.ok) {
         playSound('success');
-        onSetAdminFeedback('Nível do usuário atualizado!');
-        setTimeout(() => onSetAdminFeedback(''), 3000);
-        onRefresh();
+        setAdminFeedback('Nível do usuário atualizado!');
+        setTimeout(() => setAdminFeedback(''), 3000);
+        fetchData();
       } else {
         const data = await res.json();
-        onSetAdminFeedback(`Erro: ${data.error}`);
+        setAdminFeedback(`Erro: ${data.error}`);
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      onSetAdminFeedback(`Erro: ${msg}`);
+      setAdminFeedback(`Erro: ${msg}`);
     }
   };
 
@@ -92,20 +125,20 @@ export default function AdminPanel({
       });
       if (res.ok) {
         playSound('success');
-        onSetAdminFeedback(
+        setAdminFeedback(
           !currentBlocked
             ? 'Usuário suspenso com sucesso!'
             : 'Usuário desbloqueado!'
         );
-        setTimeout(() => onSetAdminFeedback(''), 3000);
-        onRefresh();
+        setTimeout(() => setAdminFeedback(''), 3000);
+        fetchData();
       } else {
         const data = await res.json();
-        onSetAdminFeedback(`Erro: ${data.error}`);
+        setAdminFeedback(`Erro: ${data.error}`);
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      onSetAdminFeedback(`Erro: ${msg}`);
+      setAdminFeedback(`Erro: ${msg}`);
     }
   };
 
@@ -126,16 +159,16 @@ export default function AdminPanel({
       });
       if (res.ok) {
         playSound('delete');
-        onSetAdminFeedback('Usuário excluído permanentemente!');
-        setTimeout(() => onSetAdminFeedback(''), 3000);
-        onRefresh();
+        setAdminFeedback('Usuário excluído permanentemente!');
+        setTimeout(() => setAdminFeedback(''), 3000);
+        fetchData();
       } else {
         const data = await res.json();
-        onSetAdminFeedback(`Erro: ${data.error}`);
+        setAdminFeedback(`Erro: ${data.error}`);
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      onSetAdminFeedback(`Erro: ${msg}`);
+      setAdminFeedback(`Erro: ${msg}`);
     }
   };
 
@@ -156,8 +189,8 @@ export default function AdminPanel({
       });
       if (res.ok) {
         playSound('success');
-        onSetAdminFeedback(`E-mail enviado para ${emailUserName}!`);
-        setTimeout(() => onSetAdminFeedback(''), 3000);
+        setAdminFeedback(`E-mail enviado para ${emailUserName}!`);
+        setTimeout(() => setAdminFeedback(''), 3000);
         // Reset
         setEmailUserId(null);
         setEmailUserName('');
@@ -165,11 +198,11 @@ export default function AdminPanel({
         setEmailMessage('');
       } else {
         const data = await res.json();
-        onSetAdminFeedback(`Erro: ${data.error}`);
+        setAdminFeedback(`Erro: ${data.error}`);
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      onSetAdminFeedback(`Erro: ${msg}`);
+      setAdminFeedback(`Erro: ${msg}`);
     } finally {
       setSendingEmail(false);
     }
@@ -498,7 +531,7 @@ export default function AdminPanel({
             fontWeight: 700,
           }}
           onClick={async () => {
-            onSetAdminFeedback(
+            setAdminFeedback(
               '⏳ Populando cache... isso pode levar 1-2 minutos.'
             );
             try {
@@ -510,17 +543,17 @@ export default function AdminPanel({
               const d = await r.json();
               if (r.ok && d.success) {
                 const { totalFetched, totalSkipped, totalErrors } = d.summary;
-                onSetAdminFeedback(
+                setAdminFeedback(
                   `✓ Cache populado! Novos: ${totalFetched} | Já existiam: ${totalSkipped} | Erros: ${totalErrors}`
                 );
                 playSound('success');
               } else {
-                onSetAdminFeedback(`⚠️ ${d.error || 'Erro ao popular cache'}`);
+                setAdminFeedback(`⚠️ ${d.error || 'Erro ao popular cache'}`);
               }
             } catch {
-              onSetAdminFeedback('⚠️ Erro de conexão ao popular cache');
+              setAdminFeedback('⚠️ Erro de conexão ao popular cache');
             }
-            setTimeout(() => onSetAdminFeedback(''), 8000);
+            setTimeout(() => setAdminFeedback(''), 8000);
           }}
         >
           🚀 Popular Cache (100 concursos × 5 loterias)

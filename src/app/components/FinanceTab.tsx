@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { LOTTERY_CONFIGS } from '../../lib/lottery-math';
 import { fetchWithCsrf } from '@/lib/fetch';
 import type { BetRecord, LotteryResult } from '../types';
@@ -9,33 +9,6 @@ interface FinanceTabProps {
   isPro: boolean;
   playSound: (type: 'click' | 'success' | 'delete') => void;
   setShowUpgradeModal: (show: boolean) => void;
-  bets: BetRecord[];
-  setBets: React.Dispatch<React.SetStateAction<BetRecord[]>>;
-  betsLoading: boolean;
-  setBetsLoading: (loading: boolean) => void;
-  betForm: {
-    lottery: string;
-    numbers: string;
-    contest_num: string;
-    cost: string;
-    prize_won: string;
-  };
-  setBetForm: React.Dispatch<
-    React.SetStateAction<{
-      lottery: string;
-      numbers: string;
-      contest_num: string;
-      cost: string;
-      prize_won: string;
-    }>
-  >;
-  betFeedback: string;
-  setBetFeedback: (feedback: string) => void;
-  betFormLoading: boolean;
-  setBetFormLoading: (loading: boolean) => void;
-  financeFilter: string;
-  setFinanceFilter: (filter: string) => void;
-  handleExportCSV: () => void;
 }
 
 function getMonthKey(dateStr: string): string {
@@ -66,20 +39,84 @@ export default React.memo(function FinanceTab({
   isPro,
   playSound,
   setShowUpgradeModal,
-  bets,
-  setBets,
-  betsLoading,
-  setBetsLoading,
-  betForm,
-  setBetForm,
-  betFeedback,
-  setBetFeedback,
-  betFormLoading,
-  setBetFormLoading,
-  financeFilter,
-  setFinanceFilter,
-  handleExportCSV,
 }: FinanceTabProps) {
+  const [bets, setBets] = useState<BetRecord[]>([]);
+  const [betsLoading, setBetsLoading] = useState(true);
+  const [betForm, setBetForm] = useState({
+    lottery: 'megasena',
+    numbers: '',
+    contest_num: '',
+    cost: '',
+    prize_won: '',
+  });
+  const [betFeedback, setBetFeedback] = useState('');
+  const [betFormLoading, setBetFormLoading] = useState(false);
+  const [financeFilter, setFinanceFilter] = useState('all');
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadBets() {
+      try {
+        const res = await fetchWithCsrf('/api/bets');
+        if (res.ok && !cancelled) {
+          const data = await res.json();
+          setBets(data.bets || []);
+        }
+      } finally {
+        if (!cancelled) setBetsLoading(false);
+      }
+    }
+    loadBets();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleExportCSV = () => {
+    if (bets.length === 0) return;
+    const headers = [
+      'ID',
+      'Loteria',
+      'Concurso',
+      'Numeros',
+      'Custo (R$)',
+      'Premio (R$)',
+      'Lucro/Prejuizo (R$)',
+      'Criado Em',
+    ];
+    const rows = bets.map((b) => {
+      const profit = Number(b.prize_won) - Number(b.cost);
+      return [
+        b.id || '',
+        LOTTERY_CONFIGS[b.lottery as keyof typeof LOTTERY_CONFIGS]?.name ||
+          b.lottery,
+        b.contest_num,
+        b.numbers,
+        Number(b.cost).toFixed(2),
+        Number(b.prize_won).toFixed(2),
+        profit.toFixed(2),
+        b.created_at ? new Date(b.created_at).toLocaleDateString('pt-BR') : '',
+      ];
+    });
+    const csvContent = [
+      headers.join(';'),
+      ...rows.map((e) => e.join(';')),
+    ].join('\n');
+    const blob = new Blob(['\ufeff' + csvContent], {
+      type: 'text/csv;charset=utf-8;',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute(
+      'download',
+      `meu_trevo_historico_financeiro_${new Date().toISOString().slice(0, 10)}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const filteredBets =
     financeFilter === 'all'
       ? bets

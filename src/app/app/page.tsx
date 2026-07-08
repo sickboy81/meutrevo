@@ -76,15 +76,7 @@ function TabFallback() {
   );
 }
 
-import type {
-  LotteryResult,
-  User,
-  SavedGame,
-  AdminStats,
-  AdminUser,
-  ThemeType,
-  BetRecord,
-} from '../types';
+import type { LotteryResult, User, SavedGame, ThemeType } from '../types';
 
 type ActiveTab =
   | 'results'
@@ -228,28 +220,6 @@ export default function Home() {
   const [priceMonthly, setPriceMonthly] = useState<number>(14.9);
   const [priceAnnualEquivalent, setPriceAnnualEquivalent] =
     useState<number>(129.9);
-  const [adminStats, setAdminStats] = useState<AdminStats>({
-    totalUsers: 0,
-    proUsers: 0,
-    adminUsers: 0,
-    freeUsers: 0,
-  });
-  const [adminUsersList, setAdminUsersList] = useState<AdminUser[]>([]);
-  const [adminFeedback, setAdminFeedback] = useState<string>('');
-
-  // --- CENTRAL FINANCEIRA ---
-  const [bets, setBets] = useState<BetRecord[]>([]);
-  const [betsLoading, setBetsLoading] = useState<boolean>(false);
-  const [betForm, setBetForm] = useState({
-    lottery: 'megasena',
-    numbers: '',
-    contest_num: '',
-    cost: '',
-    prize_won: '',
-  });
-  const [betFeedback, setBetFeedback] = useState<string>('');
-  const [betFormLoading, setBetFormLoading] = useState<boolean>(false);
-  const [financeFilter, setFinanceFilter] = useState<string>('all');
 
   // --- PREMIUM FASE 3: THEME & SETTINGS ---
   const [theme, setTheme] = useState<ThemeType>('meganeon');
@@ -609,21 +579,6 @@ export default function Home() {
 
   // Fetch logged in user status
 
-  const fetchAdminData = async () => {
-    try {
-      const res = await fetchWithCsrf('/api/admin/users');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          setAdminStats(data.stats);
-          setAdminUsersList(data.users);
-        }
-      }
-    } catch (e) {
-      console.error('Failed to fetch admin data:', e);
-    }
-  };
-
   const checkAuthStatus = async () => {
     try {
       const res = await fetchWithCsrf('/api/auth/me');
@@ -903,29 +858,6 @@ export default function Home() {
       return () => clearTimeout(timer);
     }
   }, [viewMode]);
-
-  useEffect(() => {
-    if (activeTab === 'admin' && user?.role === 'admin') {
-      const timer = setTimeout(() => {
-        fetchAdminData();
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-  }, [activeTab, user?.role]);
-
-  useEffect(() => {
-    if (activeTab === 'finance' && (isPro || user?.role === 'admin')) {
-      const timer = setTimeout(() => {
-        setBetsLoading(true);
-        fetch('/api/bets')
-          .then((r) => (r.ok ? r.json() : { bets: [] }))
-          .then((d) => setBets(d.bets || []))
-          .catch(() => {})
-          .finally(() => setBetsLoading(false));
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-  }, [activeTab, isPro, user?.role]);
 
   useEffect(() => {
     const abort = { cancelled: false };
@@ -1564,51 +1496,6 @@ export default function Home() {
     } catch {
       alert('Erro de conexão ao excluir conta.');
     }
-  };
-
-  const handleExportCSV = () => {
-    if (bets.length === 0) return;
-    const headers = [
-      'ID',
-      'Loteria',
-      'Concurso',
-      'Numeros',
-      'Custo (R$)',
-      'Premio (R$)',
-      'Lucro/Prejuizo (R$)',
-      'Criado Em',
-    ];
-    const rows = bets.map((b) => {
-      const profit = Number(b.prize_won) - Number(b.cost);
-      return [
-        b.id || '',
-        LOTTERY_CONFIGS[b.lottery as keyof typeof LOTTERY_CONFIGS]?.name ||
-          b.lottery,
-        b.contest_num,
-        b.numbers,
-        Number(b.cost).toFixed(2),
-        Number(b.prize_won).toFixed(2),
-        profit.toFixed(2),
-        b.created_at ? new Date(b.created_at).toLocaleDateString('pt-BR') : '',
-      ];
-    });
-    const csvContent = [
-      headers.join(';'),
-      ...rows.map((e) => e.join(';')),
-    ].join('\n');
-    const blob = new Blob(['\ufeff' + csvContent], {
-      type: 'text/csv;charset=utf-8;',
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute(
-      'download',
-      `meu_trevo_historico_financeiro_${new Date().toISOString().slice(0, 10)}.csv`
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   // Toggle simulated email alerts
@@ -4718,19 +4605,6 @@ export default function Home() {
                       isPro={isPro}
                       playSound={playSound}
                       setShowUpgradeModal={setShowUpgradeModal}
-                      bets={bets}
-                      setBets={setBets}
-                      betsLoading={betsLoading}
-                      setBetsLoading={setBetsLoading}
-                      betForm={betForm}
-                      setBetForm={setBetForm}
-                      betFeedback={betFeedback}
-                      setBetFeedback={setBetFeedback}
-                      betFormLoading={betFormLoading}
-                      setBetFormLoading={setBetFormLoading}
-                      financeFilter={financeFilter}
-                      setFinanceFilter={setFinanceFilter}
-                      handleExportCSV={handleExportCSV}
                     />
                   </Suspense>
                 )}
@@ -4783,43 +4657,7 @@ export default function Home() {
                       </p>
                     </div>
 
-                    <AdminPanel
-                      adminStats={adminStats}
-                      adminUsersList={adminUsersList}
-                      priceMonthly={priceMonthly}
-                      priceAnnualEquivalent={priceAnnualEquivalent}
-                      adminFeedback={adminFeedback}
-                      onSetAdminFeedback={setAdminFeedback}
-                      onRefresh={async () => {
-                        try {
-                          const [statsRes, usersRes, configRes] =
-                            await Promise.all([
-                              fetch('/api/admin/stats'),
-                              fetch('/api/admin/users'),
-                              fetch('/api/config'),
-                            ]);
-                          if (statsRes.ok) setAdminStats(await statsRes.json());
-                          if (usersRes.ok) {
-                            const d = await usersRes.json();
-                            setAdminUsersList(d.users || []);
-                          }
-                          if (configRes.ok) {
-                            const d = await configRes.json();
-                            if (d.success && d.config) {
-                              setPriceMonthly(
-                                parseFloat(d.config.price_monthly) || 14.9
-                              );
-                              setPriceAnnualEquivalent(
-                                parseFloat(d.config.price_annual) || 129.9
-                              );
-                            }
-                          }
-                        } catch (e) {
-                          console.error('Erro ao atualizar dados admin:', e);
-                        }
-                      }}
-                      playSound={playSound}
-                    />
+                    <AdminPanel playSound={playSound} />
                   </div>
                 )}
               </>
