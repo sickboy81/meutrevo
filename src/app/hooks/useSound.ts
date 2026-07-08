@@ -6,9 +6,14 @@ type SoundType = 'click' | 'success' | 'delete';
 
 type AudioContextConstructor = typeof AudioContext;
 
+interface WindowWithAudio extends Window {
+  AudioContext?: AudioContextConstructor;
+  webkitAudioContext?: AudioContextConstructor;
+}
+
 function getAudioContextClass(): AudioContextConstructor | undefined {
   if (typeof window === 'undefined') return undefined;
-  const w = window as Window & { webkitAudioContext?: AudioContextConstructor };
+  const w = window as WindowWithAudio;
   return w.AudioContext || w.webkitAudioContext;
 }
 
