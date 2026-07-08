@@ -11,198 +11,17 @@ import {
 } from '@/lib/caixa';
 import { decorateLotteryResult } from '@/lib/lottery-results';
 import { LOTTERY_CONFIGS } from '@/lib/lottery-math';
-
-type LotteryApiData = Record<string, unknown> & {
-  numero?: number;
-  dataApuracao?: string;
-};
-
-function decorateResults(
-  lotteryId: string,
-  items: LotteryApiData[]
-): LotteryApiData[] {
-  return items.map(
-    (item) => decorateLotteryResult(lotteryId, item as never) as LotteryApiData
-  );
-}
-
-function isIncompleteCachedResult(
-  lotteryId: string,
-  item: LotteryApiData | null
-): boolean {
-  if (!item) return true;
-  if (lotteryId !== 'loteca') return false;
-
-  // Only discard records that have no contest number at all (completely broken)
-  if (!item.numero) return true;
-
-  // Accept records even with partial dezenas — they're better than nothing for history
-  return false;
-}
-
-// Ensure the cache table is initialized (idempotent)
-async function ensureCacheTable() {
-  try {
-    await db.execute(`
-      CREATE TABLE IF NOT EXISTS lottery_cache (
-        lottery TEXT NOT NULL,
-        contest_num INTEGER NOT NULL,
-        draw_date TEXT NOT NULL,
-        data_json TEXT NOT NULL,
-        cached_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (lottery, contest_num)
-      );
-    `);
-    // Add cached_at column if upgrading from old schema that used created_at
-    await db
-      .execute(`ALTER TABLE lottery_cache ADD COLUMN cached_at DATETIME`)
-      .catch(() => {
-        /* already exists */
-      });
-  } catch (err) {
-    console.error('Failed to ensure lottery_cache table:', err);
-  }
-}
-
-// Persist a contest result permanently — past results NEVER change
-async function saveToCache(
-  lotteryId: string,
-  contestNum: number,
-  dateStr: string,
-  data: LotteryApiData
-) {
-  try {
-    await db.execute({
-      sql: `INSERT OR REPLACE INTO lottery_cache (lottery, contest_num, draw_date, data_json, cached_at)
-            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-      args: [lotteryId, contestNum, dateStr, JSON.stringify(data)],
-    });
-  } catch (e) {
-    console.error('Error writing to cache:', e);
-  }
-}
-
-// Read N most recent contests from DB for a given lottery
-async function getHistoryFromDB(
-  lotteryId: string,
-  maxCount: number,
-  filters?: {
-    dateStart?: string;
-    dateEnd?: string;
-    contestMin?: number;
-    contestMax?: number;
-  }
-): Promise<LotteryApiData[]> {
-  try {
-    let sql = `SELECT data_json FROM lottery_cache WHERE lottery = ?`;
-    const args: (string | number)[] = [lotteryId];
-
-    if (filters?.dateStart) {
-      sql += ` AND draw_date >= ?`;
-      args.push(filters.dateStart);
-    }
-    if (filters?.dateEnd) {
-      sql += ` AND draw_date <= ?`;
-      args.push(filters.dateEnd);
-    }
-    if (filters?.contestMin) {
-      sql += ` AND contest_num >= ?`;
-      args.push(filters.contestMin);
-    }
-    if (filters?.contestMax) {
-      sql += ` AND contest_num <= ?`;
-      args.push(filters.contestMax);
-    }
-
-    sql += ` ORDER BY contest_num DESC LIMIT ?`;
-    args.push(maxCount);
-
-    const res = await db.execute({ sql, args });
-    return res.rows
-      .map(
-        (row) =>
-          decorateLotteryResult(
-            lotteryId,
-            JSON.parse(row.data_json as string) as never
-          ) as LotteryApiData
-      )
-      .filter((item) => !isIncompleteCachedResult(lotteryId, item));
-  } catch (e) {
-    console.error('Error fetching history from DB:', e);
-    return [];
-  }
-}
-
-// Read a single specific contest from DB
-async function getContestFromDB(
-  lotteryId: string,
-  contestNum: number
-): Promise<LotteryApiData | null> {
-  try {
-    const res = await db.execute({
-      sql: `SELECT data_json FROM lottery_cache WHERE lottery = ? AND contest_num = ? LIMIT 1`,
-      args: [lotteryId, contestNum],
-    });
-    if (res.rows.length > 0) {
-      const parsed = decorateLotteryResult(
-        lotteryId,
-        JSON.parse(res.rows[0].data_json as string) as never
-      ) as LotteryApiData;
-      return isIncompleteCachedResult(lotteryId, parsed) ? null : parsed;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-// Get how old (in ms) our latest cached entry is
-async function getLatestCacheState(
-  lotteryId: string
-): Promise<{ age: number; source?: unknown }> {
-  try {
-    const res = await db.execute({
-      sql: `SELECT cached_at, data_json FROM lottery_cache WHERE lottery = ? ORDER BY contest_num DESC LIMIT 1`,
-      args: [lotteryId],
-    });
-    if (res.rows.length > 0 && res.rows[0].cached_at) {
-      const cachedAt = new Date(res.rows[0].cached_at as string).getTime();
-      const data = decorateLotteryResult(
-        lotteryId,
-        JSON.parse(res.rows[0].data_json as string) as never
-      ) as LotteryApiData;
-      if (isIncompleteCachedResult(lotteryId, data)) {
-        return { age: Infinity };
-      }
-      return { age: Date.now() - cachedAt, source: data.fonteDados };
-    }
-    return { age: Infinity };
-  } catch {
-    return { age: Infinity };
-  }
-}
-
-// Fetch a single contest from Caixa and save to cache
-async function fetchAndCacheContest(
-  lotteryId: string,
-  contestNum: number
-): Promise<LotteryApiData | null> {
-  try {
-    const raw = await fetchOfficialLotteryResult(lotteryId, contestNum);
-    if (!raw) return null;
-    // Decorate before caching so derived fields (e.g. Loteca listaDezenas) are persisted
-    const data = decorateLotteryResult(
-      lotteryId,
-      raw as never
-    ) as LotteryApiData;
-    if (data.numero) {
-      await saveToCache(lotteryId, data.numero, data.dataApuracao || '', data);
-    }
-    return data;
-  } catch {
-    return null;
-  }
-}
+import {
+  LotteryApiData,
+  decorateResults,
+  isIncompleteCachedResult,
+  ensureCacheTable,
+  saveToCache,
+  getHistoryFromDB,
+  getContestFromDB,
+  getLatestCacheState,
+  fetchAndCacheContest,
+} from '@/lib/lottery-cache';
 
 export async function GET(
   request: Request,
@@ -212,7 +31,6 @@ export async function GET(
 
   const { type } = await params;
 
-  // Validate lottery type
   if (!LOTTERY_CONFIGS[type]) {
     return NextResponse.json(
       {
@@ -236,7 +54,6 @@ export async function GET(
 
   // ─────────────────────────────────────────────────────────────────────────
   // PATH A: Specific contest query (e.g. ?concurso=2750)
-  // Historical contest data is IMMUTABLE — always serve from cache if present
   // ─────────────────────────────────────────────────────────────────────────
   if (concurso) {
     const contestNumVal = parseInt(concurso, 10);
@@ -247,10 +64,8 @@ export async function GET(
       );
     }
 
-    // 1. Check DB first — no TTL needed for historical data
     const cached = await getContestFromDB(type, contestNumVal);
     if (cached) {
-      // For Loteca: if cached data has empty listaDezenas, try Caixa API
       if (type === 'loteca') {
         const enriched = await enrichLotecaMatchData(cached);
         if (enriched !== cached) {
@@ -276,8 +91,11 @@ export async function GET(
       });
     }
 
-    // 2. Not in cache → fetch from Caixa and persist forever
-    const data = await fetchAndCacheContest(type, contestNumVal);
+    const data = await fetchAndCacheContest(
+      type,
+      contestNumVal,
+      fetchOfficialLotteryResult
+    );
     if (data) {
       return NextResponse.json(decorateLotteryResult(type, data as never), {
         headers: { 'X-Cache': 'MISS', 'X-Cache-Source': 'caixa' },
@@ -291,23 +109,11 @@ export async function GET(
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // PATH B: Latest + history request (e.g. ?limit=30)
-  //
-  // Strategy:
-  //   1. If our latest cached entry is verified and fresh (< 5 minutes), serve
-  //      from DB — no Caixa call needed.
-  //   2. If stale (>= 5 minutes), call the upstream providers for the latest.
-  //      - If the latest contest number is ALREADY in our DB, the only thing
-  //        that could have changed is valorEstimadoProximoConcurso — update it.
-  //      - If it's a NEW contest number, cache it and backfill any gaps.
-  //   3. If Caixa is offline, always fall back to DB gracefully.
+  // PATH B: Latest + history request
   // ─────────────────────────────────────────────────────────────────────────
-
   const cacheState = await getLatestCacheState(type);
 
-  // Old rows without provider provenance must be checked upstream immediately.
-  // For Loteca: also force upstream fetch when latest has empty listaDezenas
-  // (cached mirror data without results).
+  // For Loteca: force upstream fetch when latest has empty listaDezenas
   const lotecaCacheEmpty =
     type === 'loteca' && canServeCachedLatest(cacheState.age, cacheState.source)
       ? await (async () => {
@@ -327,7 +133,7 @@ export async function GET(
     const localHistory = await getHistoryFromDB(type, limit, filters);
     if (localHistory.length > 0) {
       let latest = decorateLotteryResult(type, localHistory[0] as never);
-      // For Loteca: if cached data has empty listaDezenas, try Caixa API
+
       if (type === 'loteca') {
         const dezenas = (latest as LotteryApiData).listaDezenas as
           | string[]
@@ -349,7 +155,8 @@ export async function GET(
           }
         }
       }
-      // Fire-and-forget backfill when DB has fewer results than requested
+
+      // Fire-and-forget backfill
       if (
         limit > 1 &&
         localHistory.length < limit &&
@@ -379,7 +186,13 @@ export async function GET(
                   if (i >= missing.length) return;
                   const batch = missing.slice(i, i + BATCH);
                   Promise.all(
-                    batch.map((num) => fetchAndCacheContest(type, num))
+                    batch.map((num) =>
+                      fetchAndCacheContest(
+                        type,
+                        num,
+                        fetchOfficialLotteryResult
+                      )
+                    )
                   ).then(() => runBatch(i + BATCH));
                 };
                 runBatch(0);
@@ -388,6 +201,7 @@ export async function GET(
             .catch(() => {});
         }
       }
+
       return NextResponse.json(
         {
           latest,
@@ -398,15 +212,16 @@ export async function GET(
     }
   }
 
-  // STALE or EMPTY: check Caixa for the latest
+  // ─────────────────────────────────────────────────────────────────────────
+  // STALE or EMPTY: fetch from Caixa
+  // ─────────────────────────────────────────────────────────────────────────
   try {
     let rawLatest = await fetchOfficialLotteryResult(type);
     if (!rawLatest) {
       throw new Error('Nao foi possivel obter o ultimo concurso na Caixa');
     }
-    // For Loteca: ensure we have listaResultadoEquipeEsportiva from Caixa API.
-    // The mirror doesn't provide this, and the latest endpoint may timeout.
-    // Fetch the specific contest directly with retries.
+
+    // Loteca: ensure listaResultadoEquipeEsportiva from Caixa API
     if (type === 'loteca') {
       const dezenas = (rawLatest as LotteryApiData).listaDezenas as
         | string[]
@@ -414,7 +229,7 @@ export async function GET(
       if (!dezenas || dezenas.length === 0) {
         const enriched = await enrichLotecaMatchData(rawLatest);
         if (enriched) rawLatest = enriched;
-        // If still empty, try fetching the specific contest directly
+
         const enrichedDezenas = (rawLatest as LotteryApiData).listaDezenas as
           | string[]
           | undefined;
@@ -444,7 +259,7 @@ export async function GET(
         }
       }
     }
-    // Decorate before caching so derived fields (e.g. Loteca listaDezenas) are persisted
+
     const latestData = decorateLotteryResult(
       type,
       rawLatest as never
@@ -452,8 +267,6 @@ export async function GET(
 
     if (latestData.numero) {
       const latestNum = latestData.numero;
-
-      // Always persist/update the latest contest
       await saveToCache(
         type,
         latestNum,
@@ -461,10 +274,9 @@ export async function GET(
         latestData
       );
 
-      // Backfill historical contests that are missing from DB (max 100)
+      // Backfill missing contests
       if (limit > 1) {
         const rangeStart = Math.max(1, latestNum - limit + 1);
-
         const cachedNumsRes = await db.execute({
           sql: `SELECT contest_num FROM lottery_cache WHERE lottery = ? AND contest_num >= ? AND contest_num <= ?`,
           args: [type, rangeStart, latestNum],
@@ -472,19 +284,18 @@ export async function GET(
         const cachedSet = new Set(
           cachedNumsRes.rows.map((r) => r.contest_num as number)
         );
-
         const missing: number[] = [];
         for (let n = latestNum - 1; n >= rangeStart; n--) {
           if (!cachedSet.has(n)) missing.push(n);
         }
-
-        // Fetch missing in parallel (throttled to 20 at a time to avoid hammering Caixa)
         if (missing.length > 0) {
           const BATCH = 20;
           for (let i = 0; i < missing.length; i += BATCH) {
             const batch = missing.slice(i, i + BATCH);
             await Promise.all(
-              batch.map((num) => fetchAndCacheContest(type, num))
+              batch.map((num) =>
+                fetchAndCacheContest(type, num, fetchOfficialLotteryResult)
+              )
             );
           }
         }
@@ -506,7 +317,6 @@ export async function GET(
       { headers: { 'X-Cache': 'MISS', 'X-Cache-Source': 'caixa' } }
     );
   } catch (err: unknown) {
-    // Caixa is offline → always fall back to DB, even with incomplete entries
     const message = getErrorMessage(err);
     console.warn(`Caixa API unavailable (${message}). Serving from DB cache.`);
 
@@ -553,7 +363,7 @@ export async function GET(
         );
       }
     } catch {
-      // DB also failed — fall through to 503
+      // DB also failed
     }
 
     return NextResponse.json(
