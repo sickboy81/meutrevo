@@ -479,7 +479,6 @@ export default function Home() {
 
     if (upgrade === 'cancel') {
       const frame = window.requestAnimationFrame(() => {
-        setCheckoutError('Pagamento no Stripe cancelado antes da confirmação.');
         setShowUpgradeModal(true);
         clearStripeParams();
       });
@@ -490,26 +489,16 @@ export default function Home() {
 
     const initFrame = window.requestAnimationFrame(() => {
       setShowUpgradeModal(true);
-      setCheckoutLoading(true);
-      setCheckoutError(null);
     });
 
     let attempts = 0;
     const interval = window.setInterval(async () => {
       attempts += 1;
       const refreshedUser = await checkAuthStatus();
-
       if (refreshedUser?.role === 'pro' || attempts >= 10) {
         window.clearInterval(interval);
-        setCheckoutLoading(false);
         clearStripeParams();
-        if (attempts >= 10 && refreshedUser?.role !== 'pro') {
-          setCheckoutError(
-            'Pagamento recebido. O Stripe ainda está confirmando sua assinatura; recarregue em alguns segundos se o PRO não liberar imediatamente.'
-          );
-        } else {
-          setShowUpgradeModal(false);
-        }
+        setShowUpgradeModal(false);
       }
     }, 2000);
 
