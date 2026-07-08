@@ -1,0 +1,398 @@
+/* Desktop responsive + utility styles — loaded on all routes */
+
+/* ==========================================================================
+   DESKTOP RESPONSIVE LAYOUT ENHANCEMENTS
+   ========================================================================== */
+@media (min-width: 768px) {
+  /* Expand mobile container to modern desktop width */
+  .app-container,
+  .landing-container {
+    max-width: 900px;
+    border-left: 1px solid var(--glass-border);
+    border-right: 1px solid var(--glass-border);
+    border-radius: 16px;
+    margin: 0 auto;
+    min-height: 100vh;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75);
+  }
+
+  body {
+    padding: 0;
+    background-size: cover;
+  }
+
+  .landing-hero-sales {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+    align-items: center;
+    gap: 2rem;
+    padding: 0.75rem 2.25rem 2.5rem;
+  }
+
+  .landing-hero-copy {
+    align-items: flex-start;
+  }
+
+  .landing-title {
+    font-size: 3.3rem;
+  }
+
+  .landing-hero-lead {
+    font-size: 1.2rem;
+  }
+
+  .landing-subtitle {
+    max-width: 580px;
+  }
+
+  .landing-proof-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    max-width: 660px;
+  }
+
+  .landing-hero-actions {
+    flex-direction: row;
+    width: 100%;
+  }
+
+  .landing-widget-actions {
+    flex-direction: row;
+  }
+
+  /* Center and align bottom nav for desktop width */
+  .bottom-nav {
+    max-width: 900px;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+    padding: 0.6rem 0;
+  }
+
+  /* Landing page grids */
+  .landing-features-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+
+  .landing-pricing-cards {
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: center;
+    gap: 2rem;
+  }
+
+  .landing-price-card {
+    flex: 1;
+    max-width: 450px;
+  }
+
+  /* Landing and App Volante (Board) Grids */
+  .landing-board-grid {
+    grid-template-columns: repeat(10, 1fr);
+    gap: 0.5rem;
+  }
+
+  .landing-board-grid.lotofacil {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .volante-grid {
+    grid-template-columns: repeat(10, 1fr) !important;
+    gap: 0.6rem !important;
+  }
+
+  .volante-grid.lotofacil {
+    grid-template-columns: repeat(5, 1fr) !important;
+  }
+
+  /* Stats side-by-side layouts on desktop */
+  .stats-row {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  /* Make charts sit side-by-side on desktop */
+  .charts-container-desktop {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  /* Generator tab dual-column layout on desktop */
+  .generator-layout-desktop {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  /* Bento layouts for landing and dashboard */
+  .insight-card-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 1rem !important;
+  }
+
+  /* Dual-column for Testador Expresso on desktop */
+  .landing-widget-layout {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 2rem;
+    align-items: stretch;
+  }
+
+  /* Desktop modal: wider, centered */
+  .modal-content-wrapper {
+    max-width: 520px;
+    padding: 1.25rem;
+  }
+}
+
+/* Floating animation for neon elements */
+@keyframes float-ball {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.float-animation {
+  animation: float-ball 6s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Pulse scale effect */
+.pulse-scale {
+  animation: pulse-scale-key 3s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes pulse-dot {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(0, 230, 118, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 230, 118, 0);
+  }
+}
+
+@keyframes pulse-scale-key {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.03);
+  }
+}
+
+/* Marquee scrolling ticker results */
+.marquee-ticker-container {
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  padding: 0.5rem 0;
+  background: rgba(0, 0, 0, 0.25);
+  border-top: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+  contain: layout style paint;
+}
+
+.marquee-ticker-inner {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 20s linear infinite;
+  gap: 1.25rem;
+  will-change: transform;
+}
+
+.marquee-ticker-inner:hover {
+  animation-play-state: paused;
+}
+
+.marquee-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  color: #fff;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.marquee-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.marquee-ball {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 0.55rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes marquee-scroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+/* Real-time statistics badge list */
+.stat-tag-badge {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.25s;
+}
+
+.stat-tag-badge:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+.header-nav-desktop {
+  display: none;
+}
+
+/* Desktop Top Navigation & Layout Fixes */
+@media (min-width: 768px) {
+  .header-nav-desktop {
+    display: flex !important;
+    gap: 0;
+    align-items: center;
+    margin: 0 auto;
+    overflow-x: auto;
+    flex-shrink: 1;
+    min-width: 0;
+    scrollbar-width: none;
+  }
+  .header-nav-desktop::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-item-desktop {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 0.3rem 0.45rem;
+    border-radius: 4px;
+    letter-spacing: 0;
+    text-transform: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .nav-item-desktop:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .nav-item-desktop.active {
+    color: var(--accent-color);
+    background: rgba(0, 240, 255, 0.08);
+    box-shadow: 0 0 8px rgba(0, 240, 255, 0.05);
+    font-weight: 800;
+  }
+
+  .bottom-nav {
+    display: none !important;
+  }
+
+  .desktop-user-name {
+    display: inline-block !important;
+    font-size: 0.6rem;
+    white-space: nowrap;
+    color: var(--text-muted);
+  }
+
+  .desktop-nav-links {
+    display: flex !important;
+  }
+
+  /* Right side buttons: fixed width, don't shrink */
+  .app-header > div:last-child {
+    flex-shrink: 0;
+  }
+}
+
+/* Accordion toggle button */
+.accordion-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.accordion-toggle:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+.accordion-toggle > span:last-child {
+  font-size: 0.6rem;
+  transition: transform 0.2s;
+}
+
+.hover-glow-text:hover {
+  color: white !important;
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+}
+
+/* Reduce GPU stress: disable all animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .marquee-ticker-inner {
+    animation: none !important;
+  }
+}
+
+/* Performance: isolate animated elements to prevent layout cascade */
+.ball {
+  contain: layout style paint;
+}
+
+/* Utility: number displays (stats, prices, counters) */
+.num {
+  font-family: var(--font-numbers);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}

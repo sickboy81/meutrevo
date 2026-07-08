@@ -6,6 +6,8 @@ import {
 import Link from 'next/link';
 import AppEntryLink from './components/AppEntryLink';
 import QuickSimulator from './components/QuickSimulator';
+import './landing.css';
+import './responsive.css';
 
 export const revalidate = 300;
 

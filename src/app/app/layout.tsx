@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import '../app.css';
+import '../responsive.css';
 
 export const metadata: Metadata = {
   title: {
