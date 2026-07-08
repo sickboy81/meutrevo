@@ -2206,38 +2206,7 @@ export default function Home() {
                           onChange={(e) => {
                             setEnableSounds(e.target.checked);
                             if (e.target.checked) {
-                              setTimeout(() => {
-                                try {
-                                  const AudioContextClass =
-                                    getAudioContextClass();
-                                  if (AudioContextClass) {
-                                    const ctx = new AudioContextClass();
-                                    const osc = ctx.createOscillator();
-                                    const gain = ctx.createGain();
-                                    osc.connect(gain);
-                                    gain.connect(ctx.destination);
-                                    osc.type = 'sine';
-                                    osc.frequency.setValueAtTime(
-                                      600,
-                                      ctx.currentTime
-                                    );
-                                    osc.frequency.exponentialRampToValueAtTime(
-                                      1200,
-                                      ctx.currentTime + 0.1
-                                    );
-                                    gain.gain.setValueAtTime(
-                                      0.04,
-                                      ctx.currentTime
-                                    );
-                                    gain.gain.exponentialRampToValueAtTime(
-                                      0.001,
-                                      ctx.currentTime + 0.1
-                                    );
-                                    osc.start();
-                                    osc.stop(ctx.currentTime + 0.1);
-                                  }
-                                } catch {}
-                              }, 50);
+                              setTimeout(() => playSound('click'), 50);
                             }
                           }}
                           style={{
