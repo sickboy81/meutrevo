@@ -139,3 +139,50 @@ export function copyToClipboard(
   playSound('click');
   navigator.clipboard.writeText(text);
 }
+
+import type { SavedGame } from '../app/types';
+
+/**
+ * Build Bolão/Pool sharing text for WhatsApp.
+ */
+export function buildBolaoText(
+  selectedGames: SavedGame[],
+  cotas: string,
+  taxa: string,
+  isPro: boolean
+): { text: string; shareUrl: string } {
+  let totalCost = 0;
+  let text = `🍀 *BOLÃO MEU TREVO - JOGOS OTIMIZADOS* 🍀\n`;
+  text += `Abaixo estão nossos jogos gerados matematicamente no Meu Trevo:\n\n`;
+
+  selectedGames.forEach((game, idx) => {
+    const cfg = LOTTERY_CONFIGS[game.lottery];
+    let price = 4.0;
+    if (game.lottery === 'megasena') price = 5.0;
+    else if (game.lottery === 'lotofacil') price = 3.0;
+    else if (game.lottery === 'quina') price = 2.5;
+    totalCost += price;
+    text += `${idx + 1}. *[${cfg?.name || game.lottery.toUpperCase()}]* \n`;
+    text += `👉 \` ${game.numbers.replace(/,/g, ' - ')} \` \n\n`;
+  });
+
+  const cotasNum = parseInt(cotas, 10) || 1;
+  const taxaPct = parseFloat(taxa) || 0;
+  const totalWithTax = totalCost * (1 + taxaPct / 100);
+  const pricePerCota = totalWithTax / cotasNum;
+
+  text += `💰 *Custo Total dos Volantes:* R$ ${totalCost.toFixed(2).replace('.', ',')}\n`;
+  if (isPro && (cotasNum > 1 || taxaPct > 0)) {
+    text += `👥 *Total de Cotas:* ${cotasNum}\n`;
+    if (taxaPct > 0) text += `⚙️ *Taxa de Organização:* ${taxaPct}%\n`;
+    text += `💵 *Valor por Cota:* R$ ${pricePerCota.toFixed(2).replace('.', ',')}\n\n`;
+  } else {
+    text += `\n`;
+  }
+  text += `🤖 Gerado de forma inteligente com IA. Vamos ganhar juntos!`;
+
+  return {
+    text,
+    shareUrl: `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`,
+  };
+}

@@ -22,6 +22,7 @@ import {
   downloadTXT as downloadTXTFn,
   downloadPDF as downloadPDFFn,
   printGames as printGamesFn,
+  buildBolaoText,
 } from '@/lib/lottery-exports';
 
 let _mathMod: typeof import('../../lib/lottery-math') | null = null;
@@ -64,6 +65,7 @@ const QuickSimulator = lazy(() => import('../components/QuickSimulator'));
 const SavedGamesPanel = lazy(() => import('../components/SavedGamesPanel'));
 const SettingsPanel = lazy(() => import('../components/SettingsPanel'));
 const PaymentSection = lazy(() => import('../components/PaymentSection'));
+import VolanteGrid from '../components/VolanteGrid';
 
 // Lightweight fallback for lazy-loaded tabs
 function TabFallback() {
@@ -1033,50 +1035,17 @@ export default function Home() {
   // Build Bolão/Pool sharing text and WhatsApp URL
   const handleBuildBolao = () => {
     if (selectedForPool.length === 0) return;
-
     const selectedList = savedGames.filter((g) =>
       selectedForPool.includes(g.id)
     );
-    let totalCost = 0;
-
-    let text = `🍀 *BOLÃO MEU TREVO - JOGOS OTIMIZADOS* 🍀\n`;
-    text += `Abaixo estão nossos jogos gerados matematicamente no Meu Trevo:\n\n`;
-
-    selectedList.forEach((game, idx) => {
-      const configGame = LOTTERY_CONFIGS[game.lottery];
-      let price = 4.0;
-      if (game.lottery === 'megasena') price = 5.0;
-      else if (game.lottery === 'lotofacil') price = 3.0;
-      else if (game.lottery === 'quina') price = 2.5;
-
-      totalCost += price;
-
-      text += `${idx + 1}. *[${configGame?.name || game.lottery.toUpperCase()}]* \n`;
-      text += `👉 \` ${game.numbers.replace(/,/g, ' - ')} \` \n\n`;
-    });
-
-    const cotasNum = parseInt(bolaoCotas, 10) || 1;
-    const taxaPct = parseFloat(bolaoTaxa) || 0;
-
-    const totalWithTax = totalCost * (1 + taxaPct / 100);
-    const pricePerCota = totalWithTax / cotasNum;
-
-    text += `💰 *Custo Total dos Volantes:* R$ ${totalCost.toFixed(2).replace('.', ',')}\n`;
-    if (isPro && (cotasNum > 1 || taxaPct > 0)) {
-      text += `👥 *Total de Cotas:* ${cotasNum}\n`;
-      if (taxaPct > 0) {
-        text += `⚙️ *Taxa de Organização:* ${taxaPct}%\n`;
-      }
-      text += `💵 *Valor por Cota:* R$ ${pricePerCota.toFixed(2).replace('.', ',')}\n\n`;
-    } else {
-      text += `\n`;
-    }
-    text += `🤖 Gerado de forma inteligente com IA. Vamos ganhar juntos!`;
-
-    setBolaoText(text);
-    setBolaoShareUrl(
-      `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`
+    const { text, shareUrl } = buildBolaoText(
+      selectedList,
+      bolaoCotas,
+      bolaoTaxa,
+      isPro
     );
+    setBolaoText(text);
+    setBolaoShareUrl(shareUrl);
   };
 
   const getCleanDezenas = useCallback(
@@ -1095,60 +1064,8 @@ export default function Home() {
     }));
   };
 
-  // Helper to render volante board
-  const renderVolante = (
-    mode: 'filter' | 'wheeling' | 'simulator',
-    selectedList: number[],
-    onSelect: (num: number) => void
-  ) => {
-    const balls = [];
-    const minVal = config.minNum;
-    const maxVal = config.maxNum;
-    const isCompact = maxVal - minVal + 1 <= 31;
-
-    for (let i = minVal; i <= maxVal; i++) {
-      let extraClass = '';
-      let style: React.CSSProperties = {};
-
-      if (mode === 'filter') {
-        const status = filtersMap[i] || 'none';
-        if (status === 'fixed') {
-          extraClass = 'selected';
-          style = {
-            '--active-color': '#00e676',
-            '--active-glow': 'rgba(0, 230, 118, 0.4)',
-          } as React.CSSProperties;
-        } else if (status === 'excluded') {
-          extraClass = 'selected';
-          style = {
-            '--active-color': '#ff1744',
-            '--active-glow': 'rgba(255, 23, 68, 0.4)',
-          } as React.CSSProperties;
-        }
-      } else {
-        if (selectedList.includes(i)) {
-          extraClass = 'selected';
-        }
-      }
-
-      balls.push(
-        <button
-          key={i}
-          className={`volante-ball ${extraClass}`}
-          style={style}
-          onClick={() => onSelect(i)}
-        >
-          {String(i).padStart(2, '0')}
-        </button>
-      );
-    }
-
-    return (
-      <div className={`volante-grid ${isCompact ? 'compact' : ''}`}>
-        {balls}
-      </div>
-    );
-  };
+  // Helper to render volante board (delegated to VolanteGrid component)
+  // Uses <VolanteGrid> directly in JSX instead of this function
 
   return (
     <main
@@ -1929,7 +1846,14 @@ export default function Home() {
                               dezena do sorteio.
                             </span>
 
-                            {renderVolante('filter', [], toggleFilterNumber)}
+                            <VolanteGrid
+                              mode="filter"
+                              minNum={config.minNum}
+                              maxNum={config.maxNum}
+                              selectedList={[]}
+                              filtersMap={filtersMap}
+                              onSelect={toggleFilterNumber}
+                            />
 
                             {/* CO-OCCURRENCE DEZENAS PARCEIRAS */}
                             {partnerNumbers.length > 0 && (
