@@ -44,12 +44,10 @@ function inlineWheelCount(
 }
 
 // Lazy-loaded components — only downloaded when tab/modal is opened
-const UpgradeModal = lazy(() => import('../components/UpgradeModal'));
 const TutorialModal = lazy(() => import('../components/TutorialModal'));
 const AdminPanel = lazy(() => import('../components/AdminPanel'));
 const ResultsTab = lazy(() => import('../components/ResultsTab'));
 const StatsTab = lazy(() => import('../components/StatsTab'));
-const ToolsPanel = lazy(() => import('../components/ToolsPanel'));
 const FinanceTab = lazy(() => import('../components/FinanceTab'));
 const LandingPage = lazy(() => import('../components/LandingPage'));
 const RankingPanel = lazy(() => import('../components/RankingPanel'));
@@ -60,6 +58,7 @@ const CameraScanner = lazy(() => import('../components/CameraScanner'));
 const QuickSimulator = lazy(() => import('../components/QuickSimulator'));
 const SavedGamesPanel = lazy(() => import('../components/SavedGamesPanel'));
 const SettingsPanel = lazy(() => import('../components/SettingsPanel'));
+const PaymentSection = lazy(() => import('../components/PaymentSection'));
 
 // Lightweight fallback for lazy-loaded tabs
 function TabFallback() {
@@ -162,9 +161,6 @@ export default function Home() {
       ? (stored as ActiveTab)
       : 'results';
   });
-  const [settingsSubTab, setSettingsSubTab] = useState<
-    'config' | 'profile' | 'tools'
-  >('config');
   const settingsRef = useRef<HTMLDivElement | null>(null);
 
   // Sub-tab for generator: 'smart' | 'wheeling' | 'mystic' | 'bolao'
@@ -203,20 +199,8 @@ export default function Home() {
   const [showRateio, setShowRateio] = useState<boolean>(false);
   const [showFilters, setShowFilters] = useState<boolean>(false);
 
-  // --- PREMIUM FREEMIUM MODAL & CHECKOUT STATES ---
+  // --- PREMIUM FREEMIUM MODAL ---
   const [showUpgradeModal, setShowUpgradeModal] = useState<boolean>(false);
-  const [checkoutLoading, setCheckoutLoading] = useState<boolean>(false);
-  const [paymentData, setPaymentData] = useState<{
-    payment_id: string;
-    qr_code: string;
-    qr_image_url: string;
-  } | null>(null);
-  const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
-  const [pollingIntervalId, setPollingIntervalId] = useState<ReturnType<
-    typeof setInterval
-  > | null>(null);
-  const [pixCopied, setPixCopied] = useState<boolean>(false);
-  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [isAnnual, setIsAnnual] = useState<boolean>(false);
   const [priceMonthly, setPriceMonthly] = useState<number>(14.9);
   const [priceAnnualEquivalent, setPriceAnnualEquivalent] =
@@ -394,7 +378,6 @@ export default function Home() {
   const [savedGames, setSavedGames] = useState<SavedGame[]>([]);
   const [emailAlerts, setEmailAlerts] = useState<boolean>(false);
   const [showInRanking, setShowInRanking] = useState<boolean>(true);
-  const [emailAlertFeedback, setEmailAlertFeedback] = useState<string>('');
 
   const redirectToLogin = () => {
     if (typeof window === 'undefined') return;
@@ -443,114 +426,13 @@ export default function Home() {
   const config = LOTTERY_CONFIGS[activeLottery];
   const isPro = user?.role === 'pro' || user?.role === 'admin';
 
-  useEffect(() => {
-    return () => {
-      if (pollingIntervalId) {
-        clearInterval(pollingIntervalId);
-      }
-    };
-  }, [pollingIntervalId]);
-
-  const handleStartCheckout = async (provider: 'pixgo' | 'stripe') => {
-    if (!user) {
-      redirectToLogin();
-      return;
-    }
-    setCheckoutLoading(true);
-    setCheckoutError(null);
-    setPaymentData(null);
-    setPaymentStatus('pending');
+  // Fetch saved games from DB
+  const fetchSavedGames = async () => {
     try {
-      const res = await fetchWithCsrf('/api/payments/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          planType: isAnnual ? 'annual' : 'monthly',
-          provider,
-        }),
-      });
-      const result = await res.json().catch(() => ({}));
-
+      const res = await fetchWithCsrf('/api/games');
       if (res.ok) {
-        if (result.success && result.data) {
-          if (provider === 'stripe' && result.data.checkout_url) {
-            window.location.assign(result.data.checkout_url);
-            return;
-          }
-
-          setPaymentData(result.data);
-          startPollingPayment(result.data.payment_id);
-        }
-      } else {
-        setCheckoutError(
-          result.error || 'Não foi possível iniciar o checkout.'
-        );
-      }
-    } catch (e) {
-      console.error(e);
-      setCheckoutError('Erro de conexão ao iniciar o pagamento.');
-    } finally {
-      setCheckoutLoading(false);
-    }
-  };
-
-  const startPollingPayment = (id: string) => {
-    if (pollingIntervalId) clearInterval(pollingIntervalId);
-
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetchWithCsrf(`/api/payments/status?id=${id}`);
-        if (res.ok) {
-          const result = await res.json();
-          if (result.success && result.data) {
-            const status = result.data.status;
-            setPaymentStatus(status);
-            if (status === 'completed') {
-              clearInterval(interval);
-              setPollingIntervalId(null);
-              playSound('success');
-              checkAuthStatus();
-              setTimeout(() => {
-                setShowUpgradeModal(false);
-                setPaymentData(null);
-                setPaymentStatus(null);
-              }, 3000);
-            }
-          }
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    }, 4000);
-    setPollingIntervalId(interval);
-  };
-
-  const handleSimulatePaymentConfirm = async () => {
-    if (!paymentData) return;
-    try {
-      const res = await fetchWithCsrf(
-        `/api/payments/status?id=${paymentData.payment_id}&confirm=true`
-      );
-      if (res.ok) {
-        const result = await res.json();
-        if (
-          result.success &&
-          result.data &&
-          result.data.status === 'completed'
-        ) {
-          setPaymentStatus('completed');
-          if (pollingIntervalId) {
-            clearInterval(pollingIntervalId);
-            setPollingIntervalId(null);
-          }
-          playSound('success');
-          checkAuthStatus();
-          setTimeout(() => {
-            setShowUpgradeModal(false);
-            setPaymentData(null);
-            setPaymentStatus(null);
-          }, 3000);
-        }
+        const data = await res.json();
+        setSavedGames(data.games || []);
       }
     } catch (e) {
       console.error(e);
@@ -558,7 +440,6 @@ export default function Home() {
   };
 
   // Fetch logged in user status
-
   const checkAuthStatus = async () => {
     try {
       const res = await fetchWithCsrf('/api/auth/me');
@@ -631,19 +512,6 @@ export default function Home() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.role]);
-
-  // Fetch saved games from DB
-  const fetchSavedGames = async () => {
-    try {
-      const res = await fetchWithCsrf('/api/games');
-      if (res.ok) {
-        const data = await res.json();
-        setSavedGames(data.games || []);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   const fetchResult = async (lotteryId: string, contestNum?: string) => {
     setLoading(true);
@@ -1388,62 +1256,6 @@ export default function Home() {
       </html>
     `);
     printWindow.document.close();
-  };
-
-  // Handle logout
-  const handleLogout = async () => {
-    if (pollingIntervalId) {
-      clearInterval(pollingIntervalId);
-      setPollingIntervalId(null);
-    }
-    setPaymentData(null);
-    setPaymentStatus(null);
-    setShowUpgradeModal(false);
-    try {
-      const res = await fetchWithCsrf('/api/auth/logout', { method: 'POST' });
-      if (res.ok) {
-        setUser(null);
-        setSavedGames([]);
-        window.location.assign('/login');
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    const confirmed = confirm(
-      '⚠️ ATENÇÃO: Esta ação é definitiva e apagará permanentemente todos os seus dados cadastrais, jogos salvos e históricos da plataforma Meu Trevo de acordo com as diretrizes da LGPD. Deseja prosseguir?'
-    );
-
-    if (!confirmed) return;
-
-    try {
-      const res = await fetchWithCsrf('/api/auth/delete', { method: 'POST' });
-      if (res.ok) {
-        alert('Sua conta e todos os seus dados foram excluídos com sucesso.');
-        setUser(null);
-        setSavedGames([]);
-        setActiveTab('results');
-      } else {
-        const data = await res.json();
-        alert(data.error || 'Erro ao excluir conta.');
-      }
-    } catch {
-      alert('Erro de conexão ao excluir conta.');
-    }
-  };
-
-  // Toggle simulated email alerts
-  const handleToggleEmailAlerts = () => {
-    const nextVal = !emailAlerts;
-    setEmailAlerts(nextVal);
-    setEmailAlertFeedback(
-      nextVal
-        ? '✓ Alertas de resultados ativados! Enviaremos análises do Turso DB.'
-        : '✓ Alertas desativados.'
-    );
-    setTimeout(() => setEmailAlertFeedback(''), 3000);
   };
 
   // Build Bolão/Pool sharing text and WhatsApp URL
@@ -3405,36 +3217,19 @@ export default function Home() {
             )}
 
             {/* MODAL DE UPGRADE PREMIUM PRO */}
-            {showUpgradeModal && (
-              <Suspense fallback={<TabFallback />}>
-                <UpgradeModal
-                  priceMonthly={priceMonthly}
-                  checkoutLoading={checkoutLoading}
-                  checkoutError={checkoutError}
-                  paymentData={paymentData}
-                  paymentStatus={paymentStatus}
-                  pixCopied={pixCopied}
-                  onStartPixCheckout={() => handleStartCheckout('pixgo')}
-                  onStartStripeCheckout={() => handleStartCheckout('stripe')}
-                  onSimulatePayment={handleSimulatePaymentConfirm}
-                  onCopyPix={(text) => {
-                    navigator.clipboard.writeText(text);
-                    setPixCopied(true);
-                    setTimeout(() => setPixCopied(false), 2000);
-                  }}
-                  onClose={() => {
-                    setShowUpgradeModal(false);
-                    if (pollingIntervalId) {
-                      clearInterval(pollingIntervalId);
-                      setPollingIntervalId(null);
-                    }
-                    setPaymentData(null);
-                    setPaymentStatus(null);
-                    setCheckoutError(null);
-                  }}
-                />
-              </Suspense>
-            )}
+            <Suspense fallback={null}>
+              <PaymentSection
+                user={user}
+                isPro={isPro}
+                playSound={playSound}
+                onPaymentSuccess={() => {
+                  setUser((prev) => (prev ? { ...prev, role: 'pro' } : prev));
+                  setShowUpgradeModal(false);
+                }}
+                showUpgradeModal={showUpgradeModal}
+                setShowUpgradeModal={setShowUpgradeModal}
+              />
+            </Suspense>
 
             {/* MODAL DE TUTORIAL ONBOARDING GUIADO */}
             {showTutorial && (
