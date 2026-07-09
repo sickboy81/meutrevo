@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import '../app.css';
 import '../responsive.css';
+import { AppProvider } from './context/AppContext';
 
 export const metadata: Metadata = {
   title: {
@@ -17,5 +18,5 @@ export default function AppLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return children;
+  return <AppProvider>{children}</AppProvider>;
 }
