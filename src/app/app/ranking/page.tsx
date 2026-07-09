@@ -10,7 +10,7 @@ export default function RankingPage() {
 
   return (
     <Suspense fallback={<Loading />}>
-      <RankingPanel user={app.user} isPro={app.isPro} />
+      <RankingPanel user={app.user} />
     </Suspense>
   );
 }
