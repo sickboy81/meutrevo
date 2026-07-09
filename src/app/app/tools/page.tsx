@@ -12,16 +12,7 @@ export default function ToolsPage() {
 
   return (
     <Suspense fallback={<Loading />}>
-      <ToolsPanel
-        user={app.user}
-        isPro={app.isPro}
-        playSound={playSound}
-        setShowUpgradeModal={app.setShowUpgradeModal}
-        activeLottery={app.activeLottery}
-        config={app.config}
-        result={app.result}
-        history={app.history}
-      />
+      <ToolsPanel playSound={playSound} />
     </Suspense>
   );
 }
