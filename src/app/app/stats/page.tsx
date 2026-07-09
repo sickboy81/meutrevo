@@ -6,6 +6,14 @@ import { useSound } from '../../hooks/useSound';
 import StatsTab from '../../components/StatsTab';
 import Loading from '../loading';
 
+const emptyStats = {
+  frequencyMap: {} as Record<number, number>,
+  hotNumbers: [] as { num: number; count: number }[],
+  coldNumbers: [] as { num: number; delay: number }[],
+  avgSum: 0,
+  evenPct: 0,
+};
+
 export default function StatsPage() {
   const app = useApp();
   const playSound = useSound(app.enableSounds);
@@ -15,7 +23,7 @@ export default function StatsPage() {
       <StatsTab
         history={app.history}
         activeLottery={app.activeLottery}
-        statsData={null}
+        statsData={emptyStats}
         isPro={app.isPro}
         playSound={playSound}
         setShowUpgradeModal={app.setShowUpgradeModal}

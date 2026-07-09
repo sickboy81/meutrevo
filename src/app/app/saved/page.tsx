@@ -16,11 +16,6 @@ export default function SavedPage() {
   const getCleanDezenas = (r: Parameters<typeof getCleanDezenasHelper>[0]) =>
     getCleanDezenasHelper(r, app.activeLottery);
 
-  const latestResultsMap: Record<string, (typeof app.history)[0]> = {};
-  app.history.forEach((r) => {
-    if (!latestResultsMap[r.loteria]) latestResultsMap[r.loteria] = r;
-  });
-
   return (
     <Suspense fallback={<Loading />}>
       <SavedGamesPanel
@@ -28,7 +23,7 @@ export default function SavedPage() {
         selectedForPool={selectedForPool}
         setSelectedForPool={setSelectedForPool}
         setBolaoText={setBolaoText}
-        latestResultsMap={latestResultsMap}
+        latestResultsMap={{}}
         getCleanDezenas={getCleanDezenas}
         handleDeleteGame={async () => {}}
         downloadTXT={() => {}}
