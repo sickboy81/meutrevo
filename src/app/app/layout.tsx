@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import '../app.css';
+import '../landing.css';
 import '../responsive.css';
 import { AppProvider } from './context/AppContext';
 
