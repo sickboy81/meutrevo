@@ -71,7 +71,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [history, setHistory] = useState<LotteryResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [customConcurso, setCustomConcurso] = useState('');
-  const [theme, setTheme] = useState<ThemeType>('dark');
+  const [theme, setTheme] = useState<ThemeType>('meganeon');
   const [historyLimit, setHistoryLimit] = useState(30);
   const [enableSounds, setEnableSounds] = useState(true);
   const [showInRanking, setShowInRanking] = useState(true);
