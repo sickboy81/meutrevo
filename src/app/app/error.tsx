@@ -1,87 +1,62 @@
 'use client';
 
-import { useEffect } from 'react';
-import Link from 'next/link';
-
-export default function AppError({
+export default function Error({
   error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  useEffect(() => {
-    console.error('Erro no app:', error);
-  }, [error]);
-
   return (
     <div
+      className="app-container"
       style={{
         display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
         justifyContent: 'center',
+        alignItems: 'center',
         minHeight: '100vh',
-        gap: '1.5rem',
+        flexDirection: 'column',
+        gap: '1rem',
         padding: '2rem',
         textAlign: 'center',
       }}
     >
-      <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>⚠️</div>
-      <h1
+      <p style={{ fontSize: '2rem' }}>⚠️</p>
+      <h2
         style={{
-          color: '#ff1744',
-          fontSize: '1.5rem',
-          fontFamily: 'var(--font-body)',
-          fontWeight: 'bold',
+          fontFamily: 'var(--font-display)',
+          fontSize: '1.1rem',
+          color: 'var(--text-main)',
         }}
       >
-        Erro no Painel
-      </h1>
+        Algo deu errado
+      </h2>
       <p
         style={{
           color: 'var(--text-muted)',
-          fontSize: '0.9rem',
-          maxWidth: '400px',
-          lineHeight: 1.6,
+          fontFamily: 'var(--font-body)',
+          fontSize: '0.85rem',
+          maxWidth: '300px',
         }}
       >
-        Não foi possível carregar o painel. Verifique sua conexão e tente
-        novamente.
+        {error.message || 'Erro inesperado. Tente novamente.'}
       </p>
-      <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-        <button
-          onClick={reset}
-          style={{
-            background: 'var(--accent-color)',
-            color: '#000',
-            border: 'none',
-            padding: '0.75rem 1.5rem',
-            borderRadius: '8px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            fontSize: '0.9rem',
-          }}
-        >
-          Tentar novamente
-        </button>
-        <Link
-          href="/"
-          style={{
-            background: 'transparent',
-            color: 'var(--text-muted)',
-            border: '1px solid var(--glass-border)',
-            padding: '0.75rem 1.5rem',
-            borderRadius: '8px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            fontSize: '0.9rem',
-            textDecoration: 'none',
-          }}
-        >
-          Página Inicial
-        </Link>
-      </div>
+      <button
+        onClick={reset}
+        style={{
+          marginTop: '1rem',
+          padding: '0.75rem 1.5rem',
+          background: 'var(--accent-color, #209869)',
+          color: 'white',
+          border: 'none',
+          borderRadius: '12px',
+          fontWeight: 700,
+          cursor: 'pointer',
+          fontSize: '0.9rem',
+        }}
+      >
+        Tentar novamente
+      </button>
     </div>
   );
 }

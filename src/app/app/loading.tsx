@@ -1,41 +1,33 @@
-export default function AppLoading() {
+export default function Loading() {
   return (
     <div
+      className="app-container"
       style={{
         display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
         justifyContent: 'center',
+        alignItems: 'center',
         minHeight: '100vh',
-        gap: '1.5rem',
-        padding: '2rem',
+        flexDirection: 'column',
+        gap: '1rem',
       }}
     >
-      <div
-        style={{
-          width: '48px',
-          height: '48px',
-          border: '3px solid rgba(0, 240, 255, 0.2)',
-          borderTopColor: '#00f0ff',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite',
-        }}
+      <span
+        className="loader"
+        style={
+          {
+            '--accent-color': '#209869',
+          } as React.CSSProperties
+        }
       />
       <p
         style={{
           color: 'var(--text-muted)',
-          fontSize: '0.9rem',
           fontFamily: 'var(--font-body)',
-          letterSpacing: '1px',
+          fontSize: '0.85rem',
         }}
       >
-        Carregando painel...
+        Carregando Meu Trevo...
       </p>
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }
