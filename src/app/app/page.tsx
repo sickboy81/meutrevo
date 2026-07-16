@@ -416,6 +416,8 @@ export default function Home() {
   const [bolaoTaxa, setBolaoTaxa] = useState<string>('0');
 
   const [copyFeedback, setCopyFeedback] = useState<string>(''); // Holds feedback text
+  const [profileFeedback, setProfileFeedback] = useState<string>('');
+  const [profileLoading, setProfileLoading] = useState<boolean>(false);
 
   // --- ADVANCED FILTERS STATES ---
   const [avoidConsecutive, setAvoidConsecutive] = useState<boolean>(false);
@@ -462,6 +464,46 @@ export default function Home() {
       console.error(e);
     }
     return null;
+  };
+
+  const handleSaveProfile = async (data: {
+    name: string;
+    password: string;
+    avatar: string;
+    favorite_lottery: string;
+    cpf_cnpj: string;
+    city: string;
+    state: string;
+  }) => {
+    setProfileLoading(true);
+    setProfileFeedback('');
+    try {
+      const res = await fetchWithCsrf('/api/auth/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const payload = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setProfileFeedback(payload.error || 'Erro ao salvar perfil.');
+        playSound('delete');
+        return;
+      }
+
+      if (payload.user) {
+        setUser(payload.user);
+        setShowInRanking(payload.user.show_in_ranking !== false);
+      }
+      setProfileFeedback('✓ Perfil salvo!');
+      playSound('success');
+    } catch {
+      setProfileFeedback('Erro de conexão ao salvar perfil.');
+      playSound('delete');
+    } finally {
+      setProfileLoading(false);
+      setTimeout(() => setProfileFeedback(''), 5000);
+    }
   };
 
   useEffect(() => {
@@ -1308,13 +1350,16 @@ export default function Home() {
                       !window.confirm('Tem certeza? Esta ação é irreversível.')
                     )
                       return;
-                    const res = await fetchWithCsrf('/api/user/delete', {
-                      method: 'DELETE',
+                    const res = await fetchWithCsrf('/api/auth/delete', {
+                      method: 'POST',
                     });
                     if (res.ok) {
                       window.location.href = '/';
                     }
                   }}
+                  onSaveProfile={handleSaveProfile}
+                  profileFeedback={profileFeedback}
+                  profileLoading={profileLoading}
                   onFactoryReset={async () => {
                     if (!window.confirm('Resetar todos os dados?')) return;
                     await fetchWithCsrf('/api/user/factory-reset', {

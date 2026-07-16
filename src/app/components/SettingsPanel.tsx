@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import type { User, ThemeType } from '../types';
+import ProfilePanel from './ProfilePanel';
 
 interface SettingsPanelProps {
   playSound: (type: 'click' | 'success' | 'delete') => void;
@@ -18,6 +19,17 @@ interface SettingsPanelProps {
   onShowTutorial: () => void;
   onLogout: () => void;
   onDeleteAccount: () => void;
+  onSaveProfile: (data: {
+    name: string;
+    password: string;
+    avatar: string;
+    favorite_lottery: string;
+    cpf_cnpj: string;
+    city: string;
+    state: string;
+  }) => Promise<void>;
+  profileFeedback: string;
+  profileLoading: boolean;
   onFactoryReset: () => void;
   user: User | null;
   isPro: boolean;
@@ -74,6 +86,9 @@ export default function SettingsPanel({
   onShowTutorial,
   onLogout,
   onDeleteAccount,
+  onSaveProfile,
+  profileFeedback,
+  profileLoading,
   onFactoryReset,
   user,
   isPro,
@@ -84,7 +99,6 @@ export default function SettingsPanel({
   const [settingsSubTab, setSettingsSubTab] = useState<'config' | 'account'>(
     'config'
   );
-  const [activeFaqIndex, setActiveFaqIndex] = useState<number | null>(null);
 
   return (
     <div
@@ -105,6 +119,8 @@ export default function SettingsPanel({
         gap: '0.85rem',
         boxShadow: '0 10px 25px rgba(0, 0, 0, 0.5)',
         padding: '1.25rem',
+        maxHeight: 'min(78vh, 680px)',
+        overflowY: 'auto',
       }}
     >
       {/* Menu Tabs Navigation */}
@@ -180,7 +196,11 @@ export default function SettingsPanel({
                   key={t}
                   className={`theme-pill-btn ${theme === t ? 'active' : ''}`}
                   onClick={() => {
-                    t === 'meganeon' || isPro ? onSetTheme(t) : onShowUpgrade();
+                    if (t === 'meganeon' || isPro) {
+                      onSetTheme(t);
+                    } else {
+                      onShowUpgrade();
+                    }
                   }}
                   style={THEME_STYLES[t]}
                 >
@@ -210,9 +230,12 @@ export default function SettingsPanel({
                   key={limit}
                   className={`theme-pill-btn ${historyLimit === limit ? 'active' : ''}`}
                   onClick={() => {
-                    limit === 30 || isPro
-                      ? (playSound('click'), onSetHistoryLimit(limit))
-                      : onShowUpgrade();
+                    if (limit === 30 || isPro) {
+                      playSound('click');
+                      onSetHistoryLimit(limit);
+                    } else {
+                      onShowUpgrade();
+                    }
                   }}
                   style={{ flex: 1, textAlign: 'center' }}
                 >
@@ -368,7 +391,7 @@ export default function SettingsPanel({
         >
           {user ? (
             <>
-              {/* Stats & Plan Grid */}
+              {/* Plan summary */}
               <div
                 style={{
                   display: 'grid',
@@ -449,7 +472,6 @@ export default function SettingsPanel({
                 </div>
               </div>
 
-              {/* Upgrade Banner for FREE users */}
               {user.role !== 'pro' && user.role !== 'admin' && (
                 <div
                   onClick={() => {
@@ -493,57 +515,36 @@ export default function SettingsPanel({
                 </div>
               )}
 
-              {/* Account Actions / Danger Zone */}
-              <div
+              <ProfilePanel
+                user={user}
+                onSave={onSaveProfile}
+                feedback={profileFeedback}
+                loading={profileLoading}
+                isPro={isPro}
+                playSound={playSound}
+                onDeleteAccount={onDeleteAccount}
+                onSetShowInRanking={onSetShowInRanking}
+                showInRanking={showInRanking}
+                onSetEmailAlerts={onSetEmailAlerts}
+                emailAlerts={emailAlerts}
+                emailAlertFeedback=""
+              />
+
+              <button
+                onClick={onLogout}
                 style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '0.4rem',
-                  borderTop: '1px solid rgba(255,255,255,0.08)',
-                  paddingTop: '0.6rem',
-                  marginTop: '0.1rem',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid var(--glass-border)',
+                  color: 'white',
+                  fontSize: '0.72rem',
+                  padding: '0.55rem',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
                 }}
               >
-                <button
-                  onClick={onLogout}
-                  style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid var(--glass-border)',
-                    color: 'white',
-                    fontSize: '0.68rem',
-                    padding: '0.45rem',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  Sair da Conta
-                </button>
-                <button
-                  onClick={onDeleteAccount}
-                  style={{
-                    background: 'rgba(255, 23, 68, 0.08)',
-                    border: '1px solid rgba(255, 23, 68, 0.4)',
-                    color: '#ff1744',
-                    fontSize: '0.68rem',
-                    padding: '0.45rem',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background =
-                      'rgba(255, 23, 68, 0.18)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background =
-                      'rgba(255, 23, 68, 0.08)';
-                  }}
-                >
-                  ⚠️ Excluir Conta
-                </button>
-              </div>
+                Sair da Conta
+              </button>
             </>
           ) : (
             <div
