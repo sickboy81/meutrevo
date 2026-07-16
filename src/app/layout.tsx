@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
 import { Orbitron, Inter, Space_Grotesk } from 'next/font/google';
 import './globals.css';
+import './app.css';
+import './landing.css';
+import './responsive.css';
 import LgpdBanner from './components/LgpdBanner';
 import PWARegistrar from './components/PWARegistrar';
 
