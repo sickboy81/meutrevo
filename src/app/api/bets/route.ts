@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { db } from '../../../lib/db';
 import { internalServerError, requireRole } from '../../../lib/api-auth';
 import { z } from 'zod';
+import { getSimpleBetPrice } from '@/lib/lottery-prices';
 
 const createBetSchema = z.object({
   lottery: z.string().min(1).max(30),
@@ -11,6 +12,29 @@ const createBetSchema = z.object({
   cost: z.number().positive().max(10000),
   prize_won: z.number().min(0).max(500000000),
 });
+
+function countPlayedNumbers(numbers: unknown): number {
+  if (typeof numbers !== 'string') return 0;
+  return numbers
+    .split(/[-,\s]+/)
+    .map((n) => n.trim())
+    .filter(Boolean).length;
+}
+
+function normalizeBetCost(row: Record<string, unknown>) {
+  const lottery = typeof row.lottery === 'string' ? row.lottery : '';
+  const cost = Number(row.cost);
+
+  if (
+    lottery === 'lotofacil' &&
+    cost === 4.5 &&
+    countPlayedNumbers(row.numbers) === 15
+  ) {
+    return { ...row, cost: getSimpleBetPrice('lotofacil') };
+  }
+
+  return row;
+}
 
 // 1. Listar apostas registradas do usuário
 export async function GET() {
@@ -22,7 +46,10 @@ export async function GET() {
       sql: 'SELECT * FROM bets WHERE user_id = ? ORDER BY created_at DESC',
       args: [user.id],
     });
-    return NextResponse.json({ success: true, bets: res.rows });
+    return NextResponse.json({
+      success: true,
+      bets: res.rows.map((row) => normalizeBetCost(row)),
+    });
   } catch (err: unknown) {
     return internalServerError('Bets list error:', err);
   }

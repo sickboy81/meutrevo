@@ -6,6 +6,7 @@ import {
   generateBolaoOtimizado,
 } from '../../lib/lottery-math';
 import { fetchWithCsrf } from '@/lib/fetch';
+import { getSimpleBetPrice } from '@/lib/lottery-prices';
 import type { SavedGame } from '../types';
 
 interface Bolao {
@@ -90,7 +91,7 @@ export default function BolaoPanel({
             lottery: activeLottery,
             contest_num: 0,
             numbers: g.numbers,
-            cost: 4.5,
+            cost: getSimpleBetPrice(activeLottery),
             prize_won: 0,
             hits: 0,
           }),
@@ -232,19 +233,7 @@ export default function BolaoPanel({
   const generateBolaoMessage = (bolao: Bolao): string => {
     const config =
       LOTTERY_CONFIGS[bolao.lottery as keyof typeof LOTTERY_CONFIGS];
-    const priceMap: Record<string, number> = {
-      megasena: 5,
-      lotofacil: 2.5,
-      quina: 2,
-      lotomania: 2.5,
-      diadesorte: 2,
-      timemania: 2,
-      loteca: 2,
-      duplasena: 2.5,
-      supersete: 2,
-      maismilionaria: 3,
-    };
-    const gamePrice = priceMap[bolao.lottery] || 2;
+    const gamePrice = getSimpleBetPrice(bolao.lottery);
     const totalCost = gamePrice * bolao.games.length;
     const cotaValue = totalCost / bolao.cotas_total;
 
@@ -851,12 +840,7 @@ export default function BolaoPanel({
               }}
             >
               {(() => {
-                const priceMap: Record<string, number> = {
-                  megasena: 5,
-                  lotofacil: 2.5,
-                  quina: 2,
-                };
-                const gp = priceMap[activeLottery] || 2;
+                const gp = getSimpleBetPrice(activeLottery);
                 const total = gp * selectedGames.length;
                 const cotas = parseInt(cotasTotal) || 1;
                 const taxa = isPro ? parseFloat(taxaPct) || 0 : 0;

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { LOTTERY_CONFIGS } from '../../lib/lottery-math';
 import { fetchWithCsrf } from '@/lib/fetch';
+import { getSimpleBetPrice } from '@/lib/lottery-prices';
 import type { BetRecord, LotteryResult } from '../types';
 
 interface FinanceTabProps {
@@ -46,7 +47,7 @@ export default React.memo(function FinanceTab({
     lottery: 'megasena',
     numbers: '',
     contest_num: '',
-    cost: '',
+    cost: getSimpleBetPrice('megasena').toFixed(2),
     prize_won: '',
   });
   const [betFeedback, setBetFeedback] = useState('');
@@ -835,7 +836,11 @@ export default React.memo(function FinanceTab({
                 <select
                   value={betForm.lottery}
                   onChange={(e) =>
-                    setBetForm((f) => ({ ...f, lottery: e.target.value }))
+                    setBetForm((f) => ({
+                      ...f,
+                      lottery: e.target.value,
+                      cost: getSimpleBetPrice(e.target.value).toFixed(2),
+                    }))
                   }
                   style={{
                     background: 'rgba(255,255,255,0.06)',
@@ -905,7 +910,9 @@ export default React.memo(function FinanceTab({
                 <input
                   type="number"
                   step="0.01"
-                  placeholder="Ex: 5.00"
+                  placeholder={`Ex: ${getSimpleBetPrice(
+                    betForm.lottery
+                  ).toFixed(2)}`}
                   value={betForm.cost}
                   onChange={(e) =>
                     setBetForm((f) => ({ ...f, cost: e.target.value }))
@@ -1140,7 +1147,7 @@ export default React.memo(function FinanceTab({
                       ...f,
                       numbers: '',
                       contest_num: '',
-                      cost: '',
+                      cost: getSimpleBetPrice(f.lottery).toFixed(2),
                       prize_won: '',
                     }));
                     const gRes = await fetchWithCsrf('/api/bets');

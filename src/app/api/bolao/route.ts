@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getAuthenticatedUser } from '@/lib/api-auth';
+import { getSimpleBetPrice } from '@/lib/lottery-prices';
 
 // GET: List user's bolões
 export async function GET(req: Request) {
@@ -90,19 +91,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Dados incompletos' }, { status: 400 });
     }
 
-    const priceMap: Record<string, number> = {
-      megasena: 5,
-      lotofacil: 2.5,
-      quina: 2,
-      lotomania: 2.5,
-      diadesorte: 2,
-      timemania: 2,
-      loteca: 2,
-      duplasena: 2.5,
-      supersete: 2,
-      maismilionaria: 3,
-    };
-    const gamePrice = priceMap[lottery] || 2;
+    const gamePrice = getSimpleBetPrice(lottery);
     const totalCost = gamePrice * games.length;
 
     const id = `bol_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;

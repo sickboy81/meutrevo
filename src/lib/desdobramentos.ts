@@ -2,6 +2,8 @@
 // Coverage guarantee: if X of the drawn numbers are in your chosen set,
 // you're guaranteed at least Y prize tier.
 
+import { getLotteryGamesCost } from './lottery-prices';
+
 export interface Desdobramento {
   id: string;
   name: string;
@@ -342,19 +344,7 @@ export function getDesdobramentos(lottery: string): Desdobramento[] {
 }
 
 export function getLotteryGameCost(lottery: string, games: number): number {
-  const priceMap: Record<string, number> = {
-    megasena: 5,
-    lotofacil: 2.5,
-    quina: 2,
-    lotomania: 2.5,
-    diadesorte: 2,
-    timemania: 2,
-    loteca: 2,
-    duplasena: 2.5,
-    supersete: 2,
-    maismilionaria: 3,
-  };
-  return (priceMap[lottery] || 2) * games;
+  return getLotteryGamesCost(lottery, games);
 }
 
 // Generate games for a closure

@@ -1,4 +1,5 @@
 import { LOTTERY_CONFIGS } from './lottery-math';
+import { getSimpleBetPrice } from './lottery-prices';
 
 /**
  * Download generated games as a TXT file.
@@ -157,10 +158,7 @@ export function buildBolaoText(
 
   selectedGames.forEach((game, idx) => {
     const cfg = LOTTERY_CONFIGS[game.lottery];
-    let price = 4.0;
-    if (game.lottery === 'megasena') price = 5.0;
-    else if (game.lottery === 'lotofacil') price = 3.0;
-    else if (game.lottery === 'quina') price = 2.5;
+    const price = getSimpleBetPrice(game.lottery);
     totalCost += price;
     text += `${idx + 1}. *[${cfg?.name || game.lottery.toUpperCase()}]* \n`;
     text += `👉 \` ${game.numbers.replace(/,/g, ' - ')} \` \n\n`;
