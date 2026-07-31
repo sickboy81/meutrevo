@@ -14,7 +14,7 @@ test('deve navegar para Mega-Sena', async ({ page }) => {
 test('deve navegar para o app', async ({ page }) => {
   await page.goto('/');
   await page.click('text=Entrar no App');
-  await expect(page).toHaveURL(/\/app/);
+  await expect(page).toHaveURL(/\/login\?next=%2Fapp$/);
 });
 
 test('deve carregar página de termos', async ({ page }) => {

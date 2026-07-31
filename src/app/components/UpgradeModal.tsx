@@ -2,6 +2,9 @@
 
 interface UpgradeModalProps {
   priceMonthly: number;
+  priceAnnual: number;
+  isAnnual: boolean;
+  onPlanChange: (annual: boolean) => void;
   checkoutLoading: boolean;
   checkoutError: string | null;
   paymentData: {
@@ -20,6 +23,9 @@ interface UpgradeModalProps {
 
 export default function UpgradeModal({
   priceMonthly,
+  priceAnnual,
+  isAnnual,
+  onPlanChange,
   checkoutLoading,
   checkoutError,
   paymentData,
@@ -34,7 +40,11 @@ export default function UpgradeModal({
   return (
     <div className="modal-overlay">
       <div className="modal-content-wrapper">
-        <button className="modal-close-btn" onClick={onClose}>
+        <button
+          className="modal-close-btn"
+          onClick={onClose}
+          aria-label="Fechar"
+        >
           ✕
         </button>
 
@@ -111,6 +121,49 @@ export default function UpgradeModal({
               </div>
             </div>
 
+            <div
+              role="group"
+              aria-label="Periodicidade da assinatura"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '0.5rem',
+              }}
+            >
+              <button
+                type="button"
+                aria-pressed={!isAnnual}
+                className="btn-action"
+                onClick={() => onPlanChange(false)}
+                style={{
+                  border: !isAnnual
+                    ? '1px solid #00e5ff'
+                    : '1px solid rgba(255,255,255,0.12)',
+                  background: !isAnnual
+                    ? 'rgba(0,229,255,0.12)'
+                    : 'rgba(255,255,255,0.03)',
+                }}
+              >
+                Mensal
+              </button>
+              <button
+                type="button"
+                aria-pressed={isAnnual}
+                className="btn-action"
+                onClick={() => onPlanChange(true)}
+                style={{
+                  border: isAnnual
+                    ? '1px solid #00e676'
+                    : '1px solid rgba(255,255,255,0.12)',
+                  background: isAnnual
+                    ? 'rgba(0,230,118,0.12)'
+                    : 'rgba(255,255,255,0.03)',
+                }}
+              >
+                Anual · economize
+              </button>
+            </div>
+
             <div style={{ textAlign: 'center', margin: '0.5rem 0' }}>
               <span
                 style={{
@@ -120,7 +173,7 @@ export default function UpgradeModal({
                   display: 'block',
                 }}
               >
-                Acesso Mensal Pro
+                Acesso {isAnnual ? 'Anual' : 'Mensal'} Pro
               </span>
               <div
                 style={{
@@ -139,14 +192,22 @@ export default function UpgradeModal({
                     fontFamily: 'var(--font-numbers)',
                   }}
                 >
-                  {priceMonthly.toFixed(2).replace('.', ',')}
+                  {(isAnnual ? priceAnnual : priceMonthly)
+                    .toFixed(2)
+                    .replace('.', ',')}
                 </span>
                 <span
                   style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}
                 >
-                  /mês
+                  /{isAnnual ? 'ano' : 'mês'}
                 </span>
               </div>
+              {isAnnual && (
+                <span style={{ fontSize: '0.7rem', color: '#00e676' }}>
+                  Equivale a R${' '}
+                  {(priceAnnual / 12).toFixed(2).replace('.', ',')} por mês
+                </span>
+              )}
             </div>
 
             {checkoutError && (

@@ -1,15 +1,21 @@
 import { test, expect } from '@playwright/test';
+import { generateValidCpf } from './helpers';
 
 const TEST_EMAIL = `e2e-${Date.now()}@test.com`;
 const TEST_PASSWORD = 'Test123456';
+const TEST_IP = '198.51.100.10';
 
 test.describe('Autenticação via API', () => {
+  test.describe.configure({ mode: 'serial' });
+  test.use({ extraHTTPHeaders: { 'x-forwarded-for': TEST_IP } });
+
   test('deve registrar novo usuário via API', async ({ request }) => {
     const response = await request.post('/api/auth/register', {
       data: {
         email: TEST_EMAIL,
         name: 'E2E Test User',
         password: TEST_PASSWORD,
+        cpf_cnpj: generateValidCpf(TEST_EMAIL),
       },
     });
     expect(response.ok()).toBeTruthy();

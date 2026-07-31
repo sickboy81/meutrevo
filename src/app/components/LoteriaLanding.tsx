@@ -2,7 +2,6 @@ import {
   getLatestLotteryResult,
   type LotteryResult,
 } from '@/lib/lottery-results';
-import Link from 'next/link';
 import AppEntryLink from './AppEntryLink';
 import QuickSimulator from './QuickSimulator';
 

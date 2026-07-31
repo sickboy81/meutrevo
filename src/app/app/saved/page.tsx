@@ -2,14 +2,12 @@
 
 import { Suspense, useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { useSound } from '../../hooks/useSound';
 import { getCleanDezenas as getCleanDezenasHelper } from '../../../lib/lottery-helpers';
 import SavedGamesPanel from '../../components/SavedGamesPanel';
 import Loading from '../loading';
 
 export default function SavedPage() {
   const app = useApp();
-  const playSound = useSound(app.enableSounds);
   const [selectedForPool, setSelectedForPool] = useState<string[]>([]);
   const [bolaoText, setBolaoText] = useState('');
 

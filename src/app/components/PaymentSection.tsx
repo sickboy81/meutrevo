@@ -2,12 +2,17 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { fetchWithCsrf } from '@/lib/fetch';
+import {
+  DEFAULT_ANNUAL_PRICE,
+  DEFAULT_MONTHLY_PRICE,
+  normalizeAnnualPrice,
+  normalizeMonthlyPrice,
+} from '@/lib/pricing-config';
 import type { User } from '../types';
 import UpgradeModal from './UpgradeModal';
 
 interface PaymentSectionProps {
   user: User | null;
-  isPro: boolean;
   playSound: (type: 'click' | 'success' | 'delete') => void;
   onPaymentSuccess: () => void;
   showUpgradeModal: boolean;
@@ -16,7 +21,6 @@ interface PaymentSectionProps {
 
 export default function PaymentSection({
   user,
-  isPro,
   playSound,
   onPaymentSuccess,
   showUpgradeModal,
@@ -32,8 +36,10 @@ export default function PaymentSection({
   const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
   const [pixCopied, setPixCopied] = useState<boolean>(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
-  const [priceMonthly, setPriceMonthly] = useState<number>(14.9);
-  const [priceAnnual, setPriceAnnual] = useState<number>(129.9);
+  const [priceMonthly, setPriceMonthly] = useState<number>(
+    DEFAULT_MONTHLY_PRICE
+  );
+  const [priceAnnual, setPriceAnnual] = useState<number>(DEFAULT_ANNUAL_PRICE);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Fetch pricing on mount
@@ -42,8 +48,8 @@ export default function PaymentSection({
       .then((res) => res.json())
       .then((d) => {
         if (d.success && d.config) {
-          setPriceMonthly(parseFloat(d.config.price_monthly) || 14.9);
-          setPriceAnnual(parseFloat(d.config.price_annual) || 129.9);
+          setPriceMonthly(normalizeMonthlyPrice(d.config.price_monthly));
+          setPriceAnnual(normalizeAnnualPrice(d.config.price_annual));
         }
       })
       .catch(() => {});
@@ -181,6 +187,9 @@ export default function PaymentSection({
   return (
     <UpgradeModal
       priceMonthly={priceMonthly}
+      priceAnnual={priceAnnual}
+      isAnnual={isAnnual}
+      onPlanChange={setIsAnnual}
       checkoutLoading={checkoutLoading}
       checkoutError={checkoutError}
       paymentData={paymentData}

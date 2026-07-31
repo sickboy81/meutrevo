@@ -1,23 +1,5 @@
-import crypto from 'crypto';
-import { randomUUID } from 'crypto';
-import { test, expect } from '@playwright/test';
-import { loadEnvConfig } from '@next/env';
-
-loadEnvConfig(process.cwd());
-
-let authUtilsPromise: Promise<typeof import('../src/lib/auth-utils')> | null =
-  null;
-let dbModulePromise: Promise<typeof import('../src/lib/db')> | null = null;
-
-function loadAuthUtils() {
-  authUtilsPromise ??= import('../src/lib/auth-utils');
-  return authUtilsPromise;
-}
-
-function loadDbModule() {
-  dbModulePromise ??= import('../src/lib/db');
-  return dbModulePromise;
-}
+import { request as playwrightRequest, test, expect } from '@playwright/test';
+import { generateValidCpf } from './helpers';
 
 type SessionUser = {
   email: string;
@@ -29,40 +11,60 @@ type SessionUser = {
 };
 
 async function createSessionUser(label: string): Promise<SessionUser> {
-  const [{ signToken, hashPassword }, { db }] = await Promise.all([
-    loadAuthUtils(),
-    loadDbModule(),
-  ]);
-
   const email = `${label}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}@e2e.test`;
-  const userId = randomUUID();
   const name = `E2E ${label}`;
-  const csrfToken = crypto.randomBytes(32).toString('hex');
-  const token = signToken({ id: userId, email, name, role: 'free' });
-
-  await db.execute({
-    sql: `
-      INSERT INTO users (id, email, name, password, role, show_in_ranking)
-      VALUES (?, ?, ?, ?, 'free', 1)
-    `,
-    args: [userId, email, name, hashPassword('Test123456')],
+  const context = await playwrightRequest.newContext({
+    baseURL: 'http://localhost:3001',
+    extraHTTPHeaders: {
+      'x-forwarded-for': label === 'flow' ? '198.51.100.30' : '198.51.100.31',
+    },
   });
 
-  const cookieHeader = `token=${token}; csrf_token=${csrfToken}`;
-  return {
-    email,
-    userId,
-    name,
-    csrfToken,
-    cookieHeader,
-    authHeaders: {
-      Cookie: cookieHeader,
-      'x-csrf-token': csrfToken,
-    },
-  };
+  try {
+    const configResponse = await context.get('/api/config');
+    expect(configResponse.status()).toBe(200);
+
+    const registerResponse = await context.post('/api/auth/register', {
+      data: {
+        email,
+        name,
+        password: 'Test123456',
+        cpf_cnpj: generateValidCpf(email),
+      },
+    });
+    expect(registerResponse.status()).toBe(200);
+
+    const registerData = await registerResponse.json();
+    const storageState = await context.storageState();
+    const token = storageState.cookies.find(
+      (cookie) => cookie.name === 'token'
+    );
+    const csrf = storageState.cookies.find(
+      (cookie) => cookie.name === 'csrf_token'
+    );
+
+    expect(token?.value).toBeTruthy();
+    expect(csrf?.value).toBeTruthy();
+
+    const csrfToken = csrf!.value;
+    const cookieHeader = `token=${token!.value}; csrf_token=${csrfToken}`;
+    return {
+      email,
+      userId: registerData.user.id,
+      name,
+      csrfToken,
+      cookieHeader,
+      authHeaders: {
+        Cookie: cookieHeader,
+        'x-csrf-token': csrfToken,
+      },
+    };
+  } finally {
+    await context.dispose();
+  }
 }
 
-test.describe.configure({ mode: 'serial' });
+test.describe.configure({ mode: 'serial', timeout: 120_000 });
 
 test('fluxo funcional completo cobre rotas autenticadas, bolao, push, recovery, webhook e guardas admin', async ({
   request,
@@ -82,7 +84,7 @@ test('fluxo funcional completo cobre rotas autenticadas, bolao, push, recovery, 
     data: {
       name: 'Flow Updated',
       favorite_lottery: 'quina',
-      cpf_cnpj: '52998224725',
+      cpf_cnpj: generateValidCpf(`${user.email}-updated`),
       city: 'Sao Paulo',
       state: 'sp',
     },
@@ -97,7 +99,7 @@ test('fluxo funcional completo cobre rotas autenticadas, bolao, push, recovery, 
     headers: user.authHeaders,
     data: {
       lottery: 'megasena',
-      numbers: '01, 02, 03, 04, 05, 06',
+      numbers: [1, 2, 3, 4, 5, 6],
     },
   });
   expect(createGame.status()).toBe(200);
@@ -154,7 +156,7 @@ test('fluxo funcional completo cobre rotas autenticadas, bolao, push, recovery, 
   );
   expect(deleteSimulation.status()).toBe(200);
 
-  const rankingInsert = await request.post('/api/ranking', {
+  const rankingInsertAsFree = await request.post('/api/ranking', {
     headers: user.authHeaders,
     data: {
       lottery: 'megasena',
@@ -164,7 +166,7 @@ test('fluxo funcional completo cobre rotas autenticadas, bolao, push, recovery, 
       prize_won: 100,
     },
   });
-  expect(rankingInsert.status()).toBe(200);
+  expect(rankingInsertAsFree.status()).toBe(403);
 
   const rankingToggle = await request.patch('/api/ranking', {
     headers: user.authHeaders,
@@ -184,7 +186,7 @@ test('fluxo funcional completo cobre rotas autenticadas, bolao, push, recovery, 
 
   const checkout = await request.post('/api/payments/checkout', {
     headers: user.authHeaders,
-    data: { planType: 'monthly' },
+    data: { planType: 'monthly', provider: 'pixgo' },
   });
   expect(checkout.status()).toBe(200);
   const checkoutData = await checkout.json();
@@ -202,13 +204,25 @@ test('fluxo funcional completo cobre rotas autenticadas, bolao, push, recovery, 
   const meAfterUpgradeData = await meAfterUpgrade.json();
   expect(meAfterUpgradeData.user.role).toBe('pro');
 
+  const rankingInsert = await request.post('/api/ranking', {
+    headers: user.authHeaders,
+    data: {
+      lottery: 'megasena',
+      contest_num: 9999,
+      numbers_played: '01,02,03,04,05,06',
+      hits: 4,
+      prize_won: 100,
+    },
+  });
+  expect(rankingInsert.status()).toBe(200);
+
   const createBet = await request.post('/api/bets', {
     headers: user.authHeaders,
     data: {
       lottery: 'megasena',
       numbers: '01,02,03,04,05,06',
       contest_num: 9999,
-      cost: 5,
+      cost: 6,
       prize_won: 0,
     },
   });

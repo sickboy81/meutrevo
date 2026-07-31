@@ -2,14 +2,12 @@
 
 import { Suspense } from 'react';
 import { useApp } from '../context/AppContext';
-import { useSound } from '../../hooks/useSound';
 import { getCleanDezenas } from '../../../lib/lottery-helpers';
 import ResultsTab from '../../components/ResultsTab';
 import Loading from '../loading';
 
 export default function ResultsPage() {
   const app = useApp();
-  const playSound = useSound(app.enableSounds);
 
   return (
     <Suspense fallback={<Loading />}>

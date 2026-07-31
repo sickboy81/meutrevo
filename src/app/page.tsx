@@ -3,7 +3,6 @@ import {
   getLatestLotteryResult,
   type LotteryResult,
 } from '@/lib/lottery-results';
-import Link from 'next/link';
 import AppEntryLink from './components/AppEntryLink';
 import QuickSimulator from './components/QuickSimulator';
 import './landing.css';

@@ -32,6 +32,7 @@ yarn-error.log*
 .codex-devserver*.log
 test-results/
 temp_old_tutorial.txt
+.codex-pets/
 
 # env files (can opt-in for committing if needed)
 .env*

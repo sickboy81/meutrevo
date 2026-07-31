@@ -21,8 +21,11 @@ npm run build
 ## Suite atual
 
 - `src/__tests__/api/auth.test.ts`
+- `src/__tests__/api/br-documents.test.ts`
 - `src/__tests__/api/games.test.ts`
+- `src/__tests__/api/rate-limit.test.ts`
 - `src/__tests__/components/LgpdBanner.test.tsx`
+- `src/lib/caixa.test.ts`
 - `src/math.test.ts`
 
 ## E2E
@@ -30,7 +33,11 @@ npm run build
 Existe Playwright configurado em `e2e/`, com:
 
 - `e2e/smoke.spec.ts`
-- `e2e/auth.spec.ts`
+- `e2e/api.spec.ts`
+- `e2e/auth-full.spec.ts`
+- `e2e/extended-flows.spec.ts`
+- `e2e/navigation.spec.ts`
+- `e2e/payment.spec.ts`
 
 Rode manualmente quando alterar fluxos criticos:
 
@@ -38,13 +45,18 @@ Rode manualmente quando alterar fluxos criticos:
 npm run test:e2e
 ```
 
-## Problemas corrigidos nesta revisao
+## Cobertura
 
-- dependencias de Testing Library ausentes quebravam `typecheck` e `test`
-- warnings antigos de `page.tsx` removidos
-- arquivos residuais de recuperacao foram removidos do codigo-fonte
+Para gerar o relatorio de cobertura:
+
+```bash
+npm run coverage
+```
+
+O relatorio HTML e os arquivos auxiliares ficam em `coverage/` e nao devem ser
+versionados.
 
 ## Riscos ainda existentes
 
 - o painel principal segue concentrado em um arquivo grande, o que aumenta risco de regressao local
-- a identidade visual e textual ainda mistura nomes de produto em partes diferentes da base
+- fluxos criticos de autenticacao, pagamentos e persistencia devem continuar cobertos pela suite E2E

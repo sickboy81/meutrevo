@@ -6,6 +6,12 @@ import {
 } from '../../../../lib/api-auth';
 import { isValidCpfCnpj } from '../../../../lib/br-documents';
 import { getStripe, getStripePriceId, isStripeConfigured } from '@/lib/stripe';
+import {
+  DEFAULT_ANNUAL_PRICE,
+  DEFAULT_MONTHLY_PRICE,
+  normalizeAnnualPrice,
+  normalizeMonthlyPrice,
+} from '@/lib/pricing-config';
 
 async function ensureStripeColumns() {
   await db
@@ -38,17 +44,15 @@ export async function POST(request: Request) {
 
     // Fetch active prices from DB
     const configQuery = await db.execute('SELECT key, value FROM app_config');
-    let priceMonthly = 14.9;
-    let priceAnnualEquivalent = 129.9; // total anual
+    let priceMonthly = DEFAULT_MONTHLY_PRICE;
+    let priceAnnualEquivalent = DEFAULT_ANNUAL_PRICE;
 
     configQuery.rows.forEach((row) => {
       if (row.key === 'price_monthly') {
-        const val = parseFloat(row.value as string);
-        if (!isNaN(val)) priceMonthly = val;
+        priceMonthly = normalizeMonthlyPrice(row.value);
       }
       if (row.key === 'price_annual') {
-        const val = parseFloat(row.value as string);
-        if (!isNaN(val)) priceAnnualEquivalent = val;
+        priceAnnualEquivalent = normalizeAnnualPrice(row.value);
       }
     });
 

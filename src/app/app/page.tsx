@@ -12,6 +12,10 @@ import {
 } from 'react';
 import Link from 'next/link';
 import { fetchWithCsrf } from '@/lib/fetch';
+import {
+  normalizeAnnualPrice,
+  normalizeMonthlyPrice,
+} from '@/lib/pricing-config';
 import { LOTTERY_CONFIGS, type GameMetrics } from '../../lib/lottery-math';
 import { useSound } from '../hooks/useSound';
 import {
@@ -613,9 +617,9 @@ export default function Home() {
         if (configResult.status === 'fulfilled' && configResult.value.ok) {
           const d = await configResult.value.json();
           if (d.success && d.config) {
-            setPriceMonthly(parseFloat(d.config.price_monthly) || 14.9);
+            setPriceMonthly(normalizeMonthlyPrice(d.config.price_monthly));
             setPriceAnnualEquivalent(
-              parseFloat(d.config.price_annual) || 129.9
+              normalizeAnnualPrice(d.config.price_annual)
             );
           }
         }
@@ -2878,7 +2882,6 @@ export default function Home() {
             <Suspense fallback={null}>
               <PaymentSection
                 user={user}
-                isPro={isPro}
                 playSound={playSound}
                 onPaymentSuccess={() => {
                   setUser((prev) => (prev ? { ...prev, role: 'pro' } : prev));

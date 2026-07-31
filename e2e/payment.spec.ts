@@ -16,7 +16,7 @@ test.describe('Fluxo de Pagamento via API', () => {
     expect(response.ok()).toBeTruthy();
     const data = await response.json();
     expect(data.config.price_monthly).toBeTruthy();
-    expect(data.config.price_annual).toBeTruthy();
+    expect(Number(data.config.price_annual)).toBe(129.9);
   });
 
   test('deve retornar status ao consultar pagamento inexistente', async ({

@@ -61,6 +61,9 @@ export async function ensureConfigTable() {
     await db.execute(
       "INSERT OR IGNORE INTO app_config (key, value) VALUES ('price_annual', '129.90')"
     );
+    await db.execute(
+      "UPDATE app_config SET value = '129.90' WHERE key = 'price_annual' AND TRIM(value) IN ('11.17', '11,17')"
+    );
   } catch (e) {
     if (!isMissingDbEnvError(e)) {
       console.error('Failed to create/seed app_config:', e);

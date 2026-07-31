@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { getAuthenticatedUser } from '@/lib/api-auth';
+import { getAuthenticatedUser, requireRole } from '@/lib/api-auth';
 import { mergeWithMockRanking } from '@/lib/mock-ranking';
 
 const ALLOWED_LOTTERIES = new Set([
@@ -119,19 +119,10 @@ export async function GET(req: Request) {
 
 // POST: Record a result for ranking
 export async function POST(req: Request) {
-  const user = await getAuthenticatedUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-  }
+  const { user, response } = await requireRole(['pro', 'admin']);
+  if (response || !user) return response;
 
   try {
-    if (user.role === 'free') {
-      return NextResponse.json(
-        { error: 'Apenas assinantes PRO podem registrar resultados' },
-        { status: 403 }
-      );
-    }
-
     const { lottery, contest_num, numbers_played, hits, prize_won } =
       await req.json();
 

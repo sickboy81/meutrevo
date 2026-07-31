@@ -1,6 +1,11 @@
 import { test, expect } from '@playwright/test';
+import { generateValidCpf } from './helpers';
 
 test.describe('API Endpoints', () => {
+  test.use({
+    extraHTTPHeaders: { 'x-forwarded-for': '198.51.100.20' },
+  });
+
   test('GET /api/health deve retornar status', async ({ request }) => {
     const response = await request.get('/api/health', { timeout: 60000 });
     expect(response.ok()).toBeTruthy();
@@ -37,10 +42,10 @@ test.describe('API Endpoints', () => {
         email,
         name: 'API Test User',
         password: 'Test123456',
+        cpf_cnpj: generateValidCpf(email),
       },
     });
-    // Pode retornar 200 ou 403 (CSRF) dependendo da config
-    expect([200, 403]).toContain(response.status());
+    expect(response.status()).toBe(200);
   });
 
   test('POST /api/auth/register com senha curta deve retornar erro', async ({
@@ -91,17 +96,17 @@ test.describe('API Endpoints', () => {
   });
 
   test('Rate limiting deve funcionar no login', async ({ request }) => {
-    const promises = Array.from({ length: 12 }, (_, i) =>
-      request.post('/api/auth/login', {
+    const statuses: number[] = [];
+    for (let i = 0; i < 12; i += 1) {
+      const response = await request.post('/api/auth/login', {
         data: {
           email: `ratelimit-${i}@test.com`,
           password: 'wrong',
         },
-      })
-    );
+      });
+      statuses.push(response.status());
+    }
 
-    const responses = await Promise.all(promises);
-    const statuses = responses.map((r) => r.status());
     const has429 = statuses.includes(429);
     expect(has429).toBeTruthy();
   });

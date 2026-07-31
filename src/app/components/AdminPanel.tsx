@@ -2,6 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { fetchWithCsrf } from '@/lib/fetch';
+import {
+  normalizeAnnualPrice,
+  normalizeMonthlyPrice,
+} from '@/lib/pricing-config';
 import type { AdminStats, AdminUser } from '../types';
 
 interface AdminPanelProps {
@@ -51,8 +55,8 @@ export default function AdminPanel({ playSound }: AdminPanelProps) {
       if (configRes.ok) {
         const d = await configRes.json();
         if (d.success && d.config) {
-          const monthly = parseFloat(d.config.price_monthly) || 14.9;
-          const annual = parseFloat(d.config.price_annual) || 129.9;
+          const monthly = normalizeMonthlyPrice(d.config.price_monthly);
+          const annual = normalizeAnnualPrice(d.config.price_annual);
           setPriceMonthly(monthly);
           setPriceAnnualEquivalent(annual);
           setLocalMonthly(monthly);

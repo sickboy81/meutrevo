@@ -1,6 +1,13 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Páginas Públicas', () => {
+  const lotteryPages = [
+    { path: '/megasena', name: 'Mega-Sena' },
+    { path: '/lotofacil', name: 'Lotofácil' },
+    { path: '/quina', name: 'Quina' },
+    { path: '/lotomania', name: 'Lotomania' },
+  ];
+
   test('deve carregar a landing page', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('h1')).toContainText('Meu Trevo');
@@ -20,6 +27,21 @@ test.describe('Páginas Públicas', () => {
     });
   });
 
+  for (const lottery of lotteryPages) {
+    test(`deve navegar de ${lottery.name} para o login do app`, async ({
+      page,
+    }) => {
+      await page.goto(lottery.path);
+      await page
+        .getByRole('link', { name: /Entrar no App/ })
+        .first()
+        .click();
+      await expect(page).toHaveURL(/\/login\?next=%2Fapp$/, {
+        timeout: 10000,
+      });
+    });
+  }
+
   test('deve carregar página de termos', async ({ page }) => {
     await page.goto('/terms');
     await expect(
@@ -37,7 +59,7 @@ test.describe('Páginas Públicas', () => {
   test('deve navegar da landing page para o app', async ({ page }) => {
     await page.goto('/');
     await page.click('text=Entrar no App');
-    await expect(page).toHaveURL(/\/app/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/login\?next=%2Fapp$/, { timeout: 10000 });
   });
 
   test('deve retornar dados da loteria na API', async ({ request }) => {

@@ -10,7 +10,8 @@ const config: PlaywrightTestConfig = {
     screenshot: 'only-on-failure',
   },
   webServer: {
-    command: 'set PORT=3001&& npm run dev',
+    command:
+      'cross-env PIXGO_API_KEY=pk_placeholder_e2e PIXGO_WEBHOOK_SECRET=whsec_placeholder_e2e PORT=3001 npm run start',
     port: 3001,
     reuseExistingServer: false,
     timeout: 120000,
