@@ -22,9 +22,9 @@ export default function LotteryLoading({ name }: { name: string }) {
             }}
           />
           <div>
-            <h1 className="lottery-title" style={{ opacity: 0.5 }}>
+            <div className="lottery-title" style={{ opacity: 0.5 }}>
               {name}
-            </h1>
+            </div>
             <p className="lottery-subtitle" style={{ opacity: 0.3 }}>
               Carregando resultados...
             </p>

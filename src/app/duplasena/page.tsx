@@ -1,21 +1,9 @@
 import LoteriaLanding, { LoteriaPageProps } from '../components/LoteriaLanding';
-import type { Metadata } from 'next';
+import { createLotteryMetadata } from '@/lib/lottery-seo';
 
 export const revalidate = 300;
 
-export const metadata: Metadata = {
-  title: 'Dupla Sena - Resultados, Estatísticas & Gerador Inteligente',
-  description:
-    'Confira o último resultado da Dupla Sena em tempo real, use nosso gerador de dezenas estatístico e faça fechamentos matemáticos otimizados.',
-  keywords: [
-    'dupla sena',
-    'resultado dupla sena',
-    'gerador dupla sena',
-    'simulador dupla sena',
-    'meu trevo dupla sena',
-  ],
-  alternates: { canonical: '/duplasena' },
-};
+export const metadata = createLotteryMetadata('duplasena');
 
 const props: LoteriaPageProps = {
   lotteryId: 'duplasena',

@@ -4,6 +4,7 @@ import {
 } from '@/lib/lottery-results';
 import AppEntryLink from './AppEntryLink';
 import QuickSimulator from './QuickSimulator';
+import LotterySeoLinks from './LotterySeoLinks';
 
 export interface LoteriaPageProps {
   lotteryId: string;
@@ -19,6 +20,10 @@ export interface LoteriaPageProps {
   sumRange: string;
   faq: { question: string; answer: string }[];
   features: { icon: string; title: string; description: string }[];
+  showSimulator?: boolean;
+  ctaTitle?: string;
+  ctaDescription?: string;
+  proofItems?: { label: string; text: string }[];
 }
 
 export default async function LoteriaLanding(props: LoteriaPageProps) {
@@ -27,6 +32,15 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
   const getCleanDezenas = (lotResult: LotteryResult) => {
     const list =
       lotResult.listaDezenas || lotResult.dezenasSorteadasOrdemSorteio || [];
+    if (
+      props.lotteryId === 'loteriafederal' ||
+      props.lotteryId === 'supersete'
+    ) {
+      return [...list];
+    }
+    if (props.lotteryId === 'loteca') {
+      return [...list].map((value) => (value === '0' ? 'X' : value));
+    }
     return [...list]
       .map((x) => parseInt(x, 10))
       .sort((a, b) => a - b)
@@ -191,15 +205,17 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
               className="landing-proof-row"
               aria-label={`Destaques ${props.name}`}
             >
-              <span>
-                <strong>Probabilidade</strong> tabelada
-              </span>
-              <span>
-                <strong>Filtros</strong> estatísticos avançados
-              </span>
-              <span>
-                <strong>Frequência</strong> de dezenas
-              </span>
+              {(
+                props.proofItems || [
+                  { label: 'Probabilidade', text: 'tabelada' },
+                  { label: 'Filtros', text: 'estatísticos avançados' },
+                  { label: 'Frequência', text: 'de dezenas' },
+                ]
+              ).map((item) => (
+                <span key={item.label}>
+                  <strong>{item.label}</strong> {item.text}
+                </span>
+              ))}
             </div>
 
             <div className="landing-cta-group landing-hero-actions">
@@ -251,12 +267,33 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                 oficial
               </span>
             </div>
-            <div className="hero-preview-balls">
-              {cleanDezenas.map((num, i) => (
-                <span key={`${num}-${i}`} style={{ background: props.color }}>
-                  {num}
-                </span>
-              ))}
+            <div
+              className={`hero-preview-balls ${
+                props.lotteryId === 'loteriafederal'
+                  ? 'hero-preview-tickets'
+                  : ''
+              }`}
+            >
+              {cleanDezenas.length > 0 ? (
+                cleanDezenas.map((num, i) => (
+                  <span
+                    key={`${num}-${i}`}
+                    style={{
+                      background: props.color,
+                      borderRadius:
+                        props.lotteryId === 'loteriafederal'
+                          ? '12px'
+                          : undefined,
+                    }}
+                  >
+                    {num}
+                  </span>
+                ))
+              ) : (
+                <p className="lottery-result-pending">
+                  Detalhes do resultado em atualização pela fonte oficial.
+                </p>
+              )}
             </div>
             <div className="hero-preview-grid">
               <div>
@@ -285,6 +322,8 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
             </div>
           </div>
         </section>
+
+        <LotterySeoLinks lotteryId={props.lotteryId} currentResult={result} />
 
         <section style={{ padding: '2rem 0' }}>
           <h2 className="landing-section-title">
@@ -327,15 +366,17 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
           </div>
         </section>
 
-        <div style={{ margin: '2rem 0' }}>
-          <h2 className="landing-section-title">
-            <span>⚙️</span> SIMULADOR EXPRESSO DA {props.name.toUpperCase()}
-          </h2>
-          <QuickSimulator
-            initialResult={result}
-            initialLottery={props.lotteryId}
-          />
-        </div>
+        {props.showSimulator !== false && (
+          <div style={{ margin: '2rem 0' }}>
+            <h2 className="landing-section-title">
+              <span>⚙️</span> SIMULADOR EXPRESSO DA {props.name.toUpperCase()}
+            </h2>
+            <QuickSimulator
+              initialResult={result}
+              initialLottery={props.lotteryId}
+            />
+          </div>
+        )}
 
         <section
           style={{
@@ -350,7 +391,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
           <h2
             style={{ fontSize: '2rem', color: 'white', marginBottom: '1rem' }}
           >
-            Potencialize seus bolões da {props.name}
+            {props.ctaTitle || `Potencialize seus jogos da ${props.name}`}
           </h2>
           <p
             style={{
@@ -359,9 +400,8 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
               margin: '0 auto 2rem auto',
             }}
           >
-            Acesse ferramentas avançadas de exportação para TXT, simulador de
-            estratégias com dados reais históricos e geração de fechamentos
-            simplificados no painel PRO.
+            {props.ctaDescription ||
+              'Acesse ferramentas avançadas, histórico de concursos e recursos de organização no painel PRO.'}
           </p>
           <AppEntryLink
             className="landing-btn-primary"
@@ -583,6 +623,42 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                     className="hover-glow-text"
                   >
                     Super Sete
+                  </AppEntryLink>
+                </li>
+                <li>
+                  <AppEntryLink
+                    href="/maismilionaria"
+                    style={{
+                      color: 'var(--text-muted)',
+                      textDecoration: 'none',
+                    }}
+                    className="hover-glow-text"
+                  >
+                    +Milionária
+                  </AppEntryLink>
+                </li>
+                <li>
+                  <AppEntryLink
+                    href="/loteca"
+                    style={{
+                      color: 'var(--text-muted)',
+                      textDecoration: 'none',
+                    }}
+                    className="hover-glow-text"
+                  >
+                    Loteca
+                  </AppEntryLink>
+                </li>
+                <li>
+                  <AppEntryLink
+                    href="/loteriafederal"
+                    style={{
+                      color: 'var(--text-muted)',
+                      textDecoration: 'none',
+                    }}
+                    className="hover-glow-text"
+                  >
+                    Loteria Federal
                   </AppEntryLink>
                 </li>
               </ul>

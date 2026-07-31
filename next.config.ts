@@ -67,7 +67,7 @@ function getConfig(): NextConfig {
         },
         {
           source:
-            '/(megasena|lotofacil|quina|lotomania|diadesorte|timemania|loteca)/(.*)',
+            '/(megasena|lotofacil|quina|lotomania|duplasena|diadesorte|timemania|maismilionaria|supersete|loteca|loteriafederal)/(.*)',
           headers: [
             {
               key: 'Cache-Control',

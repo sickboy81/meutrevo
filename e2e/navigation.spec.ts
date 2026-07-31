@@ -6,6 +6,13 @@ test.describe('Páginas Públicas', () => {
     { path: '/lotofacil', name: 'Lotofácil' },
     { path: '/quina', name: 'Quina' },
     { path: '/lotomania', name: 'Lotomania' },
+    { path: '/duplasena', name: 'Dupla Sena' },
+    { path: '/diadesorte', name: 'Dia de Sorte' },
+    { path: '/timemania', name: 'Timemania' },
+    { path: '/maismilionaria', name: '+Milionária' },
+    { path: '/supersete', name: 'Super Sete' },
+    { path: '/loteca', name: 'Loteca' },
+    { path: '/loteriafederal', name: 'Loteria Federal' },
   ];
 
   test('deve carregar a landing page', async ({ page }) => {

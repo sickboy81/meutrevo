@@ -5,27 +5,12 @@ import {
 } from '@/lib/lottery-results';
 import AppEntryLink from '../components/AppEntryLink';
 import QuickSimulator from '../components/QuickSimulator';
-import type { Metadata } from 'next';
+import { createLotteryMetadata } from '@/lib/lottery-seo';
+import LotterySeoLinks from '../components/LotterySeoLinks';
 
 export const revalidate = 300;
 
-export const metadata: Metadata = {
-  title: 'Mega-Sena - Resultados, Estatísticas & Gerador Inteligente',
-  description:
-    'Confira o último resultado da Mega-Sena em tempo real, use nosso gerador de dezenas estatístico e faça fechamentos matemáticos otimizados para acumular mais acertos.',
-  keywords: [
-    'mega sena',
-    'resultado mega sena',
-    'gerador mega sena',
-    'simulador mega sena',
-    'fechamento mega sena',
-    'probabilidade mega sena',
-    'meu trevo mega sena',
-  ],
-  alternates: {
-    canonical: '/megasena',
-  },
-};
+export const metadata = createLotteryMetadata('megasena');
 
 export default async function MegaSenaLanding() {
   const result = await getLatestLotteryResult('megasena');
@@ -307,6 +292,8 @@ export default async function MegaSenaLanding() {
             </div>
           </div>
         </section>
+
+        <LotterySeoLinks lotteryId="megasena" currentResult={result} />
 
         {/* Content Section */}
         <section style={{ padding: '2rem 0' }}>

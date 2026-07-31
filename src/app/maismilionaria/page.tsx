@@ -1,21 +1,9 @@
 import LoteriaLanding, { LoteriaPageProps } from '../components/LoteriaLanding';
-import type { Metadata } from 'next';
+import { createLotteryMetadata } from '@/lib/lottery-seo';
 
 export const revalidate = 300;
 
-export const metadata: Metadata = {
-  title: '+Milionária - Resultados, Estatísticas & Gerador Inteligente',
-  description:
-    'Confira o último resultado da +Milionária em tempo real, use nosso gerador de dezenas estatístico e trevos da sorte.',
-  keywords: [
-    'mais milionaria',
-    'resultado +milionaria',
-    'gerador +milionaria',
-    'simulador +milionaria',
-    'meu trevo',
-  ],
-  alternates: { canonical: '/maismilionaria' },
-};
+export const metadata = createLotteryMetadata('maismilionaria');
 
 const props: LoteriaPageProps = {
   lotteryId: 'maismilionaria',

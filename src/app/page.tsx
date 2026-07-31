@@ -1054,6 +1054,32 @@ export default async function LandingHome() {
                     +Milionária
                   </AppEntryLink>
                 </li>
+                <li>
+                  <AppEntryLink
+                    href="/loteca"
+                    style={{
+                      color: 'var(--text-muted)',
+                      textDecoration: 'none',
+                      transition: 'color 0.2s',
+                    }}
+                    className="hover-glow-text"
+                  >
+                    Loteca
+                  </AppEntryLink>
+                </li>
+                <li>
+                  <AppEntryLink
+                    href="/loteriafederal"
+                    style={{
+                      color: 'var(--text-muted)',
+                      textDecoration: 'none',
+                      transition: 'color 0.2s',
+                    }}
+                    className="hover-glow-text"
+                  >
+                    Loteria Federal
+                  </AppEntryLink>
+                </li>
               </ul>
             </div>
             <div>

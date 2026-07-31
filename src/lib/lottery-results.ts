@@ -13,6 +13,7 @@ export type LotteryResult = {
   acumulado: boolean;
   nomeMunicipioUFSorteio?: string;
   localSorteio?: string;
+  nomeTimeCoracaoMesSorte?: string;
   listaRateioPremio?: {
     descricaoFaixa: string;
     faixa: number;
@@ -47,6 +48,86 @@ async function getCachedResult(
     }
   }
   return null;
+}
+
+export async function getRecentLotteryResults(
+  lotteryId: string,
+  limit = 10
+): Promise<LotteryResult[]> {
+  try {
+    const safeLimit = Math.max(1, Math.min(limit, 100));
+    const res = await db.execute({
+      sql: 'SELECT data_json FROM lottery_cache WHERE lottery = ? ORDER BY contest_num DESC LIMIT ?',
+      args: [lotteryId, safeLimit],
+    });
+
+    return res.rows
+      .map((row) =>
+        decorateLotteryResult(
+          lotteryId,
+          JSON.parse(row.data_json as string) as LotteryResult
+        )
+      )
+      .filter((result): result is LotteryResult => result !== null);
+  } catch (e) {
+    if (!isMissingDbEnvError(e)) {
+      console.error(`Failed to fetch recent contests for ${lotteryId}:`, e);
+    }
+    return [];
+  }
+}
+
+export async function getLotteryContestResult(
+  lotteryId: string,
+  contestNumber: number
+): Promise<LotteryResult | null> {
+  try {
+    const res = await db.execute({
+      sql: 'SELECT data_json FROM lottery_cache WHERE lottery = ? AND contest_num = ? LIMIT 1',
+      args: [lotteryId, contestNumber],
+    });
+    if (res.rows.length > 0) {
+      return decorateLotteryResult(
+        lotteryId,
+        JSON.parse(res.rows[0].data_json as string) as LotteryResult
+      );
+    }
+  } catch (e) {
+    if (!isMissingDbEnvError(e)) {
+      console.error(
+        `Failed to fetch contest ${contestNumber} for ${lotteryId}:`,
+        e
+      );
+    }
+  }
+
+  const official = await fetchOfficialLotteryResult(lotteryId, contestNumber);
+  if (!official || official.numero !== contestNumber) {
+    return null;
+  }
+
+  const result = decorateLotteryResult(lotteryId, official as LotteryResult);
+  if (!result) return null;
+
+  try {
+    await db.execute({
+      sql: `INSERT OR REPLACE INTO lottery_cache
+            (lottery, contest_num, draw_date, data_json, cached_at)
+            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+      args: [
+        lotteryId,
+        contestNumber,
+        result.dataApuracao || '',
+        JSON.stringify(result),
+      ],
+    });
+  } catch (e) {
+    if (!isMissingDbEnvError(e)) {
+      console.error(`Failed to cache ${lotteryId} ${contestNumber}:`, e);
+    }
+  }
+
+  return result;
 }
 
 function parseBrazilDate(date: string | undefined): Date | null {

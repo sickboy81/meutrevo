@@ -5,27 +5,12 @@ import {
 } from '@/lib/lottery-results';
 import AppEntryLink from '../components/AppEntryLink';
 import QuickSimulator from '../components/QuickSimulator';
-import type { Metadata } from 'next';
+import { createLotteryMetadata } from '@/lib/lottery-seo';
+import LotterySeoLinks from '../components/LotterySeoLinks';
 
 export const revalidate = 300;
 
-export const metadata: Metadata = {
-  title: 'Quina - Resultados, Fechamentos & Gerador Estatístico',
-  description:
-    'Confira o último resultado da Quina em tempo real, use estatísticas de dezenas atrasadas/frequentes e faça desdobramentos combinatórios otimizados para suas apostas.',
-  keywords: [
-    'quina',
-    'resultado quina',
-    'gerador quina',
-    'simulador quina',
-    'fechamento quina',
-    'probabilidade quina',
-    'meu trevo quina',
-  ],
-  alternates: {
-    canonical: '/quina',
-  },
-};
+export const metadata = createLotteryMetadata('quina');
 
 export default async function QuinaLanding() {
   const result = await getLatestLotteryResult('quina');
@@ -375,6 +360,8 @@ export default async function QuinaLanding() {
             </div>
           </div>
         </section>
+
+        <LotterySeoLinks lotteryId="quina" currentResult={result} />
 
         {/* Content Section */}
         <section style={{ padding: '2rem 0' }}>

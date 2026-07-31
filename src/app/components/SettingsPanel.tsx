@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import type { User, ThemeType } from '../types';
 import ProfilePanel from './ProfilePanel';
 
@@ -559,13 +560,13 @@ export default function SettingsPanel({
               <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
                 Sua sessão não está ativa.
               </span>
-              <a
+              <Link
                 href="/login?next=/app"
                 className="btn-action"
                 style={{ textDecoration: 'none', fontSize: '0.75rem' }}
               >
                 Entrar novamente
-              </a>
+              </Link>
             </div>
           )}
         </div>

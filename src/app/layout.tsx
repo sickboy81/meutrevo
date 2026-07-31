@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     'palpites de loteria',
     'meu trevo',
   ],
-  authors: [{ name: 'Meu Trevo Team' }],
+  authors: [{ name: 'Meu Trevo' }],
   creator: 'Meu Trevo',
   publisher: 'Meu Trevo',
   formatDetection: {
@@ -71,10 +71,10 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: '/icon.png',
-        width: 1024,
-        height: 1024,
-        alt: 'Meu Trevo',
+        url: '/og/meutrevo',
+        width: 1200,
+        height: 630,
+        alt: 'Meu Trevo - Resultados e estratégia para loterias',
       },
     ],
   },
@@ -83,13 +83,11 @@ export const metadata: Metadata = {
     title: 'Meu Trevo - Gerador Estatístico de Loterias',
     description:
       'Resultados em tempo real e desdobramentos combinatórios otimizados.',
-    creator: '@meutrevo',
-    images: ['/icon.png'],
+    images: ['/og/meutrevo'],
   },
   robots: {
     index: true,
     follow: true,
-    nocache: true,
     googleBot: {
       index: true,
       follow: true,
@@ -98,6 +96,9 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  verification: process.env.GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.GOOGLE_SITE_VERIFICATION }
+    : undefined,
 };
 
 export const viewport = {

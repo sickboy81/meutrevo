@@ -8,5 +8,6 @@ export default function robots(): MetadataRoute.Robots {
       disallow: ['/api/'],
     },
     sitemap: 'https://www.meutrevo.com/sitemap.xml',
+    host: 'https://www.meutrevo.com',
   };
 }

@@ -1,21 +1,9 @@
 import LoteriaLanding, { LoteriaPageProps } from '../components/LoteriaLanding';
-import type { Metadata } from 'next';
+import { createLotteryMetadata } from '@/lib/lottery-seo';
 
 export const revalidate = 300;
 
-export const metadata: Metadata = {
-  title: 'Timemania - Resultados, Estatísticas & Gerador Inteligente',
-  description:
-    'Confira o último resultado da Timemania em tempo real, use nosso gerador de dezenas estatístico e fechamentos combinatórios.',
-  keywords: [
-    'timemania',
-    'resultado timemania',
-    'gerador timemania',
-    'simulador timemania',
-    'meu trevo timemania',
-  ],
-  alternates: { canonical: '/timemania' },
-};
+export const metadata = createLotteryMetadata('timemania');
 
 const props: LoteriaPageProps = {
   lotteryId: 'timemania',

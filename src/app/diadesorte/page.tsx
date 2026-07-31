@@ -1,21 +1,9 @@
 import LoteriaLanding, { LoteriaPageProps } from '../components/LoteriaLanding';
-import type { Metadata } from 'next';
+import { createLotteryMetadata } from '@/lib/lottery-seo';
 
 export const revalidate = 300;
 
-export const metadata: Metadata = {
-  title: 'Dia de Sorte - Resultados, Estatísticas & Gerador Inteligente',
-  description:
-    'Confira o último resultado do Dia de Sorte em tempo real, use nosso gerador de dezenas estatístico e faça fechamentos combinatórios.',
-  keywords: [
-    'dia de sorte',
-    'resultado dia de sorte',
-    'gerador dia de sorte',
-    'simulador dia de sorte',
-    'meu trevo',
-  ],
-  alternates: { canonical: '/diadesorte' },
-};
+export const metadata = createLotteryMetadata('diadesorte');
 
 const props: LoteriaPageProps = {
   lotteryId: 'diadesorte',

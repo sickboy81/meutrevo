@@ -5,27 +5,12 @@ import {
 } from '@/lib/lottery-results';
 import AppEntryLink from '../components/AppEntryLink';
 import QuickSimulator from '../components/QuickSimulator';
-import type { Metadata } from 'next';
+import { createLotteryMetadata } from '@/lib/lottery-seo';
+import LotterySeoLinks from '../components/LotterySeoLinks';
 
 export const revalidate = 300;
 
-export const metadata: Metadata = {
-  title: 'Lotofácil - Resultados, Fechamentos & Gerador de Jogos',
-  description:
-    'Veja o último resultado da Lotofácil em tempo real, use filtros de par/ímpar, números primos e faça fechamentos matemáticos eficientes para aumentar suas chances de 14 e 15 acertos.',
-  keywords: [
-    'lotofacil',
-    'resultado lotofacil',
-    'gerador lotofacil',
-    'simulador lotofacil',
-    'fechamento lotofacil',
-    'probabilidade lotofacil',
-    'meu trevo lotofacil',
-  ],
-  alternates: {
-    canonical: '/lotofacil',
-  },
-};
+export const metadata = createLotteryMetadata('lotofacil');
 
 export default async function LotofacilLanding() {
   const result = await getLatestLotteryResult('lotofacil');
@@ -337,6 +322,8 @@ export default async function LotofacilLanding() {
             </div>
           </div>
         </section>
+
+        <LotterySeoLinks lotteryId="lotofacil" currentResult={result} />
 
         {/* Content Section */}
         <section style={{ padding: '2rem 0' }}>

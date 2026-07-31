@@ -1,21 +1,9 @@
 import LoteriaLanding, { LoteriaPageProps } from '../components/LoteriaLanding';
-import type { Metadata } from 'next';
+import { createLotteryMetadata } from '@/lib/lottery-seo';
 
 export const revalidate = 300;
 
-export const metadata: Metadata = {
-  title: 'Super Sete - Resultados, Estatísticas & Gerador Inteligente',
-  description:
-    'Confira o último resultado da Super Sete em tempo real, use nosso gerador de dezenas estatístico com volante de 7 colunas.',
-  keywords: [
-    'super sete',
-    'resultado super sete',
-    'gerador super sete',
-    'simulador super sete',
-    'meu trevo',
-  ],
-  alternates: { canonical: '/supersete' },
-};
+export const metadata = createLotteryMetadata('supersete');
 
 const props: LoteriaPageProps = {
   lotteryId: 'supersete',

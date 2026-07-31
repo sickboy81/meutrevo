@@ -5,27 +5,12 @@ import {
 } from '@/lib/lottery-results';
 import AppEntryLink from '../components/AppEntryLink';
 import QuickSimulator from '../components/QuickSimulator';
-import type { Metadata } from 'next';
+import { createLotteryMetadata } from '@/lib/lottery-seo';
+import LotterySeoLinks from '../components/LotterySeoLinks';
 
 export const revalidate = 300;
 
-export const metadata: Metadata = {
-  title: 'Lotomania - Resultados, Fechamentos & Estatísticas de Dezenas',
-  description:
-    'Veja o último resultado da Lotomania em tempo real, acesse estatísticas de dezenas e gere jogos baseados em fechamentos matemáticos e análise de soma de dezenas.',
-  keywords: [
-    'lotomania',
-    'resultado lotomania',
-    'gerador lotomania',
-    'simulador lotomania',
-    'fechamento lotomania',
-    'probabilidade lotomania',
-    'meu trevo lotomania',
-  ],
-  alternates: {
-    canonical: '/lotomania',
-  },
-};
+export const metadata = createLotteryMetadata('lotomania');
 
 export default async function LotomaniaLanding() {
   const result = await getLatestLotteryResult('lotomania');
@@ -342,6 +327,8 @@ export default async function LotomaniaLanding() {
             </div>
           </div>
         </section>
+
+        <LotterySeoLinks lotteryId="lotomania" currentResult={result} />
 
         {/* Content Section */}
         <section style={{ padding: '2rem 0' }}>
