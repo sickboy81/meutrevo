@@ -8,6 +8,10 @@ export type LotteryResult = {
   dataProximoConcurso: string;
   dezenasSorteadasOrdemSorteio: string[];
   listaDezenas: string[];
+  listaResultadoEquipeEsportiva?: {
+    nuGolEquipeUm?: number | string | null;
+    nuGolEquipeDois?: number | string | null;
+  }[];
   trevosSorteados?: string[];
   valorEstimadoProximoConcurso: number;
   acumulado: boolean;
@@ -145,25 +149,38 @@ export function decorateLotteryResult(
 
   // Loteca: compute results from match scores (listaResultadoEquipeEsportiva)
   if (lotteryId === 'loteca') {
-    const matches = (result as unknown as Record<string, unknown>)
-      .listaResultadoEquipeEsportiva as
-      | { nuGolEquipeUm: number; nuGolEquipeDois: number }[]
-      | undefined;
+    const matches = result.listaResultadoEquipeEsportiva;
     if (
       matches &&
       matches.length > 0 &&
       (!result.listaDezenas || result.listaDezenas.length < matches.length)
     ) {
       // Loteca results: 1 = home win, 0 = draw, 2 = away win
-      const results = matches.map((m) => {
-        if (m.nuGolEquipeUm > m.nuGolEquipeDois) return '1';
-        if (m.nuGolEquipeUm === m.nuGolEquipeDois) return '0';
+      const results = matches.map((match) => {
+        if (
+          match.nuGolEquipeUm === null ||
+          match.nuGolEquipeUm === undefined ||
+          match.nuGolEquipeDois === null ||
+          match.nuGolEquipeDois === undefined
+        ) {
+          return null;
+        }
+        const homeGoals = Number(match.nuGolEquipeUm);
+        const awayGoals = Number(match.nuGolEquipeDois);
+        if (!Number.isFinite(homeGoals) || !Number.isFinite(awayGoals)) {
+          return null;
+        }
+        if (homeGoals > awayGoals) return '1';
+        if (homeGoals === awayGoals) return '0';
         return '2';
       });
+      if (results.some((value) => value === null)) return result;
+
+      const normalizedResults = results as string[];
       return {
         ...result,
-        listaDezenas: results,
-        dezenasSorteadasOrdemSorteio: results,
+        listaDezenas: normalizedResults,
+        dezenasSorteadasOrdemSorteio: normalizedResults,
       };
     }
     return result;

@@ -79,6 +79,18 @@ test.describe('Páginas Públicas', () => {
     expect(data.latest.numero).toBeGreaterThan(0);
   });
 
+  test('deve retornar os 14 resultados do concurso da Loteca', async ({
+    request,
+  }) => {
+    const response = await request.get('/api/loteria/loteca?concurso=1263', {
+      timeout: 60000,
+    });
+    expect(response.ok()).toBeTruthy();
+    const data = await response.json();
+    expect(data.numero).toBe(1263);
+    expect(data.listaDezenas).toHaveLength(14);
+  });
+
   test('deve retornar configurações na API', async ({ request }) => {
     const response = await request.get('/api/config');
     expect(response.ok()).toBeTruthy();
