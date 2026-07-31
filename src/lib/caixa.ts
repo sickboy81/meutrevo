@@ -451,11 +451,6 @@ export async function fetchOfficialLotteryResult(
       signal: AbortSignal.timeout(12000),
     });
 
-    const cookieHeader = getSetCookieHeader(warmupResponse);
-    const headers = cookieHeader
-      ? { ...CAIXA_API_HEADERS, Cookie: cookieHeader }
-      : { ...CAIXA_API_HEADERS };
-
     const warmedCandidates: LotteryApiData[] = [];
     for (const base of apiBases) {
       const apiUrl = contestNum
