@@ -1,7 +1,10 @@
 import LoteriaLanding, { LoteriaPageProps } from '../components/LoteriaLanding';
 import { createLotteryMetadata } from '@/lib/lottery-seo';
 
-export const revalidate = 300;
+// Loteca scores can be enriched after the contest metadata is published.
+// Keep this page dynamic so ISR cannot preserve an empty result indefinitely.
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 export const metadata = createLotteryMetadata('loteca');
 
 const props: LoteriaPageProps = {
