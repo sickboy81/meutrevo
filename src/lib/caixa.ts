@@ -109,6 +109,20 @@ export async function getCaixaApiBases(): Promise<string[]> {
   return [...bases];
 }
 
+export function selectLatestLotteryResult(
+  results: LotteryApiData[]
+): LotteryApiData | null {
+  return results
+    .filter((result) => typeof result.numero === 'number')
+    .reduce<LotteryApiData | null>(
+      (latest, result) =>
+        !latest || (result.numero ?? 0) > (latest.numero ?? 0)
+          ? result
+          : latest,
+      null
+    );
+}
+
 function getSetCookieHeader(response: Response): string | null {
   const withGetSetCookie = response.headers as Headers & {
     getSetCookie?: () => string[];
@@ -389,6 +403,7 @@ export async function fetchOfficialLotteryResult(
 ): Promise<LotteryApiData | null> {
   const apiId = lotteryId === 'loteriafederal' ? 'federal' : lotteryId;
   const apiBases = await getCaixaApiBases();
+  const latestCandidates: LotteryApiData[] = [];
 
   for (const base of apiBases) {
     const apiUrl = contestNum
@@ -396,9 +411,14 @@ export async function fetchOfficialLotteryResult(
       : `${base}/api/${apiId}`;
 
     try {
-      return await fetchCaixaJson(apiUrl, { ...CAIXA_API_HEADERS });
+      const result = await fetchCaixaJson(apiUrl, { ...CAIXA_API_HEADERS });
+      if (contestNum) return result;
+      if (result) latestCandidates.push(result);
     } catch {}
   }
+
+  const latestResult = selectLatestLotteryResult(latestCandidates);
+  if (latestResult) return latestResult;
 
   const pagePath = CAIXA_PAGE_BY_LOTTERY[apiId];
   if (!pagePath) {
@@ -417,15 +437,21 @@ export async function fetchOfficialLotteryResult(
       ? { ...CAIXA_API_HEADERS, Cookie: cookieHeader }
       : { ...CAIXA_API_HEADERS };
 
+    const warmedCandidates: LotteryApiData[] = [];
     for (const base of apiBases) {
       const apiUrl = contestNum
         ? `${base}/api/${apiId}/${contestNum}`
         : `${base}/api/${apiId}`;
 
       try {
-        return await fetchCaixaJson(apiUrl, headers);
+        const result = await fetchCaixaJson(apiUrl, headers);
+        if (contestNum) return result;
+        if (result) warmedCandidates.push(result);
       } catch {}
     }
+
+    const warmedLatest = selectLatestLotteryResult(warmedCandidates);
+    if (warmedLatest) return warmedLatest;
 
     return fetchMirrorLotteryResult(apiId, contestNum);
   } catch {

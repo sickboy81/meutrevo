@@ -4,9 +4,20 @@ import {
   normalizeMirrorLotteryResult,
   parseLotecaMirrorHtml,
   parseLotecaNewsHtml,
+  selectLatestLotteryResult,
 } from './caixa';
 
 describe('lottery result provider fallbacks', () => {
+  it('chooses the newest result when Caixa bases are out of sync', () => {
+    expect(
+      selectLatestLotteryResult([
+        { numero: 1263, dataApuracao: '23/07/2026' },
+        { numero: 1267, dataApuracao: '31/07/2026' },
+        { numero: 1264, dataApuracao: '25/07/2026' },
+      ])
+    ).toMatchObject({ numero: 1267 });
+  });
+
   it('does not trust a recently rewritten cache entry without source provenance', () => {
     expect(canServeCachedLatest(10_000, undefined)).toBe(false);
     expect(canServeCachedLatest(10_000, 'mirror')).toBe(true);
