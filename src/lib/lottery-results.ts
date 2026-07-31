@@ -1,5 +1,5 @@
 import { db, isMissingDbEnvError } from '@/lib/db';
-import { fetchOfficialLotteryResult } from '@/lib/caixa';
+import { enrichLotecaMatchData, fetchOfficialLotteryResult } from '@/lib/caixa';
 
 export type LotteryResult = {
   numero: number;
@@ -257,10 +257,24 @@ export function decorateLotteryResult(
 export async function getLatestLotteryResult(
   lotteryId: string
 ): Promise<LotteryResult | null> {
+  const completeResult = async (
+    result: LotteryResult | null
+  ): Promise<LotteryResult | null> => {
+    if (
+      lotteryId === 'loteca' &&
+      result &&
+      (!result.listaDezenas || result.listaDezenas.length === 0)
+    ) {
+      const enriched = await enrichLotecaMatchData(result);
+      if (enriched) result = enriched as LotteryResult;
+    }
+    return decorateLotteryResult(lotteryId, result);
+  };
+
   const officialResult = await fetchOfficialLotteryResult(lotteryId);
   if (officialResult) {
-    return decorateLotteryResult(lotteryId, officialResult as LotteryResult);
+    return completeResult(officialResult as LotteryResult);
   }
 
-  return decorateLotteryResult(lotteryId, await getCachedResult(lotteryId));
+  return completeResult(await getCachedResult(lotteryId));
 }
