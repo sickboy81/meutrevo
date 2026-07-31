@@ -65,20 +65,6 @@ const CAIXA_PAGE_HEADERS = {
   'Cache-Control': 'no-cache',
 } as const;
 
-const CAIXA_PAGE_BY_LOTTERY: Record<string, string> = {
-  megasena: '/Paginas/Mega-Sena.aspx',
-  lotofacil: '/Paginas/Lotofacil.aspx',
-  quina: '/Paginas/Quina.aspx',
-  lotomania: '/Paginas/Lotomania.aspx',
-  maismilionaria: '/Paginas/Mais-Milionaria.aspx',
-  duplasena: '/Paginas/Dupla-Sena.aspx',
-  diadesorte: '/Paginas/Dia-de-Sorte.aspx',
-  timemania: '/Paginas/Timemania.aspx',
-  supersete: '/Paginas/Super-Sete.aspx',
-  federal: '/Paginas/Federal.aspx',
-  loteca: '/Paginas/Loteca.aspx',
-};
-
 export async function getCaixaApiBases(): Promise<string[]> {
   const bases = new Set<string>([
     'https://servicebus3.caixa.gov.br/portaldeloterias',
@@ -121,22 +107,6 @@ export function selectLatestLotteryResult(
           : latest,
       null
     );
-}
-
-function getSetCookieHeader(response: Response): string | null {
-  const withGetSetCookie = response.headers as Headers & {
-    getSetCookie?: () => string[];
-  };
-
-  if (typeof withGetSetCookie.getSetCookie === 'function') {
-    const cookies = withGetSetCookie
-      .getSetCookie()
-      .map((value) => value.split(';', 1)[0])
-      .filter(Boolean);
-    return cookies.length > 0 ? cookies.join('; ') : null;
-  }
-
-  return null;
 }
 
 async function fetchCaixaJson(
@@ -439,38 +409,23 @@ export async function fetchOfficialLotteryResult(
   const latestResult = selectLatestLotteryResult(latestCandidates);
   if (latestResult) return latestResult;
 
-  const pagePath = CAIXA_PAGE_BY_LOTTERY[apiId];
-  if (!pagePath) {
-    return fetchMirrorLotteryResult(apiId, contestNum);
+  const warmedCandidates: LotteryApiData[] = [];
+  for (const base of apiBases) {
+    const apiUrl = contestNum
+      ? `${base}/api/${apiId}/${contestNum}`
+      : `${base}/api/${apiId}`;
+
+    try {
+      const result = await fetchCaixaBaseResult(apiUrl);
+      if (contestNum) return result;
+      if (result) warmedCandidates.push(result);
+    } catch {}
   }
 
-  try {
-    const warmupResponse = await fetch(`${CAIXA_PORTAL_BASE}${pagePath}`, {
-      headers: CAIXA_PAGE_HEADERS,
-      cache: 'no-store',
-      signal: AbortSignal.timeout(12000),
-    });
+  const warmedLatest = selectLatestLotteryResult(warmedCandidates);
+  if (warmedLatest) return warmedLatest;
 
-    const warmedCandidates: LotteryApiData[] = [];
-    for (const base of apiBases) {
-      const apiUrl = contestNum
-        ? `${base}/api/${apiId}/${contestNum}`
-        : `${base}/api/${apiId}`;
-
-      try {
-        const result = await fetchCaixaBaseResult(apiUrl);
-        if (contestNum) return result;
-        if (result) warmedCandidates.push(result);
-      } catch {}
-    }
-
-    const warmedLatest = selectLatestLotteryResult(warmedCandidates);
-    if (warmedLatest) return warmedLatest;
-
-    return fetchMirrorLotteryResult(apiId, contestNum);
-  } catch {
-    return fetchMirrorLotteryResult(apiId, contestNum);
-  }
+  return fetchMirrorLotteryResult(apiId, contestNum);
 }
 
 /**
