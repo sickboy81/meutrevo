@@ -273,7 +273,29 @@ export async function getLatestLotteryResult(
 
   const officialResult = await fetchOfficialLotteryResult(lotteryId);
   if (officialResult) {
-    return completeResult(officialResult as LotteryResult);
+    const officialComplete = await completeResult(
+      officialResult as LotteryResult
+    );
+    if (
+      lotteryId !== 'loteca' ||
+      (officialComplete?.listaDezenas &&
+        officialComplete.listaDezenas.length > 0)
+    ) {
+      return officialComplete;
+    }
+
+    // Prefer a previously enriched cache entry if the upstream response only
+    // contains Loteca metadata during a transient Caixa failure.
+    const cachedComplete = await completeResult(
+      await getCachedResult(lotteryId)
+    );
+    if (
+      cachedComplete?.listaDezenas &&
+      cachedComplete.listaDezenas.length > 0
+    ) {
+      return cachedComplete;
+    }
+    return officialComplete;
   }
 
   return completeResult(await getCachedResult(lotteryId));
