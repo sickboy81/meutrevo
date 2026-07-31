@@ -505,7 +505,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
           </div>
           <div style={{ display: 'flex', gap: '4rem', flexWrap: 'wrap' }}>
             <div>
-              <h4
+              <h3
                 style={{
                   color: 'white',
                   fontSize: '0.9rem',
@@ -517,7 +517,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                 }}
               >
                 Modalidades
-              </h4>
+              </h3>
               <ul
                 style={{
                   listStyle: 'none',
@@ -664,7 +664,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
               </ul>
             </div>
             <div>
-              <h4
+              <h3
                 style={{
                   color: 'white',
                   fontSize: '0.9rem',
@@ -676,7 +676,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                 }}
               >
                 Meu Trevo
-              </h4>
+              </h3>
               <ul
                 style={{
                   listStyle: 'none',

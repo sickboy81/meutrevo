@@ -913,7 +913,7 @@ export default async function LandingHome() {
           </div>
           <div style={{ display: 'flex', gap: '4rem', flexWrap: 'wrap' }}>
             <div>
-              <h4
+              <h3
                 style={{
                   color: 'white',
                   fontSize: '0.9rem',
@@ -925,7 +925,7 @@ export default async function LandingHome() {
                 }}
               >
                 Modalidades
-              </h4>
+              </h3>
               <ul
                 style={{
                   listStyle: 'none',
@@ -1083,7 +1083,7 @@ export default async function LandingHome() {
               </ul>
             </div>
             <div>
-              <h4
+              <h3
                 style={{
                   color: 'white',
                   fontSize: '0.9rem',
@@ -1095,7 +1095,7 @@ export default async function LandingHome() {
                 }}
               >
                 Meu Trevo
-              </h4>
+              </h3>
               <ul
                 style={{
                   listStyle: 'none',

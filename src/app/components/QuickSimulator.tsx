@@ -37,6 +37,24 @@ interface QuickSimulatorProps {
   onUpgrade?: () => void;
 }
 
+function getAccessibleTextColor(background: string): '#05050d' | '#ffffff' {
+  const hex = background.replace('#', '');
+  if (!/^[0-9a-f]{6}$/i.test(hex)) return '#ffffff';
+
+  const channels = [0, 2, 4].map((offset) => {
+    const value = Number.parseInt(hex.slice(offset, offset + 2), 16) / 255;
+    return value <= 0.04045
+      ? value / 12.92
+      : Math.pow((value + 0.055) / 1.055, 2.4);
+  });
+  const luminance =
+    0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+  const whiteContrast = 1.05 / (luminance + 0.05);
+  const darkContrast = (luminance + 0.05) / 0.05;
+
+  return darkContrast > whiteContrast ? '#05050d' : '#ffffff';
+}
+
 export default function QuickSimulator({
   initialResult,
   initialLottery,
@@ -254,7 +272,7 @@ export default function QuickSimulator({
           marginBottom: '1.25rem',
         }}
       >
-        <h3
+        <h2
           style={{
             fontFamily: 'var(--font-body)',
             fontSize: '1.1rem',
@@ -267,7 +285,7 @@ export default function QuickSimulator({
         >
           <span style={{ color: 'var(--accent-color)' }}>🎮</span> TESTE SUA
           APOSTA ANTES DE JOGAR
-        </h3>
+        </h2>
         <p
           style={{
             fontSize: '0.75rem',
@@ -310,6 +328,7 @@ export default function QuickSimulator({
                   {
                     '--active-color': lot.color,
                     '--active-glow': lot.accentColor,
+                    '--active-foreground': getAccessibleTextColor(lot.color),
                     fontSize: '0.65rem',
                     padding: '0.3rem 0.5rem',
                     whiteSpace: 'nowrap',
@@ -466,7 +485,7 @@ export default function QuickSimulator({
           }}
         >
           <div>
-            <h4
+            <h3
               style={{
                 fontSize: '0.8rem',
                 fontFamily: 'var(--font-body)',
@@ -479,7 +498,7 @@ export default function QuickSimulator({
               }}
             >
               📊 ANÁLISE DO JOGO
-            </h4>
+            </h3>
 
             {gameMetrics && (
               <div

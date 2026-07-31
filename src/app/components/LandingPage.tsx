@@ -493,7 +493,7 @@ export default function LandingPage({
             marginBottom: '1.25rem',
           }}
         >
-          <h3
+          <h2
             style={{
               fontFamily: 'var(--font-body)',
               fontSize: '1.1rem',
@@ -506,7 +506,7 @@ export default function LandingPage({
           >
             <span style={{ color: 'var(--accent-color)' }}>🎮</span> TESTE SUA
             APOSTA ANTES DE JOGAR
-          </h3>
+          </h2>
           <p
             style={{
               fontSize: '0.75rem',
@@ -544,6 +544,7 @@ export default function LandingPage({
                   {
                     '--active-color': '#209869',
                     '--active-glow': 'rgba(32, 152, 105, 0.3)',
+                    '--active-foreground': '#05050d',
                   } as React.CSSProperties
                 }
               >
@@ -561,6 +562,7 @@ export default function LandingPage({
                   {
                     '--active-color': '#93098f',
                     '--active-glow': 'rgba(147, 9, 143, 0.3)',
+                    '--active-foreground': '#ffffff',
                   } as React.CSSProperties
                 }
               >
@@ -690,7 +692,7 @@ export default function LandingPage({
             }}
           >
             <div>
-              <h4
+              <h3
                 style={{
                   fontSize: '0.8rem',
                   fontFamily: 'var(--font-body)',
@@ -703,7 +705,7 @@ export default function LandingPage({
                 }}
               >
                 📊 ANÁLISE DO JOGO
-              </h4>
+              </h3>
 
               {landingQuickNums.length === 0 ? (
                 <div

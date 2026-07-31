@@ -796,7 +796,7 @@
 
 .landing-widget-tab-btn.active {
   background: var(--active-color, var(--accent-color));
-  color: white;
+  color: var(--active-foreground, white);
   box-shadow: 0 0 10px var(--active-glow, var(--accent-glow));
 }
 
