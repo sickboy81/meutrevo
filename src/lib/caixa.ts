@@ -162,6 +162,25 @@ async function fetchCaixaJson(
   return { ...data, fonteDados: 'caixa' };
 }
 
+async function fetchCaixaBaseResult(
+  url: string
+): Promise<LotteryApiData | null> {
+  try {
+    return await fetchCaixaJson(url, { ...CAIXA_API_HEADERS });
+  } catch {
+    // Some Caixa edges reject Origin/Referer headers from serverless regions.
+    return fetchCaixaJson(
+      url,
+      {
+        'User-Agent': CAIXA_API_HEADERS['User-Agent'],
+        Accept: 'application/json',
+        'Accept-Language': CAIXA_API_HEADERS['Accept-Language'],
+      },
+      20000
+    );
+  }
+}
+
 export function normalizeMirrorLotteryResult(
   lotteryId: string,
   data: MirrorLotteryData
@@ -411,7 +430,7 @@ export async function fetchOfficialLotteryResult(
       : `${base}/api/${apiId}`;
 
     try {
-      const result = await fetchCaixaJson(apiUrl, { ...CAIXA_API_HEADERS });
+      const result = await fetchCaixaBaseResult(apiUrl);
       if (contestNum) return result;
       if (result) latestCandidates.push(result);
     } catch {}
@@ -444,7 +463,7 @@ export async function fetchOfficialLotteryResult(
         : `${base}/api/${apiId}`;
 
       try {
-        const result = await fetchCaixaJson(apiUrl, headers);
+        const result = await fetchCaixaBaseResult(apiUrl);
         if (contestNum) return result;
         if (result) warmedCandidates.push(result);
       } catch {}
