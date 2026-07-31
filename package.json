@@ -14,6 +14,7 @@
     "test": "vitest run",
     "coverage": "vitest run --coverage",
     "test:e2e": "npm run build && playwright test",
+    "collect:lotteries": "node scripts/collect-lottery-cache.mjs",
     "db:init": "node src/lib/init-db.js",
     "infer": "tsc --project tsconfig.json --build --noEmit",
     "watch": "tsc -w",
