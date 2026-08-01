@@ -29,137 +29,157 @@ export default function LgpdBanner() {
   if (!visible) return null;
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        bottom: '1.5rem',
-        left: '1.5rem',
-        right: '1.5rem',
-        zIndex: 9999,
-        background: 'rgba(8, 8, 15, 0.92)',
-        backdropFilter: 'blur(12px)',
-        border: '1px solid rgba(0, 240, 255, 0.2)',
-        borderRadius: '16px',
-        boxShadow:
-          '0 8px 32px 0 rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 240, 255, 0.1)',
-        padding: '1.25rem 1.5rem',
-        display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '1.25rem',
-        maxWidth: '1200px',
-        margin: '0 auto',
-        animation: 'slide-up-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-      }}
-    >
-      <div style={{ flex: '1 1 500px' }}>
-        <h4
-          style={{
-            color: '#00f0ff',
-            fontSize: '0.85rem',
-            fontFamily: 'var(--font-body)',
-            margin: '0 0 0.35rem 0',
-            fontWeight: 'bold',
-            letterSpacing: '0.5px',
-          }}
-        >
-          🛡️ PRIVACIDADE E PROTEÇÃO DE DADOS (LGPD)
-        </h4>
-        <p
-          style={{
-            color: 'rgba(255, 255, 255, 0.7)',
-            fontSize: '0.78rem',
-            lineHeight: '1.5',
-            margin: 0,
-          }}
-        >
-          O Meu Trevo utiliza cookies essenciais para manter sua sessão ativa na
-          plataforma e melhorar sua experiência de navegação. Ao prosseguir,
-          você consente com a nossa coleta de dados mínima em conformidade com a
-          Lei Geral de Proteção de Dados (LGPD). Consulte nossos{' '}
-          <Link
-            href="/terms"
-            style={{ color: '#00f0ff', textDecoration: 'underline' }}
-          >
-            Termos de Uso
-          </Link>{' '}
-          e nossa{' '}
-          <Link
-            href="/privacy"
-            style={{ color: '#00f0ff', textDecoration: 'underline' }}
-          >
-            Política de Privacidade
-          </Link>
-          .
-        </p>
-      </div>
+    <>
+      <div
+        className="lgpd-banner"
+        role="region"
+        aria-label="Preferências de privacidade"
+      >
+        <div className="lgpd-banner-copy">
+          <h4>🛡️ PRIVACIDADE E PROTEÇÃO DE DADOS (LGPD)</h4>
+          <p>
+            O Meu Trevo utiliza cookies essenciais para manter sua sessão ativa
+            na plataforma e melhorar sua experiência de navegação. Ao
+            prosseguir, você consente com a nossa coleta de dados mínima em
+            conformidade com a Lei Geral de Proteção de Dados (LGPD). Consulte
+            nossos <Link href="/terms">Termos de Uso</Link> e nossa{' '}
+            <Link href="/privacy">Política de Privacidade</Link>.
+          </p>
+        </div>
 
-      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'nowrap' }}>
-        <button
-          onClick={handleDecline}
-          style={{
-            background: 'transparent',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            color: 'rgba(255, 255, 255, 0.6)',
-            fontSize: '0.75rem',
-            padding: '0.5rem 1rem',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            transition: 'all 0.2s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.3)';
-            e.currentTarget.style.color = '#fff';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.border =
-              '1px solid rgba(255, 255, 255, 0.15)';
-            e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
-          }}
-        >
-          Recusar
-        </button>
-        <button
-          onClick={handleAccept}
-          style={{
-            background: 'linear-gradient(90deg, #00f0ff, #00e5ff)',
-            border: 'none',
-            color: '#000',
-            fontSize: '0.75rem',
-            padding: '0.5rem 1.25rem',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            boxShadow: '0 0 10px rgba(0, 240, 255, 0.3)',
-            transition: 'all 0.2s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.boxShadow = '0 0 15px rgba(0, 240, 255, 0.5)';
-            e.currentTarget.style.transform = 'translateY(-1px)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.boxShadow = '0 0 10px rgba(0, 240, 255, 0.3)';
-            e.currentTarget.style.transform = 'translateY(0)';
-          }}
-        >
-          Aceitar Termos
-        </button>
+        <div className="lgpd-banner-actions">
+          <button onClick={handleDecline} className="lgpd-banner-decline">
+            Recusar
+          </button>
+          <button onClick={handleAccept} className="lgpd-banner-accept">
+            Aceitar Termos
+          </button>
+        </div>
       </div>
 
       <style jsx global>{`
         @keyframes slide-up-fade {
           from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translate(-50%, 20px);
           }
           to {
             opacity: 1;
-            transform: translateY(0);
+            transform: translate(-50%, 0);
+          }
+        }
+
+        .lgpd-banner {
+          position: fixed;
+          left: 50%;
+          bottom: 1.25rem;
+          z-index: 9999;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1.25rem;
+          width: min(calc(100% - 2.5rem), 1120px);
+          padding: 1rem 1.25rem;
+          transform: translateX(-50%);
+          border: 1px solid rgba(0, 240, 255, 0.2);
+          border-radius: 16px;
+          background: rgba(8, 8, 15, 0.94);
+          box-shadow:
+            0 12px 38px rgba(0, 0, 0, 0.72),
+            0 0 18px rgba(0, 240, 255, 0.1);
+          backdrop-filter: blur(16px);
+          animation: slide-up-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .lgpd-banner-copy {
+          flex: 1 1 520px;
+        }
+        .lgpd-banner-copy h4 {
+          margin: 0 0 0.3rem;
+          color: #00f0ff;
+          font-family: var(--font-body);
+          font-size: 0.8rem;
+          font-weight: 800;
+          letter-spacing: 0.04em;
+        }
+        .lgpd-banner-copy p {
+          margin: 0;
+          color: rgba(255, 255, 255, 0.72);
+          font-size: 0.74rem;
+          line-height: 1.45;
+        }
+        .lgpd-banner-copy a {
+          color: #00f0ff;
+          text-decoration: underline;
+        }
+        .lgpd-banner-actions {
+          display: flex;
+          flex: 0 0 auto;
+          gap: 0.6rem;
+        }
+        .lgpd-banner-actions button {
+          min-height: 38px;
+          padding: 0.5rem 0.9rem;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 0.72rem;
+          font-weight: 800;
+          transition:
+            transform 0.2s ease,
+            border-color 0.2s ease,
+            box-shadow 0.2s ease;
+        }
+        .lgpd-banner-actions button:hover {
+          transform: translateY(-1px);
+        }
+        .lgpd-banner-decline {
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          background: transparent;
+          color: rgba(255, 255, 255, 0.7);
+        }
+        .lgpd-banner-decline:hover {
+          border-color: rgba(255, 255, 255, 0.36);
+          color: #fff;
+        }
+        .lgpd-banner-accept {
+          border: 0;
+          background: linear-gradient(90deg, #00f0ff, #00e676);
+          color: #02060a;
+          box-shadow: 0 0 12px rgba(0, 240, 255, 0.28);
+        }
+        .lgpd-banner-accept:hover {
+          box-shadow: 0 0 18px rgba(0, 240, 255, 0.46);
+        }
+
+        @media (max-width: 640px) {
+          .lgpd-banner {
+            bottom: 0.75rem;
+            align-items: stretch;
+            gap: 0.7rem;
+            width: calc(100% - 1.5rem);
+            padding: 0.8rem;
+            flex-direction: column;
+          }
+          .lgpd-banner-copy h4 {
+            font-size: 0.65rem;
+          }
+          .lgpd-banner-copy p {
+            font-size: 0.66rem;
+            line-height: 1.35;
+          }
+          .lgpd-banner-actions {
+            display: grid;
+            grid-template-columns: 0.9fr 1.25fr;
+            width: 100%;
+          }
+          .lgpd-banner-actions button {
+            width: 100%;
+            min-height: 40px;
+            padding-inline: 0.5rem;
+            font-size: 0.68rem;
           }
         }
       `}</style>
-    </div>
+    </>
   );
 }
