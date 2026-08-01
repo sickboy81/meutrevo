@@ -62,6 +62,9 @@ const FinanceTab = lazy(() => import('../components/FinanceTab'));
 const LandingPage = lazy(() => import('../components/LandingPage'));
 const RankingPanel = lazy(() => import('../components/RankingPanel'));
 const BolaoPanel = lazy(() => import('../components/BolaoPanel'));
+const LotofacilStrategyPanel = lazy(
+  () => import('../components/LotofacilStrategyPanel')
+);
 const MysticGenerator = lazy(() => import('../components/MysticGenerator'));
 const ExportImportModal = lazy(() => import('../components/ExportImportModal'));
 const CameraScanner = lazy(() => import('../components/CameraScanner'));
@@ -100,7 +103,7 @@ type ActiveTab =
   | 'admin'
   | 'finance'
   | 'ranking';
-type GeneratorTab = 'smart' | 'wheeling' | 'mystic' | 'bolao';
+type GeneratorTab = 'smart' | 'wheeling' | 'mystic' | 'bolao' | 'lotofacil';
 
 export default function Home() {
   const [activeLottery, setActiveLottery] = useState<string>('megasena');
@@ -183,6 +186,7 @@ export default function Home() {
       'wheeling',
       'mystic',
       'bolao',
+      'lotofacil',
     ];
     const stored = sessionStorage.getItem('meu-trevo-gensubtab');
     return stored && validGenTabs.includes(stored as GeneratorTab)
@@ -1625,6 +1629,22 @@ export default function Home() {
                         Desdobramento
                       </button>
                       <button
+                        className={`sub-tab-btn ${genSubTab === 'lotofacil' ? 'active' : ''}`}
+                        onClick={() => {
+                          if (!isPro) {
+                            setShowUpgradeModal(true);
+                            return;
+                          }
+                          if (activeLottery !== 'lotofacil') {
+                            setActiveLottery('lotofacil');
+                          }
+                          setHistoryLimit(100);
+                          setGenSubTab('lotofacil');
+                        }}
+                      >
+                        Estratégia Lotofácil {!isPro && '👑'}
+                      </button>
+                      <button
                         className={`sub-tab-btn ${genSubTab === 'mystic' ? 'active' : ''}`}
                         onClick={() => {
                           if (isPro) {
@@ -2245,6 +2265,23 @@ export default function Home() {
                     </div>
                   </div>
                 )}
+
+                {activeTab === 'generator' &&
+                  user &&
+                  genSubTab === 'lotofacil' &&
+                  activeLottery === 'lotofacil' && (
+                    <div
+                      className="glass-panel"
+                      style={{ animation: 'fade-in 0.3s ease' }}
+                    >
+                      <Suspense fallback={<TabFallback />}>
+                        <LotofacilStrategyPanel
+                          history={history}
+                          onSaveGame={handleSaveGeneratedGame}
+                        />
+                      </Suspense>
+                    </div>
+                  )}
 
                 {/* SUB-ABA: DESDOBRAMENTO / WHEELING */}
                 {activeTab === 'generator' &&
