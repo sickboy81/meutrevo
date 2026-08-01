@@ -17,6 +17,7 @@ import {
   normalizeMonthlyPrice,
 } from '@/lib/pricing-config';
 import { LOTTERY_CONFIGS, type GameMetrics } from '../../lib/lottery-math';
+import { NUMERIC_STRATEGY_LOTTERIES } from '@/lib/numeric-lottery-strategy';
 import { useSound } from '../hooks/useSound';
 import {
   getCleanDezenas as getCleanDezenasHelper,
@@ -65,6 +66,9 @@ const BolaoPanel = lazy(() => import('../components/BolaoPanel'));
 const LotofacilStrategyPanel = lazy(
   () => import('../components/LotofacilStrategyPanel')
 );
+const NumericStrategyPanel = lazy(
+  () => import('../components/NumericStrategyPanel')
+);
 const MysticGenerator = lazy(() => import('../components/MysticGenerator'));
 const ExportImportModal = lazy(() => import('../components/ExportImportModal'));
 const CameraScanner = lazy(() => import('../components/CameraScanner'));
@@ -103,7 +107,13 @@ type ActiveTab =
   | 'admin'
   | 'finance'
   | 'ranking';
-type GeneratorTab = 'smart' | 'wheeling' | 'mystic' | 'bolao' | 'lotofacil';
+type GeneratorTab =
+  | 'smart'
+  | 'wheeling'
+  | 'mystic'
+  | 'bolao'
+  | 'lotofacil'
+  | 'numeric';
 
 export default function Home() {
   const [activeLottery, setActiveLottery] = useState<string>('megasena');
@@ -187,6 +197,7 @@ export default function Home() {
       'mystic',
       'bolao',
       'lotofacil',
+      'numeric',
     ];
     const stored = sessionStorage.getItem('meu-trevo-gensubtab');
     return stored && validGenTabs.includes(stored as GeneratorTab)
@@ -1644,6 +1655,23 @@ export default function Home() {
                       >
                         Estratégia Lotofácil {!isPro && '👑'}
                       </button>
+                      {NUMERIC_STRATEGY_LOTTERIES.includes(
+                        activeLottery as (typeof NUMERIC_STRATEGY_LOTTERIES)[number]
+                      ) && (
+                        <button
+                          className={`sub-tab-btn ${genSubTab === 'numeric' ? 'active' : ''}`}
+                          onClick={() => {
+                            if (!isPro) {
+                              setShowUpgradeModal(true);
+                              return;
+                            }
+                            setHistoryLimit(100);
+                            setGenSubTab('numeric');
+                          }}
+                        >
+                          Estratégia avançada {!isPro && '👑'}
+                        </button>
+                      )}
                       <button
                         className={`sub-tab-btn ${genSubTab === 'mystic' ? 'active' : ''}`}
                         onClick={() => {
@@ -2277,6 +2305,26 @@ export default function Home() {
                       <Suspense fallback={<TabFallback />}>
                         <LotofacilStrategyPanel
                           history={history}
+                          onSaveGame={handleSaveGeneratedGame}
+                        />
+                      </Suspense>
+                    </div>
+                  )}
+
+                {activeTab === 'generator' &&
+                  user &&
+                  genSubTab === 'numeric' &&
+                  NUMERIC_STRATEGY_LOTTERIES.includes(
+                    activeLottery as (typeof NUMERIC_STRATEGY_LOTTERIES)[number]
+                  ) && (
+                    <div
+                      className="glass-panel"
+                      style={{ animation: 'fade-in 0.3s ease' }}
+                    >
+                      <Suspense fallback={<TabFallback />}>
+                        <NumericStrategyPanel
+                          history={history}
+                          config={config}
                           onSaveGame={handleSaveGeneratedGame}
                         />
                       </Suspense>
