@@ -359,10 +359,11 @@ export default function Home() {
       redirectToLogin();
       return;
     }
-    const numsStr = numbers
+    const numsStr = [...numbers]
       .sort((a, b) => a - b)
       .map((n) => String(n).padStart(2, '0'))
       .join(', ');
+    setSaveFeedback('Salvando jogo...');
     try {
       const payload = {
         lottery: activeLottery,
@@ -384,10 +385,17 @@ export default function Home() {
           },
           ...current,
         ]);
+        setSaveFeedback('✓ Jogo salvo em Meus Jogos');
+      } else {
+        setSaveFeedback(
+          `⚠️ ${data.error || 'Não foi possível salvar o jogo.'}`
+        );
       }
     } catch (err) {
       console.error(err);
+      setSaveFeedback('⚠️ Erro de conexão ao salvar o jogo.');
     }
+    window.setTimeout(() => setSaveFeedback(''), 3500);
   };
 
   // Programmatic Synthesizer Audio Context
@@ -396,6 +404,7 @@ export default function Home() {
   // --- AUTH / USER STATES ---
   const [user, setUser] = useState<User | null>(null);
   const [savedGames, setSavedGames] = useState<SavedGame[]>([]);
+  const [saveFeedback, setSaveFeedback] = useState<string>('');
   const [emailAlerts, setEmailAlerts] = useState<boolean>(false);
   const [showInRanking, setShowInRanking] = useState<boolean>(true);
 
@@ -1424,6 +1433,34 @@ export default function Home() {
               </button>
             ))}
           </div>
+
+          {saveFeedback && (
+            <div
+              role="status"
+              style={{
+                position: 'fixed',
+                left: '50%',
+                bottom: '1.25rem',
+                zIndex: 2500,
+                transform: 'translateX(-50%)',
+                maxWidth: 'calc(100% - 2rem)',
+                padding: '0.7rem 1rem',
+                borderRadius: '9px',
+                border: `1px solid ${saveFeedback.startsWith('✓') ? 'rgba(0,230,118,0.35)' : saveFeedback.startsWith('⚠️') ? 'rgba(255,214,0,0.35)' : 'rgba(0,240,255,0.3)'}`,
+                background: 'rgba(8,8,15,0.95)',
+                color: saveFeedback.startsWith('✓')
+                  ? '#00e676'
+                  : saveFeedback.startsWith('⚠️')
+                    ? '#ffd600'
+                    : 'var(--accent-color)',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.45)',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+              }}
+            >
+              {saveFeedback}
+            </div>
+          )}
 
           {/* Welcome User Banner */}
           {user && (

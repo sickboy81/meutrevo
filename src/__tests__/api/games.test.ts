@@ -10,6 +10,14 @@ describe('Games Schemas', () => {
     expect(result.success).toBe(true);
   });
 
+  it('deve aceitar dezenas no formato usado pelo salvamento do gerador', () => {
+    const result = createGameSchema.safeParse({
+      lottery: 'lotofacil',
+      numbers: '01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12, 13, 14, 15',
+    });
+    expect(result.success).toBe(true);
+  });
+
   it('deve rejeitar números fora do range', () => {
     const result = createGameSchema.safeParse({
       lottery: 'megasena',

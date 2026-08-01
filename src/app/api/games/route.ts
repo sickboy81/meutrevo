@@ -40,7 +40,13 @@ export async function POST(request: Request) {
     }
 
     const { lottery, numbers } = parsed.data;
-    const numbersJson = JSON.stringify(numbers);
+    const normalizedNumbers = Array.isArray(numbers)
+      ? numbers.map((number) => String(number).padStart(2, '0')).join(', ')
+      : numbers
+          .split(',')
+          .map((number) => String(Number(number.trim())).padStart(2, '0'))
+          .join(', ');
+    const numbersJson = JSON.stringify(normalizedNumbers);
 
     const gameId = crypto.randomUUID();
 

@@ -14,7 +14,21 @@ export const LOTTERY_IDS = [
 
 export const createGameSchema = z.object({
   lottery: z.enum(LOTTERY_IDS),
-  numbers: z.array(z.number().min(0).max(99)),
+  numbers: z.union([
+    z.array(z.number().min(0).max(99)),
+    z
+      .string()
+      .trim()
+      .min(1)
+      .refine(
+        (value) =>
+          value.split(',').every((item) => {
+            const number = Number(item.trim());
+            return Number.isInteger(number) && number >= 0 && number <= 99;
+          }),
+        'Dezenas inválidas'
+      ),
+  ]),
   strategy: z.enum(['balanced', 'aggressive', 'delayed']).optional(),
 });
 
