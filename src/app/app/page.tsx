@@ -107,13 +107,7 @@ type ActiveTab =
   | 'admin'
   | 'finance'
   | 'ranking';
-type GeneratorTab =
-  | 'smart'
-  | 'wheeling'
-  | 'mystic'
-  | 'bolao'
-  | 'lotofacil'
-  | 'numeric';
+type GeneratorTab = 'smart' | 'wheeling' | 'mystic' | 'bolao' | 'advanced';
 
 export default function Home() {
   const [activeLottery, setActiveLottery] = useState<string>('megasena');
@@ -196,8 +190,7 @@ export default function Home() {
       'wheeling',
       'mystic',
       'bolao',
-      'lotofacil',
-      'numeric',
+      'advanced',
     ];
     const stored = sessionStorage.getItem('meu-trevo-gensubtab');
     return stored && validGenTabs.includes(stored as GeneratorTab)
@@ -761,9 +754,18 @@ export default function Home() {
       setSelectedForPool([]);
       setBolaoText('');
       setBolaoShareUrl('');
+      if (
+        genSubTab === 'advanced' &&
+        activeLottery !== 'lotofacil' &&
+        !NUMERIC_STRATEGY_LOTTERIES.includes(
+          activeLottery as (typeof NUMERIC_STRATEGY_LOTTERIES)[number]
+        )
+      ) {
+        setGenSubTab('smart');
+      }
     }, 0);
     return () => clearTimeout(timer);
-  }, [activeLottery]);
+  }, [activeLottery, genSubTab]);
 
   const partnerNumbers = (() => {
     const fixed = Object.entries(filtersMap)
@@ -1639,34 +1641,19 @@ export default function Home() {
                       >
                         Desdobramento
                       </button>
-                      <button
-                        className={`sub-tab-btn ${genSubTab === 'lotofacil' ? 'active' : ''}`}
-                        onClick={() => {
-                          if (!isPro) {
-                            setShowUpgradeModal(true);
-                            return;
-                          }
-                          if (activeLottery !== 'lotofacil') {
-                            setActiveLottery('lotofacil');
-                          }
-                          setHistoryLimit(100);
-                          setGenSubTab('lotofacil');
-                        }}
-                      >
-                        Estratégia Lotofácil {!isPro && '👑'}
-                      </button>
-                      {NUMERIC_STRATEGY_LOTTERIES.includes(
-                        activeLottery as (typeof NUMERIC_STRATEGY_LOTTERIES)[number]
-                      ) && (
+                      {(activeLottery === 'lotofacil' ||
+                        NUMERIC_STRATEGY_LOTTERIES.includes(
+                          activeLottery as (typeof NUMERIC_STRATEGY_LOTTERIES)[number]
+                        )) && (
                         <button
-                          className={`sub-tab-btn ${genSubTab === 'numeric' ? 'active' : ''}`}
+                          className={`sub-tab-btn ${genSubTab === 'advanced' ? 'active' : ''}`}
                           onClick={() => {
                             if (!isPro) {
                               setShowUpgradeModal(true);
                               return;
                             }
                             setHistoryLimit(100);
-                            setGenSubTab('numeric');
+                            setGenSubTab('advanced');
                           }}
                         >
                           Estratégia avançada {!isPro && '👑'}
@@ -2296,7 +2283,7 @@ export default function Home() {
 
                 {activeTab === 'generator' &&
                   user &&
-                  genSubTab === 'lotofacil' &&
+                  genSubTab === 'advanced' &&
                   activeLottery === 'lotofacil' && (
                     <div
                       className="glass-panel"
@@ -2313,7 +2300,7 @@ export default function Home() {
 
                 {activeTab === 'generator' &&
                   user &&
-                  genSubTab === 'numeric' &&
+                  genSubTab === 'advanced' &&
                   NUMERIC_STRATEGY_LOTTERIES.includes(
                     activeLottery as (typeof NUMERIC_STRATEGY_LOTTERIES)[number]
                   ) && (
