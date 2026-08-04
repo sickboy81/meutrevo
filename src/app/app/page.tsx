@@ -29,6 +29,7 @@ import {
   printGames as printGamesFn,
   buildBolaoText,
 } from '@/lib/lottery-exports';
+import { getSimpleBetPrice } from '@/lib/lottery-prices';
 
 let _mathMod: typeof import('../../lib/lottery-math') | null = null;
 async function loadMath() {
@@ -42,6 +43,10 @@ function comb(n: number, k: number): number {
   let r = 1;
   for (let i = 0; i < k; i++) r = (r * (n - i)) / (i + 1);
   return Math.round(r);
+}
+
+function getGameSaveSignature(lottery: string, numbers: number[]) {
+  return `${lottery}:${[...numbers].sort((a, b) => a - b).join(',')}`;
 }
 function inlineWheelCount(
   n: number,
@@ -354,16 +359,31 @@ export default function Home() {
     setWheelGeneratedGames(games);
   };
 
-  const handleSaveGeneratedGame = async (numbers: number[]) => {
+  const handleSaveGeneratedGame = async (
+    numbers: number[],
+    options: { silent?: boolean } = {}
+  ): Promise<boolean> => {
     if (!user) {
       redirectToLogin();
-      return;
+      return false;
     }
     const numsStr = [...numbers]
       .sort((a, b) => a - b)
       .map((n) => String(n).padStart(2, '0'))
       .join(', ');
-    setSaveFeedback('Salvando jogo...');
+    const saveSignature = getGameSaveSignature(activeLottery, numbers);
+    if (savingGameSignaturesRef.current.has(saveSignature)) {
+      if (!options.silent) {
+        setSaveFeedback('⚠️ Este jogo já está sendo salvo.');
+      }
+      return false;
+    }
+
+    savingGameSignaturesRef.current.add(saveSignature);
+    setSavingGameSignatures((current) => [...current, saveSignature]);
+    if (!options.silent) setSaveFeedback('Salvando jogo...');
+
+    let saved = false;
     try {
       const payload = {
         lottery: activeLottery,
@@ -385,17 +405,57 @@ export default function Home() {
           },
           ...current,
         ]);
-        setSaveFeedback('✓ Jogo salvo em Meus Jogos');
+        saved = true;
+        if (!options.silent) {
+          setSaveFeedback('✓ Jogo salvo em Meus Jogos');
+        }
       } else {
-        setSaveFeedback(
-          `⚠️ ${data.error || 'Não foi possível salvar o jogo.'}`
-        );
+        if (!options.silent) {
+          setSaveFeedback(
+            `⚠️ ${data.error || 'Não foi possível salvar o jogo.'}`
+          );
+        }
       }
     } catch (err) {
       console.error(err);
-      setSaveFeedback('⚠️ Erro de conexão ao salvar o jogo.');
+      if (!options.silent) {
+        setSaveFeedback('⚠️ Erro de conexão ao salvar o jogo.');
+      }
+    } finally {
+      savingGameSignaturesRef.current.delete(saveSignature);
+      setSavingGameSignatures((current) =>
+        current.filter((signature) => signature !== saveSignature)
+      );
+      if (!options.silent) {
+        window.setTimeout(() => setSaveFeedback(''), 3500);
+      }
     }
-    window.setTimeout(() => setSaveFeedback(''), 3500);
+    return saved;
+  };
+
+  const handleSaveAllGeneratedGames = async (games: number[][]) => {
+    if (savingAllGeneratedGames || games.length === 0) return;
+
+    setSavingAllGeneratedGames(true);
+    setSaveFeedback(`Salvando 0 de ${games.length} jogos...`);
+    let savedCount = 0;
+
+    try {
+      for (const game of games) {
+        const saved = await handleSaveGeneratedGame(game, { silent: true });
+        if (saved) savedCount += 1;
+        setSaveFeedback(`Salvando ${savedCount} de ${games.length} jogos...`);
+      }
+
+      setSaveFeedback(
+        savedCount === games.length
+          ? `✓ ${savedCount} jogos salvos em Meus Jogos`
+          : `⚠️ ${savedCount} de ${games.length} jogos foram salvos. Tente novamente os restantes.`
+      );
+    } finally {
+      setSavingAllGeneratedGames(false);
+      window.setTimeout(() => setSaveFeedback(''), 4500);
+    }
   };
 
   // Programmatic Synthesizer Audio Context
@@ -405,6 +465,12 @@ export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [savedGames, setSavedGames] = useState<SavedGame[]>([]);
   const [saveFeedback, setSaveFeedback] = useState<string>('');
+  const [savingGameSignatures, setSavingGameSignatures] = useState<string[]>(
+    []
+  );
+  const [savingAllGeneratedGames, setSavingAllGeneratedGames] = useState(false);
+  const savingGameSignaturesRef = useRef(new Set<string>());
+  const [resultError, setResultError] = useState<string | null>(null);
   const [emailAlerts, setEmailAlerts] = useState<boolean>(false);
   const [showInRanking, setShowInRanking] = useState<boolean>(true);
 
@@ -575,6 +641,7 @@ export default function Home() {
 
   const fetchResult = async (lotteryId: string, contestNum?: string) => {
     setLoading(true);
+    setResultError(null);
     try {
       if (contestNum) {
         // Fetch specific past contest
@@ -586,6 +653,11 @@ export default function Home() {
           setResult(data);
           setHistory([data]);
           setLatestResultsMap((prev) => ({ ...prev, [lotteryId]: data }));
+        } else {
+          const data = await res.json().catch(() => ({}));
+          setResultError(
+            data.error || 'Não foi possível carregar este concurso agora.'
+          );
         }
       } else {
         // Fetch latest + full history with dynamic limit
@@ -600,10 +672,16 @@ export default function Home() {
             ...prev,
             [lotteryId]: data.latest,
           }));
+        } else {
+          const data = await res.json().catch(() => ({}));
+          setResultError(
+            data.error || 'Não foi possível carregar os resultados agora.'
+          );
         }
       }
     } catch (e) {
       console.error(e);
+      setResultError('Erro de conexão ao carregar os resultados.');
     } finally {
       setLoading(false);
     }
@@ -612,15 +690,11 @@ export default function Home() {
   useEffect(() => {
     const timer = setTimeout(() => {
       void (async () => {
-        // Parallelize independent requests: auth + config + active lottery
-        const [authResult, configResult, lotteryResult] =
-          await Promise.allSettled([
-            fetchWithCsrf('/api/auth/me'),
-            fetchWithCsrf('/api/config'),
-            fetchWithCsrf(
-              `/api/loteria/${activeLottery}?limit=${historyLimit}`
-            ),
-          ]);
+        // The active lottery is loaded by the dedicated effect below.
+        const [authResult, configResult] = await Promise.allSettled([
+          fetchWithCsrf('/api/auth/me'),
+          fetchWithCsrf('/api/config'),
+        ]);
 
         // Auth
         if (authResult.status === 'fulfilled' && authResult.value?.ok) {
@@ -640,23 +714,10 @@ export default function Home() {
             );
           }
         }
-
-        // Active lottery results
-        if (lotteryResult.status === 'fulfilled' && lotteryResult.value.ok) {
-          const data = await lotteryResult.value.json();
-          setResult(data.latest);
-          setHistory(data.history || [data.latest]);
-          setLatestResultsMap((prev) => ({
-            ...prev,
-            [activeLottery]: data.latest,
-          }));
-        }
-        setLoading(false);
       })();
     }, 0);
 
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Lazy-load other lotteries only when games tab needs them
@@ -728,6 +789,9 @@ export default function Home() {
     const timer = setTimeout(() => {
       void (async () => {
         setLoading(true);
+        setResultError(null);
+        setResult(null);
+        setHistory([]);
         try {
           const res = await fetchWithCsrf(
             `/api/loteria/${activeLottery}?limit=${historyLimit}`
@@ -740,9 +804,15 @@ export default function Home() {
               ...prev,
               [activeLottery]: data.latest,
             }));
+          } else {
+            const data = await res.json().catch(() => ({}));
+            setResultError(
+              data.error || 'Não foi possível carregar os resultados agora.'
+            );
           }
         } catch (e) {
           console.error(e);
+          setResultError('Erro de conexão ao carregar os resultados.');
         } finally {
           if (!abort.cancelled) setLoading(false);
         }
@@ -1232,6 +1302,7 @@ export default function Home() {
             <div className="header-nav-desktop">
               <button
                 className={`nav-item-desktop ${activeTab === 'results' ? 'active' : ''}`}
+                aria-current={activeTab === 'results' ? 'page' : undefined}
                 onClick={() => {
                   playSound('click');
                   setActiveTab('results');
@@ -1241,6 +1312,7 @@ export default function Home() {
               </button>
               <button
                 className={`nav-item-desktop ${activeTab === 'generator' ? 'active' : ''}`}
+                aria-current={activeTab === 'generator' ? 'page' : undefined}
                 onClick={() => {
                   playSound('click');
                   setActiveTab('generator');
@@ -1250,6 +1322,7 @@ export default function Home() {
               </button>
               <button
                 className={`nav-item-desktop ${activeTab === 'games' ? 'active' : ''}`}
+                aria-current={activeTab === 'games' ? 'page' : undefined}
                 onClick={() => {
                   playSound('click');
                   setActiveTab('games');
@@ -1259,6 +1332,7 @@ export default function Home() {
               </button>
               <button
                 className={`nav-item-desktop ${activeTab === 'simulator' ? 'active' : ''}`}
+                aria-current={activeTab === 'simulator' ? 'page' : undefined}
                 onClick={() => {
                   playSound('click');
                   setActiveTab('simulator');
@@ -1268,6 +1342,7 @@ export default function Home() {
               </button>
               <button
                 className={`nav-item-desktop ${activeTab === 'stats' ? 'active' : ''}`}
+                aria-current={activeTab === 'stats' ? 'page' : undefined}
                 onClick={() => {
                   playSound('click');
                   setActiveTab('stats');
@@ -1277,6 +1352,7 @@ export default function Home() {
               </button>
               <button
                 className={`nav-item-desktop ${activeTab === 'finance' ? 'active' : ''}`}
+                aria-current={activeTab === 'finance' ? 'page' : undefined}
                 onClick={() => {
                   playSound('click');
                   setActiveTab('finance');
@@ -1286,6 +1362,7 @@ export default function Home() {
               </button>
               <button
                 className={`nav-item-desktop ${activeTab === 'ranking' ? 'active' : ''}`}
+                aria-current={activeTab === 'ranking' ? 'page' : undefined}
                 onClick={() => {
                   playSound('click');
                   setActiveTab('ranking');
@@ -1297,6 +1374,7 @@ export default function Home() {
               {user?.role === 'admin' && (
                 <button
                   className={`nav-item-desktop ${activeTab === 'admin' ? 'active' : ''}`}
+                  aria-current={activeTab === 'admin' ? 'page' : undefined}
                   onClick={() => {
                     playSound('click');
                     setActiveTab('admin');
@@ -1336,6 +1414,8 @@ export default function Home() {
               <button
                 onClick={() => setShowSettings(!showSettings)}
                 className="settings-toggle-btn"
+                aria-label="Abrir configurações do aplicativo"
+                aria-expanded={showSettings}
                 style={{
                   background: 'none',
                   border: 'none',
@@ -1413,6 +1493,8 @@ export default function Home() {
               <button
                 key={lot.id}
                 className={`lottery-pill ${activeLottery === lot.id ? 'active' : ''}`}
+                aria-pressed={activeLottery === lot.id}
+                aria-label={`Selecionar ${lot.name}`}
                 onClick={() => setActiveLottery(lot.id)}
                 style={
                   {
@@ -1432,6 +1514,9 @@ export default function Home() {
                 {lot.name}
               </button>
             ))}
+          </div>
+          <div className="lottery-scroll-hint" aria-hidden="true">
+            Arraste para ver outras loterias →
           </div>
 
           {saveFeedback && (
@@ -1506,35 +1591,72 @@ export default function Home() {
               />
             )}
             {!result ? (
-              <div
-                style={{
-                  display: 'flex',
-                  flex: 1,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  minHeight: '300px',
-                  flexDirection: 'column',
-                  gap: '1rem',
-                }}
-              >
-                <span
-                  className="loader"
-                  style={
-                    {
-                      '--accent-color': config?.accentColor,
-                    } as React.CSSProperties
-                  }
-                />
-                <p
+              resultError ? (
+                <div
+                  role="alert"
                   style={{
-                    color: 'var(--text-muted)',
-                    fontFamily: 'var(--font-body)',
-                    fontSize: '0.85rem',
+                    display: 'flex',
+                    flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: '300px',
+                    flexDirection: 'column',
+                    gap: '0.75rem',
+                    textAlign: 'center',
+                    padding: '1rem',
                   }}
                 >
-                  Carregando resultados...
-                </p>
-              </div>
+                  <strong style={{ color: '#ffd600', fontSize: '0.9rem' }}>
+                    Não foi possível carregar os resultados
+                  </strong>
+                  <p
+                    style={{
+                      color: 'var(--text-muted)',
+                      fontSize: '0.78rem',
+                      margin: 0,
+                    }}
+                  >
+                    {resultError}
+                  </p>
+                  <button
+                    type="button"
+                    className="theme-pill-btn active"
+                    onClick={() => void fetchResult(activeLottery)}
+                  >
+                    Tentar novamente
+                  </button>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    display: 'flex',
+                    flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: '300px',
+                    flexDirection: 'column',
+                    gap: '1rem',
+                  }}
+                >
+                  <span
+                    className="loader"
+                    style={
+                      {
+                        '--accent-color': config?.accentColor,
+                      } as React.CSSProperties
+                    }
+                  />
+                  <p
+                    style={{
+                      color: 'var(--text-muted)',
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '0.85rem',
+                    }}
+                  >
+                    Carregando resultados...
+                  </p>
+                </div>
+              )
             ) : (
               <>
                 {/* TAB: RESULTADOS */}
@@ -2200,6 +2322,15 @@ export default function Home() {
                                       onClick={() =>
                                         handleSaveGeneratedGame(game.numbers)
                                       }
+                                      disabled={
+                                        savingAllGeneratedGames ||
+                                        savingGameSignatures.includes(
+                                          getGameSaveSignature(
+                                            activeLottery,
+                                            game.numbers
+                                          )
+                                        )
+                                      }
                                       style={{
                                         background: 'rgba(0,230,118,0.1)',
                                         border: '1px solid rgba(0,230,118,0.2)',
@@ -2208,11 +2339,30 @@ export default function Home() {
                                         fontWeight: 600,
                                         padding: '0.25rem 0.5rem',
                                         borderRadius: '4px',
-                                        cursor: 'pointer',
+                                        cursor: savingAllGeneratedGames
+                                          ? 'wait'
+                                          : 'pointer',
                                         whiteSpace: 'nowrap',
+                                        opacity:
+                                          savingAllGeneratedGames ||
+                                          savingGameSignatures.includes(
+                                            getGameSaveSignature(
+                                              activeLottery,
+                                              game.numbers
+                                            )
+                                          )
+                                            ? 0.55
+                                            : 1,
                                       }}
                                     >
-                                      💾 Salvar nos Meus Jogos
+                                      {savingGameSignatures.includes(
+                                        getGameSaveSignature(
+                                          activeLottery,
+                                          game.numbers
+                                        )
+                                      )
+                                        ? 'Salvando...'
+                                        : '💾 Salvar nos Meus Jogos'}
                                     </button>
                                   </div>
                                   {/* Metrics Row */}
@@ -2614,7 +2764,9 @@ export default function Home() {
                                   c =
                                     (c * (wheelSelectedNums.length - i)) /
                                     (i + 1);
-                                return (c * 4.5).toFixed(2).replace('.', ',');
+                                return (c * getSimpleBetPrice(activeLottery))
+                                  .toFixed(2)
+                                  .replace('.', ',');
                               })()}
                             </strong>
                           </span>
@@ -2630,7 +2782,9 @@ export default function Home() {
                                   config.drawCount,
                                   wheelGuarantee
                                 );
-                                return (est * 4.5).toFixed(2).replace('.', ',');
+                                return (est * getSimpleBetPrice(activeLottery))
+                                  .toFixed(2)
+                                  .replace('.', ',');
                               })()}
                             </strong>
                           </span>
@@ -2687,12 +2841,12 @@ export default function Home() {
                               {wheelGeneratedGames.length} JOGOS GERADOS
                             </span>
                             <button
-                              onClick={() => {
-                                wheelGeneratedGames.forEach((nums) =>
-                                  handleSaveGeneratedGame(nums)
-                                );
-                                playSound('success');
-                              }}
+                              onClick={() =>
+                                void handleSaveAllGeneratedGames(
+                                  wheelGeneratedGames
+                                )
+                              }
+                              disabled={savingAllGeneratedGames}
                               style={{
                                 background: 'rgba(0,230,118,0.1)',
                                 border: '1px solid rgba(0,230,118,0.2)',
@@ -2701,14 +2855,23 @@ export default function Home() {
                                 fontWeight: 600,
                                 padding: '0.25rem 0.5rem',
                                 borderRadius: '4px',
-                                cursor: 'pointer',
+                                cursor: savingAllGeneratedGames
+                                  ? 'wait'
+                                  : 'pointer',
+                                opacity: savingAllGeneratedGames ? 0.55 : 1,
                               }}
                             >
-                              💾 Salvar Todos em Meus Jogos (
-                              {(wheelGeneratedGames.length * 4.5)
-                                .toFixed(2)
-                                .replace('.', ',')}
-                              )
+                              {savingAllGeneratedGames
+                                ? 'Salvando jogos...'
+                                : '💾 Salvar Todos em Meus Jogos ('}
+                              {!savingAllGeneratedGames &&
+                                (
+                                  wheelGeneratedGames.length *
+                                  getSimpleBetPrice(activeLottery)
+                                )
+                                  .toFixed(2)
+                                  .replace('.', ',')}
+                              {!savingAllGeneratedGames && ')'}
                             </button>
                           </div>
                           <div
@@ -2776,6 +2939,12 @@ export default function Home() {
                                 </div>
                                 <button
                                   onClick={() => handleSaveGeneratedGame(nums)}
+                                  disabled={
+                                    savingAllGeneratedGames ||
+                                    savingGameSignatures.includes(
+                                      getGameSaveSignature(activeLottery, nums)
+                                    )
+                                  }
                                   style={{
                                     background: 'none',
                                     border: '1px solid rgba(0,230,118,0.15)',
@@ -2784,10 +2953,26 @@ export default function Home() {
                                     fontWeight: 600,
                                     padding: '0.15rem 0.4rem',
                                     borderRadius: '4px',
-                                    cursor: 'pointer',
+                                    cursor: savingAllGeneratedGames
+                                      ? 'wait'
+                                      : 'pointer',
+                                    opacity:
+                                      savingAllGeneratedGames ||
+                                      savingGameSignatures.includes(
+                                        getGameSaveSignature(
+                                          activeLottery,
+                                          nums
+                                        )
+                                      )
+                                        ? 0.55
+                                        : 1,
                                   }}
                                 >
-                                  Salvar em Meus Jogos
+                                  {savingGameSignatures.includes(
+                                    getGameSaveSignature(activeLottery, nums)
+                                  )
+                                    ? 'Salvando...'
+                                    : 'Salvar em Meus Jogos'}
                                 </button>
                               </div>
                             ))}
@@ -3058,36 +3243,42 @@ export default function Home() {
           >
             <button
               className={`nav-item ${activeTab === 'results' ? 'active' : ''}`}
+              aria-current={activeTab === 'results' ? 'page' : undefined}
               onClick={() => setActiveTab('results')}
             >
               <span className="nav-icon">★</span> Resultados
             </button>
             <button
               className={`nav-item ${activeTab === 'generator' ? 'active' : ''}`}
+              aria-current={activeTab === 'generator' ? 'page' : undefined}
               onClick={() => setActiveTab('generator')}
             >
               <span className="nav-icon">⚡</span> Gerador
             </button>
             <button
               className={`nav-item ${activeTab === 'games' ? 'active' : ''}`}
+              aria-current={activeTab === 'games' ? 'page' : undefined}
               onClick={() => setActiveTab('games')}
             >
               <span className="nav-icon">💾</span> Meus Jogos
             </button>
             <button
               className={`nav-item ${activeTab === 'simulator' ? 'active' : ''}`}
+              aria-current={activeTab === 'simulator' ? 'page' : undefined}
               onClick={() => setActiveTab('simulator')}
             >
               <span className="nav-icon">🎯</span> Simulador
             </button>
             <button
               className={`nav-item ${activeTab === 'ranking' ? 'active' : ''}`}
+              aria-current={activeTab === 'ranking' ? 'page' : undefined}
               onClick={() => setActiveTab('ranking')}
             >
               <span className="nav-icon">🏆</span> Ranking
             </button>
             <button
               className={`nav-item ${activeTab === 'finance' ? 'active' : ''}`}
+              aria-current={activeTab === 'finance' ? 'page' : undefined}
               onClick={() => setActiveTab('finance')}
             >
               <span className="nav-icon">💰</span> Financeiro

@@ -38,12 +38,9 @@ export default function LgpdBanner() {
         <div className="lgpd-banner-copy">
           <h4>🛡️ PRIVACIDADE E PROTEÇÃO DE DADOS (LGPD)</h4>
           <p>
-            O Meu Trevo utiliza cookies essenciais para manter sua sessão ativa
-            na plataforma e melhorar sua experiência de navegação. Ao
-            prosseguir, você consente com a nossa coleta de dados mínima em
-            conformidade com a Lei Geral de Proteção de Dados (LGPD). Consulte
-            nossos <Link href="/terms">Termos de Uso</Link> e nossa{' '}
-            <Link href="/privacy">Política de Privacidade</Link>.
+            Usamos apenas cookies essenciais para manter sua sessão e lembrar
+            esta escolha. Consulte os <Link href="/terms">Termos de Uso</Link> e
+            a <Link href="/privacy">Política de Privacidade</Link>.
           </p>
         </div>
 
@@ -52,7 +49,7 @@ export default function LgpdBanner() {
             Recusar
           </button>
           <button onClick={handleAccept} className="lgpd-banner-accept">
-            Aceitar Termos
+            Aceitar
           </button>
         </div>
       </div>
@@ -61,26 +58,25 @@ export default function LgpdBanner() {
         @keyframes slide-up-fade {
           from {
             opacity: 0;
-            transform: translate(-50%, 20px);
+            transform: translateY(20px);
           }
           to {
             opacity: 1;
-            transform: translate(-50%, 0);
+            transform: translateY(0);
           }
         }
 
         .lgpd-banner {
           position: fixed;
-          left: 50%;
+          right: 1.25rem;
           bottom: 1.25rem;
           z-index: 9999;
           display: flex;
           align-items: center;
           justify-content: space-between;
           gap: 1.25rem;
-          width: min(calc(100% - 2.5rem), 1120px);
-          padding: 1rem 1.25rem;
-          transform: translateX(-50%);
+          width: min(calc(100% - 2.5rem), 560px);
+          padding: 0.85rem 1rem;
           border: 1px solid rgba(0, 240, 255, 0.2);
           border-radius: 16px;
           background: rgba(8, 8, 15, 0.94);
@@ -153,6 +149,7 @@ export default function LgpdBanner() {
 
         @media (max-width: 640px) {
           .lgpd-banner {
+            right: 0.75rem;
             bottom: 0.75rem;
             align-items: stretch;
             gap: 0.7rem;
@@ -162,6 +159,9 @@ export default function LgpdBanner() {
           }
           .lgpd-banner-copy h4 {
             font-size: 0.65rem;
+          }
+          .lgpd-banner-copy {
+            flex: 0 1 auto;
           }
           .lgpd-banner-copy p {
             font-size: 0.66rem;

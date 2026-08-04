@@ -234,6 +234,7 @@ export default function LoginPage() {
             type="button"
             className={`option-btn ${mode === 'login' ? 'active' : ''}`}
             onClick={() => changeMode('login')}
+            aria-pressed={mode === 'login'}
           >
             Entrar
           </button>
@@ -241,6 +242,7 @@ export default function LoginPage() {
             type="button"
             className={`option-btn ${mode === 'register' ? 'active' : ''}`}
             onClick={() => changeMode('register')}
+            aria-pressed={mode === 'register'}
           >
             Cadastrar
           </button>
@@ -249,6 +251,7 @@ export default function LoginPage() {
         <form
           className="auth-form"
           onSubmit={handleSubmit}
+          aria-busy={loading}
           style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}
         >
           {mode === 'register' && (
@@ -261,6 +264,7 @@ export default function LoginPage() {
                 onChange={(event) => setName(event.target.value)}
                 required
                 placeholder="Seu nome"
+                autoComplete="name"
               />
             </label>
           )}
@@ -274,6 +278,7 @@ export default function LoginPage() {
               onChange={(event) => setEmail(event.target.value)}
               required
               placeholder="seu@email.com"
+              autoComplete="email"
             />
           </label>
 
@@ -288,6 +293,8 @@ export default function LoginPage() {
                   onChange={(event) => setCpfCnpj(event.target.value)}
                   required
                   placeholder="000.000.000-00"
+                  inputMode="numeric"
+                  autoComplete="off"
                 />
               </label>
               <div
@@ -305,6 +312,7 @@ export default function LoginPage() {
                     value={city}
                     onChange={(event) => setCity(event.target.value)}
                     placeholder="Sua cidade"
+                    autoComplete="address-level2"
                   />
                 </label>
                 <label className="auth-label">
@@ -313,6 +321,7 @@ export default function LoginPage() {
                     className="auth-input"
                     value={state}
                     onChange={(event) => setState(event.target.value)}
+                    autoComplete="address-level1"
                   >
                     <option value="">UF</option>
                     {BRAZIL_STATES.map((uf) => (
@@ -338,6 +347,9 @@ export default function LoginPage() {
                   required
                   placeholder={
                     mode === 'register' ? 'Mínimo 6 caracteres' : 'Sua senha'
+                  }
+                  autoComplete={
+                    mode === 'register' ? 'new-password' : 'current-password'
                   }
                   style={{ paddingRight: '3rem' }}
                 />
@@ -413,6 +425,8 @@ export default function LoginPage() {
 
           {error && (
             <div
+              role="alert"
+              aria-live="assertive"
               style={{
                 color: '#ff8a80',
                 background: 'rgba(255,68,102,0.1)',
@@ -427,6 +441,8 @@ export default function LoginPage() {
           )}
           {success && (
             <div
+              role="status"
+              aria-live="polite"
               style={{
                 color: '#00e676',
                 background: 'rgba(0,230,118,0.1)',

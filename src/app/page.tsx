@@ -234,6 +234,9 @@ export default async function LandingHome() {
               Lotomania
             </AppEntryLink>
           </nav>
+          <span className="landing-nav-scroll-hint" aria-hidden="true">
+            Deslize para mais loterias →
+          </span>
           <AppEntryLink
             className="theme-pill-btn active landing-header-app-link"
             style={{

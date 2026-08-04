@@ -3,6 +3,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties, Dispatch, SetStateAction } from 'react';
 import { LOTTERY_CONFIGS } from '@/lib/lottery-math';
+import {
+  getSavedGameWinnerStatus,
+  type SavedGameWinnerStatus,
+} from '@/lib/saved-game-winner';
 import type { LotteryResult, SavedGame } from '../types';
 
 type SortMode = 'date-desc' | 'date-asc' | 'hits-desc' | 'hits-asc';
@@ -35,19 +39,12 @@ type Props = {
 type EnrichedGame = {
   game: SavedGame;
   hits: number | null;
-  isWinner: boolean;
+  winnerStatus: SavedGameWinnerStatus | null;
   latestResult: LotteryResult | null;
   nums: string[];
 };
 
 const SAVED_GAMES_FILTERS_KEY = 'meu-trevo-saved-games-filters';
-
-function getMinimumWinnerHits(lottery: string) {
-  if (lottery === 'lotofacil') return 11;
-  if (lottery === 'megasena') return 4;
-  if (lottery === 'quina') return 2;
-  return 20;
-}
 
 export default function SavedGamesPanel({
   savedGames,
@@ -154,7 +151,13 @@ export default function SavedGamesPanel({
       const latestResult = latestResultsMap[game.lottery] ?? null;
 
       if (!latestResult) {
-        return { game, nums, hits: null, isWinner: false, latestResult: null };
+        return {
+          game,
+          nums,
+          hits: null,
+          winnerStatus: null,
+          latestResult: null,
+        };
       }
 
       const drawnNumbers = getCleanDezenas(latestResult).map(Number);
@@ -165,7 +168,7 @@ export default function SavedGamesPanel({
         game,
         nums,
         hits,
-        isWinner: hits >= getMinimumWinnerHits(game.lottery),
+        winnerStatus: getSavedGameWinnerStatus(game.lottery, hits),
         latestResult,
       };
     });
@@ -185,12 +188,12 @@ export default function SavedGamesPanel({
       .map((value) => value.trim())
       .filter(Boolean);
 
-    const filtered = enrichedGames.filter(({ game, nums, isWinner }) => {
+    const filtered = enrichedGames.filter(({ game, nums, winnerStatus }) => {
       if (lotteryFilter !== 'all' && game.lottery !== lotteryFilter) {
         return false;
       }
 
-      if (onlyWinners && !isWinner) {
+      if (onlyWinners && winnerStatus !== 'winner') {
         return false;
       }
 
@@ -244,7 +247,7 @@ export default function SavedGamesPanel({
   const visibleWinnerIds = useMemo(
     () =>
       visibleGames
-        .filter(({ isWinner }) => isWinner)
+        .filter(({ winnerStatus }) => winnerStatus === 'winner')
         .map(({ game }) => game.id),
     [visibleGames]
   );
@@ -264,7 +267,9 @@ export default function SavedGamesPanel({
         {
           key: 'all',
           label: `Todos os jogos (${visibleGames.length})`,
-          winnerCount: visibleGames.filter((item) => item.isWinner).length,
+          winnerCount: visibleGames.filter(
+            (item) => item.winnerStatus === 'winner'
+          ).length,
           items: visibleGames,
         },
       ];
@@ -287,7 +292,8 @@ export default function SavedGamesPanel({
         groupMode === 'lottery'
           ? `${LOTTERY_CONFIGS[key]?.name || key.toUpperCase()} (${items.length})`
           : `${key} (${items.length})`,
-      winnerCount: items.filter((item) => item.isWinner).length,
+      winnerCount: items.filter((item) => item.winnerStatus === 'winner')
+        .length,
       items,
     }));
   }, [groupMode, visibleGames]);
@@ -298,7 +304,9 @@ export default function SavedGamesPanel({
   const selectedGameLists = visibleGames
     .filter(({ game }) => selectedForPool.includes(game.id))
     .map(({ game }) => game.numbers.split(',').map(Number));
-  const winnerCount = enrichedGames.filter((item) => item.isWinner).length;
+  const winnerCount = enrichedGames.filter(
+    (item) => item.winnerStatus === 'winner'
+  ).length;
 
   return (
     <div style={{ marginTop: '0.5rem' }}>
@@ -325,8 +333,8 @@ export default function SavedGamesPanel({
               marginTop: '0.2rem',
             }}
           >
-            {visibleGames.length} exibido(s) • {winnerCount} premiado(s) no
-            último concurso carregado
+            {visibleGames.length} exibido(s) • {winnerCount} premiado(s) com
+            conferência automática
           </div>
         </div>
 
@@ -735,7 +743,10 @@ export default function SavedGamesPanel({
                   )}
                   <div className="saved-games-list">
                     {group.items.map(
-                      ({ game, nums, hits, isWinner, latestResult }) => {
+                      ({ game, nums, hits, winnerStatus, latestResult }) => {
+                        const isWinner = winnerStatus === 'winner';
+                        const requiresManualReview =
+                          winnerStatus === 'manual-review';
                         const configGame = LOTTERY_CONFIGS[game.lottery];
 
                         return (
@@ -814,7 +825,9 @@ export default function SavedGamesPanel({
                                 >
                                   {hits === null
                                     ? 'Sem leitura'
-                                    : `${hits} acerto${hits !== 1 ? 's' : ''}`}
+                                    : requiresManualReview
+                                      ? `${hits} acerto${hits !== 1 ? 's' : ''} · conferir`
+                                      : `${hits} acerto${hits !== 1 ? 's' : ''}`}
                                 </span>
                                 <button
                                   className="delete-game-btn"
@@ -893,7 +906,11 @@ export default function SavedGamesPanel({
                                     }}
                                   >
                                     🎯 {hits} Acerto{hits !== 1 ? 's' : ''}{' '}
-                                    {isWinner ? '🏆 (Premiado)' : ''}
+                                    {isWinner
+                                      ? '🏆 (Premiado)'
+                                      : requiresManualReview
+                                        ? '· Conferência oficial necessária'
+                                        : ''}
                                   </span>
                                 </div>
                                 <div
