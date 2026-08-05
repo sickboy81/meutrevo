@@ -1431,7 +1431,27 @@ export default function Home() {
                 }}
                 title="Configurações do App"
               >
-                ⚙️
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                  />
+                  <path
+                    d="m19.4 15 .1.1a1.8 1.8 0 0 1-2.5 2.5l-.1-.1a1.8 1.8 0 0 0-3.1 1.3v.2a1.8 1.8 0 0 1-3.6 0v-.2a1.8 1.8 0 0 0-3.1-1.3l-.1.1a1.8 1.8 0 1 1-2.5-2.5l.1-.1A1.8 1.8 0 0 0 3.3 12a1.8 1.8 0 0 0-1.3-3.1h-.2a1.8 1.8 0 0 1 0-3.6H2A1.8 1.8 0 0 0 3.3 2.2l-.1-.1a1.8 1.8 0 1 1 2.5-2.5l.1.1A1.8 1.8 0 0 0 8.9-1.6v-.2a1.8 1.8 0 0 1 3.6 0v.2a1.8 1.8 0 0 0 3.1 1.3l.1-.1a1.8 1.8 0 1 1 2.5 2.5l-.1.1A1.8 1.8 0 0 0 19.4 5h.2a1.8 1.8 0 0 1 0 3.6h-.2a1.8 1.8 0 0 0 0 6.4Z"
+                    stroke="currentColor"
+                    strokeWidth="1.3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    transform="translate(1.2 4.4) scale(.9)"
+                  />
+                </svg>
               </button>
             </div>
 
@@ -1562,7 +1582,9 @@ export default function Home() {
                 animation: 'fade-in 0.3s ease-out',
               }}
             >
-              <span>{user.avatar || '👤'}</span>
+              <span className="user-mark" aria-hidden="true">
+                {user.name?.trim().charAt(0).toUpperCase() || 'U'}
+              </span>
               <span>
                 Olá,{' '}
                 <strong style={{ color: 'var(--text-main)' }}>
@@ -1815,7 +1837,7 @@ export default function Home() {
                             setGenSubTab('advanced');
                           }}
                         >
-                          Estratégia avançada {!isPro && '👑'}
+                          Estratégia avançada
                         </button>
                       )}
                       <button
@@ -1828,7 +1850,7 @@ export default function Home() {
                           }
                         }}
                       >
-                        Gerador Místico 🔮 {!isPro && '👑'}
+                        Gerador Místico
                       </button>
                       <button
                         className={`sub-tab-btn ${genSubTab === 'bolao' ? 'active' : ''}`}
@@ -1836,7 +1858,7 @@ export default function Home() {
                           setGenSubTab('bolao');
                         }}
                       >
-                        Gerador Bolão 👥
+                        Gerador de Bolão
                       </button>
                     </div>
 
@@ -1942,7 +1964,7 @@ export default function Home() {
                           {intensity === 'delayed' &&
                             '⏳ Prioriza números com maior atraso (não saem há mais tempo).'}
                           {intensity === 'surpresa' &&
-                            '🎲 Sem preferência — todos os números têm o mesmo peso.'}
+                            'Sem preferência — todos os números têm o mesmo peso.'}
                         </div>
                       </div>
 
@@ -2133,7 +2155,7 @@ export default function Home() {
                                       marginBottom: '0.2rem',
                                     }}
                                   >
-                                    Soma das Dezenas {!isPro && '👑'}
+                                    Soma das Dezenas
                                   </label>
                                   <div
                                     style={{
@@ -2196,7 +2218,7 @@ export default function Home() {
                                       marginBottom: '0.2rem',
                                     }}
                                   >
-                                    Limitar Repetidos Anterior {!isPro && '👑'}
+                                    Limitar Repetidos Anterior
                                   </label>
                                   <input
                                     type="number"
@@ -2228,7 +2250,7 @@ export default function Home() {
                                     borderRadius: '4px',
                                   }}
                                 >
-                                  PRO ONLY 👑
+                                  PRO
                                 </span>
                               )}
                             </div>
@@ -2248,7 +2270,7 @@ export default function Home() {
                             borderRadius: '8px',
                           }}
                         >
-                          🎲 Gerar{' '}
+                          Gerar{' '}
                           {gameQuantity > 1 ? `${gameQuantity} Jogos` : 'Jogo'}{' '}
                           com IA
                         </button>
@@ -2362,7 +2384,7 @@ export default function Home() {
                                         )
                                       )
                                         ? 'Salvando...'
-                                        : '💾 Salvar nos Meus Jogos'}
+                                        : 'Salvar nos Meus Jogos'}
                                     </button>
                                   </div>
                                   {/* Metrics Row */}
@@ -2863,7 +2885,7 @@ export default function Home() {
                             >
                               {savingAllGeneratedGames
                                 ? 'Salvando jogos...'
-                                : '💾 Salvar Todos em Meus Jogos ('}
+                                : 'Salvar Todos em Meus Jogos ('}
                               {!savingAllGeneratedGames &&
                                 (
                                   wheelGeneratedGames.length *
@@ -3246,42 +3268,42 @@ export default function Home() {
               aria-current={activeTab === 'results' ? 'page' : undefined}
               onClick={() => setActiveTab('results')}
             >
-              <span className="nav-icon">★</span> Resultados
+              Resultados
             </button>
             <button
               className={`nav-item ${activeTab === 'generator' ? 'active' : ''}`}
               aria-current={activeTab === 'generator' ? 'page' : undefined}
               onClick={() => setActiveTab('generator')}
             >
-              <span className="nav-icon">⚡</span> Gerador
+              Gerador
             </button>
             <button
               className={`nav-item ${activeTab === 'games' ? 'active' : ''}`}
               aria-current={activeTab === 'games' ? 'page' : undefined}
               onClick={() => setActiveTab('games')}
             >
-              <span className="nav-icon">💾</span> Meus Jogos
+              Meus Jogos
             </button>
             <button
               className={`nav-item ${activeTab === 'simulator' ? 'active' : ''}`}
               aria-current={activeTab === 'simulator' ? 'page' : undefined}
               onClick={() => setActiveTab('simulator')}
             >
-              <span className="nav-icon">🎯</span> Simulador
+              Simulador
             </button>
             <button
               className={`nav-item ${activeTab === 'ranking' ? 'active' : ''}`}
               aria-current={activeTab === 'ranking' ? 'page' : undefined}
               onClick={() => setActiveTab('ranking')}
             >
-              <span className="nav-icon">🏆</span> Ranking
+              Ranking
             </button>
             <button
               className={`nav-item ${activeTab === 'finance' ? 'active' : ''}`}
               aria-current={activeTab === 'finance' ? 'page' : undefined}
               onClick={() => setActiveTab('finance')}
             >
-              <span className="nav-icon">💰</span> Financeiro
+              Financeiro
             </button>
           </nav>
         </>

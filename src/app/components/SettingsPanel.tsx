@@ -138,7 +138,7 @@ export default function SettingsPanel({
         {(
           [
             ['config', '⚙️ Ajustes'],
-            ['account', '👤 Conta'],
+            ['account', 'Conta'],
           ] as const
         ).map(([tab, label]) => (
           <button
@@ -206,7 +206,7 @@ export default function SettingsPanel({
                   style={THEME_STYLES[t]}
                 >
                   {t === 'meganeon' ? 'MEGA-GREEN' : t.toUpperCase()}
-                  {t !== 'meganeon' && !isPro && ' 👑'}
+                  {t !== 'meganeon' && !isPro && ' PRO'}
                 </button>
               ))}
             </div>
@@ -223,7 +223,7 @@ export default function SettingsPanel({
                 fontWeight: 600,
               }}
             >
-              📊 AMOSTRAGEM DE CONCURSOS
+              AMOSTRAGEM DE CONCURSOS
             </span>
             <div style={{ display: 'flex', gap: '0.3rem' }}>
               {([10, 30, 50, 100] as number[]).map((limit) => (
@@ -240,7 +240,7 @@ export default function SettingsPanel({
                   }}
                   style={{ flex: 1, textAlign: 'center' }}
                 >
-                  {limit} Jogos{limit !== 30 && !isPro && ' 👑'}
+                  {limit} Jogos{limit !== 30 && !isPro && ' PRO'}
                 </button>
               ))}
             </div>
@@ -328,7 +328,7 @@ export default function SettingsPanel({
                   fontWeight: 600,
                 }}
               >
-                🏆 Aparecer no Ranking Geral
+                Aparecer no Ranking Geral
               </span>
             </label>
           </div>
@@ -500,7 +500,7 @@ export default function SettingsPanel({
                       display: 'block',
                     }}
                   >
-                    👑 UPGRADE PARA PREMIUM PRO
+                    UPGRADE PARA PREMIUM PRO
                   </span>
                   <span
                     style={{

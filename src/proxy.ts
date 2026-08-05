@@ -278,6 +278,29 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(appUrl);
   }
 
+  // Login is the recovery point for stale browser sessions. Rotate the CSRF
+  // cookie here so an expired token or duplicate cookie cannot block sign-in.
+  if (pathname === APP_LOGIN_PATH && method === 'GET') {
+    const response = NextResponse.next();
+    if (token && !authUser) {
+      response.cookies.delete('token');
+    }
+    response.cookies.delete('csrf_token');
+    response.cookies.set('csrf_token', generateCsrfToken(), {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 3600,
+    });
+    response.headers.set(
+      'Strict-Transport-Security',
+      'max-age=63072000; includeSubDomains; preload'
+    );
+    response.headers.set('X-XSS-Protection', '1; mode=block');
+    return response;
+  }
+
   // ── CSRF Protection ──
   if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
     const needsCsrf = CSRF_PROTECTED_ROUTES.some(
