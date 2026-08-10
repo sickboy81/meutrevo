@@ -79,7 +79,7 @@ class MemoryRateLimitStore implements RateLimitStore {
   }
 }
 
-export class TursoRateLimitStore implements RateLimitStore {
+export class SupabaseRateLimitStore implements RateLimitStore {
   private sweepInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor() {

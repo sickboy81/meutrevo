@@ -15,7 +15,6 @@
     "coverage": "vitest run --coverage",
     "test:e2e": "npm run build && playwright test",
     "collect:lotteries": "node scripts/collect-lottery-cache.mjs",
-    "db:init": "node src/lib/init-db.js",
     "infer": "tsc --project tsconfig.json --build --noEmit",
     "watch": "tsc -w",
     "analyze": "cross-env ANALYZE=true next build",
@@ -23,11 +22,10 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@libsql/client": "^0.17.4",
     "@sentry/nextjs": "^10.57.0",
+    "@supabase/supabase-js": "^2.57.4",
     "dotenv": "^17.4.2",
     "jsonwebtoken": "^9.0.3",
-    "libsql": "^0.5.29",
     "next": "16.2.12",
     "postgres": "^3.4.7",
     "react": "19.2.4",

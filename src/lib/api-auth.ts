@@ -1,7 +1,7 @@
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { AuthUser, UserRole, verifyToken } from '@/lib/auth-utils';
+import { AuthUser, UserRole } from '@/lib/auth-utils';
+import { getSupabaseSessionUser } from '@/lib/supabase-session';
 
 export function internalServerError(context: string, error: unknown) {
   console.error(context, error);
@@ -16,11 +16,21 @@ export function getErrorMessage(error: unknown): string {
 }
 
 export async function getAuthenticatedUser(): Promise<AuthUser | null> {
-  const cookieStore = await cookies();
-  const tokenCookie = cookieStore.get('token');
-  if (!tokenCookie) return null;
-
-  return verifyToken(tokenCookie.value);
+  const authUser = await getSupabaseSessionUser();
+  if (!authUser?.id || !authUser.email) return null;
+  const result = await db.execute({
+    sql: 'SELECT name, role FROM users WHERE id = ? LIMIT 1',
+    args: [authUser.id],
+  });
+  const row = result.rows[0];
+  return {
+    id: authUser.id,
+    email: authUser.email,
+    name: String(row?.name || authUser.user_metadata?.name || authUser.email),
+    role: (row?.role === 'pro' || row?.role === 'admin'
+      ? row.role
+      : 'free') as UserRole,
+  };
 }
 
 export async function getCurrentUserRole(user: AuthUser): Promise<UserRole> {

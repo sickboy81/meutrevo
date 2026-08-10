@@ -1,56 +1,42 @@
 import { NextResponse } from 'next/server';
-import { db } from '../../../../lib/db';
-import { hashPassword } from '../../../../lib/auth-utils';
+import { createClient } from '@supabase/supabase-js';
 import { internalServerError } from '../../../../lib/api-auth';
 import { validateBody } from '../../../../lib/validate';
 import { resetSchema } from '../../../../schemas/auth';
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json().catch(() => ({}));
-    const validation = validateBody(resetSchema, body);
+    const validation = validateBody(
+      resetSchema,
+      await request.json().catch(() => ({}))
+    );
     if (validation.error) return validation.error;
-
-    const { token, newPassword } = validation.data!;
-
-    // Buscar usuário com o token correspondente
-    const res = await db.execute({
-      sql: 'SELECT id, reset_token_expires FROM users WHERE reset_token = ? LIMIT 1',
-      args: [token],
-    });
-
-    if (res.rows.length === 0) {
+    const accessToken = request.headers
+      .get('authorization')
+      ?.replace(/^Bearer\s+/i, '');
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    if (!accessToken || !url || !key)
       return NextResponse.json(
-        { error: 'Token inválido ou expirado' },
+        { error: 'Sessão de recuperação inválida' },
+        { status: 401 }
+      );
+    const client = createClient(url, key, {
+      global: { headers: { Authorization: `Bearer ${accessToken}` } },
+    });
+    const { error } = await client.auth.updateUser({
+      password: validation.data!.newPassword,
+    });
+    if (error)
+      return NextResponse.json(
+        { error: 'Link inválido ou expirado' },
         { status: 400 }
       );
-    }
-
-    const user = res.rows[0];
-    const userId = user.id as string;
-    const expiresStr = user.reset_token_expires as string;
-
-    if (!expiresStr || new Date(expiresStr).getTime() < Date.now()) {
-      return NextResponse.json(
-        { error: 'Token inválido ou expirado' },
-        { status: 400 }
-      );
-    }
-
-    // Hash da nova senha
-    const hashedPassword = hashPassword(newPassword);
-
-    // Atualizar senha no banco de dados e limpar as colunas de recuperação
-    await db.execute({
-      sql: 'UPDATE users SET password = ?, reset_token = NULL, reset_token_expires = NULL WHERE id = ?',
-      args: [hashedPassword, userId],
-    });
-
     return NextResponse.json({
       success: true,
       message: 'Senha redefinida com sucesso!',
     });
-  } catch (err: unknown) {
-    return internalServerError('Reset password error:', err);
+  } catch (error) {
+    return internalServerError('Reset password error:', error);
   }
 }

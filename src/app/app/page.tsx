@@ -3184,7 +3184,7 @@ export default function Home() {
                       >
                         Gerencie preços dinâmicos, visualize estatísticas e
                         promova ou altere funções de usuários cadastrados no
-                        banco Turso.
+                        banco Supabase.
                       </p>
                     </div>
 

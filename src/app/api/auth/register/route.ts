@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import crypto from 'crypto';
 import { db } from '../../../../lib/db';
-import { hashPassword, signToken } from '../../../../lib/auth-utils';
 import { internalServerError } from '../../../../lib/api-auth';
 import { isValidCpfCnpj, normalizeCpfCnpj } from '../../../../lib/br-documents';
 import { sanitize } from '../../../../lib/sanitize';
@@ -11,6 +9,8 @@ import {
 } from '../../../../lib/rate-limit';
 import { validateBody } from '../../../../lib/validate';
 import { registerSchema } from '../../../../schemas/auth';
+import { getSupabaseAuth } from '../../../../lib/supabase-auth';
+import { setSupabaseSessionCookies } from '../../../../lib/supabase-session';
 
 function normalizeEmail(email: unknown): string | null {
   if (typeof email !== 'string') return null;
@@ -84,8 +84,27 @@ export async function POST(request: Request) {
       );
     }
 
-    const userId = crypto.randomUUID();
-    const hashedPassword = hashPassword(password);
+    const supabaseAuth = getSupabaseAuth();
+    const { data: authData, error: authError } = supabaseAuth
+      ? await supabaseAuth.auth.signUp({
+          email: normalizedEmail,
+          password,
+          options: {
+            data: { name: cleanName },
+            emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login`,
+          },
+        })
+      : { data: null, error: null };
+
+    if (authError || !authData?.user) {
+      return NextResponse.json(
+        { error: authError?.message || 'Não foi possível criar a conta' },
+        { status: 400 }
+      );
+    }
+
+    const userId = authData.user.id;
+    const hashedPassword = 'supabase-auth';
 
     const cleanCity = city ? sanitize(String(city).trim()) : '';
     const cleanState = state ? String(state).trim().toUpperCase() : '';
@@ -103,17 +122,9 @@ export async function POST(request: Request) {
       ],
     });
 
-    // Gerar Token
-    const userPayload = {
-      id: userId,
-      email: normalizedEmail,
-      name: cleanName,
-      role: 'free',
-    };
-    const token = signToken(userPayload);
-
     const response = NextResponse.json({
       success: true,
+      needsEmailConfirmation: !authData.session,
       user: {
         id: userId,
         email: normalizedEmail,
@@ -125,14 +136,7 @@ export async function POST(request: Request) {
       },
     });
 
-    // Definir cookie seguro
-    response.cookies.set('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 dias
-      path: '/',
-    });
+    if (authData.session) setSupabaseSessionCookies(response, authData.session);
 
     return response;
   } catch (err: unknown) {

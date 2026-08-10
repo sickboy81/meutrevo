@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '../../../../lib/db';
-import { hashPassword, signToken } from '../../../../lib/auth-utils';
+import { createClient } from '@supabase/supabase-js';
 import {
   internalServerError,
   requireAuthenticatedUser,
@@ -9,6 +9,7 @@ import { isValidCpfCnpj, normalizeCpfCnpj } from '../../../../lib/br-documents';
 import { sanitize } from '../../../../lib/sanitize';
 import { validateBody } from '../../../../lib/validate';
 import { updateSchema } from '../../../../schemas/auth';
+import { getSupabaseAccessToken } from '../../../../lib/supabase-session';
 
 async function ensureUserProfileColumns() {
   try {
@@ -45,6 +46,7 @@ export async function POST(request: Request) {
 
     const updates: string[] = [];
     const args: string[] = [];
+    let passwordUpdated = false;
 
     if (typeof name === 'string' && name.trim()) {
       updates.push('name = ?');
@@ -64,8 +66,33 @@ export async function POST(request: Request) {
           { status: 400 }
         );
       }
-      updates.push('password = ?');
-      args.push(hashPassword(password));
+      const accessToken =
+        request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ||
+        (await getSupabaseAccessToken());
+      const supabase =
+        process.env.NEXT_PUBLIC_SUPABASE_URL &&
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY &&
+        accessToken
+          ? createClient(
+              process.env.NEXT_PUBLIC_SUPABASE_URL,
+              process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+              {
+                global: { headers: { Authorization: `Bearer ${accessToken}` } },
+              }
+            )
+          : null;
+      if (!supabase)
+        return NextResponse.json(
+          { error: 'Sessão Supabase inválida' },
+          { status: 401 }
+        );
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error)
+        return NextResponse.json(
+          { error: 'Não foi possível atualizar a senha' },
+          { status: 400 }
+        );
+      passwordUpdated = true;
     }
 
     if (typeof avatar === 'string') {
@@ -100,7 +127,7 @@ export async function POST(request: Request) {
       args.push(state.trim().toUpperCase());
     }
 
-    if (updates.length === 0) {
+    if (updates.length === 0 && !passwordUpdated) {
       return NextResponse.json(
         { error: 'Nenhum campo para atualizar' },
         { status: 400 }
@@ -129,14 +156,6 @@ export async function POST(request: Request) {
     const updatedCity = dbUser.city as string | undefined;
     const updatedState = dbUser.state as string | undefined;
 
-    // Issue updated token
-    const token = signToken({
-      id: user.id,
-      email: updatedEmail,
-      name: updatedName,
-      role: updatedRole,
-    });
-
     const nextResponse = NextResponse.json({
       success: true,
       user: {
@@ -150,14 +169,6 @@ export async function POST(request: Request) {
         city: updatedCity || '',
         state: updatedState || '',
       },
-    });
-
-    nextResponse.cookies.set('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: '/',
     });
 
     return nextResponse;

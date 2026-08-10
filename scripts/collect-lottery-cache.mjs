@@ -1,4 +1,3 @@
-import { createClient } from '@libsql/client';
 import postgres from 'postgres';
 
 const CAIXA_BASES = [
@@ -140,18 +139,11 @@ async function saveIfNewer(db, lottery, result) {
   return { lottery, status: 'updated', contest: result.numero };
 }
 
-const db = process.env.SUPABASE_DATABASE_URL
-  ? createPostgresAdapter(process.env.SUPABASE_DATABASE_URL)
-  : (() => {
-      const connectionUrl = process.env.TURSO_CONNECTION_URL;
-      const authToken = process.env.TURSO_AUTH_TOKEN;
-      if (!connectionUrl || !authToken) {
-        throw new Error(
-          'SUPABASE_DATABASE_URL or TURSO_CONNECTION_URL/TURSO_AUTH_TOKEN is required'
-        );
-      }
-      return createClient({ url: connectionUrl, authToken });
-    })();
+if (!process.env.SUPABASE_DATABASE_URL) {
+  throw new Error('SUPABASE_DATABASE_URL is required');
+}
+
+const db = createPostgresAdapter(process.env.SUPABASE_DATABASE_URL);
 await ensureTable(db);
 
 const reports = await Promise.all(

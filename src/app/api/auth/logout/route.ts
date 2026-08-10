@@ -4,7 +4,8 @@ export async function POST() {
   const response = NextResponse.json({ success: true });
 
   // Limpar cookie de sessão
-  response.cookies.delete('token');
+  response.cookies.delete('sb-access-token');
+  response.cookies.delete('sb-refresh-token');
 
   return response;
 }

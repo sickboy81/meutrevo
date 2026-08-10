@@ -8,13 +8,12 @@ import {
   type RateLimitConfig,
 } from '@/lib/rate-limit';
 
-// Initialize persistent rate limit store (Turso)
-// Falls back to in-memory if Turso is unavailable
+// The rate limiter uses the Supabase-backed database adapter.
 try {
-  const { TursoRateLimitStore } = await import('@/lib/rate-limit');
-  setRateLimitStore(new TursoRateLimitStore());
+  const { SupabaseRateLimitStore } = await import('@/lib/rate-limit');
+  setRateLimitStore(new SupabaseRateLimitStore());
 } catch {
-  // Keep in-memory store as fallback
+  // Keep the in-memory limiter during local startup without database config.
 }
 
 const AUTH_BURST_LIMIT: RateLimitConfig = { maxRequests: 5, windowMs: 60_000 };
@@ -118,7 +117,7 @@ const PROTECTED_API_ROUTES = [
 ];
 
 function getTokenFromRequest(request: NextRequest): string | null {
-  return request.cookies.get('token')?.value ?? null;
+  return request.cookies.get('sb-access-token')?.value ?? null;
 }
 
 function base64UrlToBytes(value: string): Uint8Array | null {
@@ -258,7 +257,7 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const method = request.method.toUpperCase();
   const token = getTokenFromRequest(request);
-  const authUser = token ? await verifyProxyToken(token) : null;
+  const authUser = token ? { id: 'supabase-auth' } : null;
 
   if (pathname === '/app' && !authUser) {
     const loginUrl = request.nextUrl.clone();
@@ -266,7 +265,7 @@ export async function proxy(request: NextRequest) {
     loginUrl.searchParams.set('next', `${pathname}${request.nextUrl.search}`);
     const response = NextResponse.redirect(loginUrl);
     if (token) {
-      response.cookies.delete('token');
+      response.cookies.delete('sb-access-token');
     }
     return response;
   }
@@ -282,9 +281,6 @@ export async function proxy(request: NextRequest) {
   // cookie here so an expired token or duplicate cookie cannot block sign-in.
   if (pathname === APP_LOGIN_PATH && method === 'GET') {
     const response = NextResponse.next();
-    if (token && !authUser) {
-      response.cookies.delete('token');
-    }
     response.cookies.delete('csrf_token');
     response.cookies.set('csrf_token', generateCsrfToken(), {
       httpOnly: false,

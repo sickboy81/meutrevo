@@ -1,7 +1,5 @@
 import postgres, { type Sql } from 'postgres';
-import { createClient } from '@libsql/client';
 
-type LibsqlClient = ReturnType<typeof createClient>;
 type Query = string | { sql: string; args?: unknown[] };
 type Result = {
   rows: Record<string, unknown>[];
@@ -12,7 +10,6 @@ type Result = {
 const MISSING_DB_ENV_MESSAGE =
   'Nenhuma conexão de banco foi definida nas variáveis de ambiente';
 
-let libsql: LibsqlClient | null = null;
 let pg: Sql<Record<string, unknown>> | null = null;
 
 function getSupabaseClient() {
@@ -30,18 +27,12 @@ function getSupabaseClient() {
   return pg;
 }
 
-function getLibsqlClient() {
-  if (libsql) return libsql;
-
-  const url = process.env.TURSO_CONNECTION_URL;
-  if (!url) throw new Error(MISSING_DB_ENV_MESSAGE);
-
-  libsql = createClient({ url, authToken: process.env.TURSO_AUTH_TOKEN });
-  return libsql;
-}
-
 function shouldUseSupabase() {
   return Boolean(process.env.SUPABASE_DATABASE_URL);
+}
+
+function requireSupabase() {
+  if (!shouldUseSupabase()) throw new Error(MISSING_DB_ENV_MESSAGE);
 }
 
 function normalizeQuery(query: Query) {
@@ -83,21 +74,13 @@ async function executePostgres(
 
 export const db = {
   async execute(query: Query, positionalArgs?: unknown[]): Promise<Result> {
-    if (!shouldUseSupabase()) {
-      return getLibsqlClient().execute(
-        positionalArgs
-          ? { sql: query as string, args: positionalArgs as never }
-          : (query as never)
-      ) as never;
-    }
+    requireSupabase();
     return executePostgres(query, positionalArgs);
   },
 
   async batch(queries: Query[], mode?: string): Promise<Result[]> {
     void mode;
-    if (!shouldUseSupabase()) {
-      return getLibsqlClient().batch(queries as never) as never;
-    }
+    requireSupabase();
 
     const results: Result[] = [];
     await getSupabaseClient().begin(async (transaction) => {
@@ -117,10 +100,6 @@ export const db = {
     if (pg) {
       await pg.end({ timeout: 5 });
       pg = null;
-    }
-    if (libsql) {
-      libsql.close();
-      libsql = null;
     }
   },
 };
