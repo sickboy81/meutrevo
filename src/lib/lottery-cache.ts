@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import { normalizeDatabaseDate } from '@/lib/database-date';
 import { decorateLotteryResult } from '@/lib/lottery-results';
 
 export type LotteryApiData = Record<string, unknown> & {
@@ -54,6 +55,14 @@ export async function saveToCache(
   dateStr: string,
   data: LotteryApiData
 ) {
+  const databaseDate = normalizeDatabaseDate(dateStr);
+  if (!databaseDate) {
+    console.warn(
+      `Skipping cache write without a valid draw date: ${lotteryId} ${contestNum}`
+    );
+    return;
+  }
+
   try {
     await db.execute({
       sql: `INSERT INTO lottery_cache (lottery, contest_num, draw_date, data_json, cached_at)
@@ -62,7 +71,7 @@ export async function saveToCache(
               draw_date = EXCLUDED.draw_date,
               data_json = EXCLUDED.data_json,
               cached_at = CURRENT_TIMESTAMP`,
-      args: [lotteryId, contestNum, dateStr, JSON.stringify(data)],
+      args: [lotteryId, contestNum, databaseDate, JSON.stringify(data)],
     });
   } catch (e) {
     console.error('Error writing to cache:', e);

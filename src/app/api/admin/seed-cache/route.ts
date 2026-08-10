@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireRole, internalServerError } from '@/lib/api-auth';
 import { fetchOfficialLotteryResult } from '@/lib/caixa';
+import { normalizeDatabaseDate } from '@/lib/database-date';
 
 const LOTTERIES = [
   'megasena',
@@ -22,16 +23,13 @@ type LotteryApiData = Record<string, unknown> & {
 
 async function saveContest(lotteryId: string, data: LotteryApiData) {
   if (!data.numero) return;
+  const databaseDate = normalizeDatabaseDate(data.dataApuracao);
+  if (!databaseDate) return;
   try {
     await db.execute({
       sql: `INSERT OR IGNORE INTO lottery_cache (lottery, contest_num, draw_date, data_json, cached_at)
             VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-      args: [
-        lotteryId,
-        data.numero,
-        data.dataApuracao || '',
-        JSON.stringify(data),
-      ],
+      args: [lotteryId, data.numero, databaseDate, JSON.stringify(data)],
     });
   } catch {
     /* ignore duplicate */

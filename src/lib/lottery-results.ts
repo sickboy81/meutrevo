@@ -1,4 +1,5 @@
 import { db, isMissingDbEnvError } from '@/lib/db';
+import { normalizeDatabaseDate } from '@/lib/database-date';
 import { enrichLotecaMatchData, fetchOfficialLotteryResult } from '@/lib/caixa';
 
 export type LotteryResult = {
@@ -112,6 +113,8 @@ export async function getLotteryContestResult(
 
   const result = decorateLotteryResult(lotteryId, official as LotteryResult);
   if (!result) return null;
+  const databaseDate = normalizeDatabaseDate(result.dataApuracao);
+  if (!databaseDate) return result;
 
   try {
     await db.execute({
@@ -122,12 +125,7 @@ export async function getLotteryContestResult(
               draw_date = EXCLUDED.draw_date,
               data_json = EXCLUDED.data_json,
               cached_at = CURRENT_TIMESTAMP`,
-      args: [
-        lotteryId,
-        contestNumber,
-        result.dataApuracao || '',
-        JSON.stringify(result),
-      ],
+      args: [lotteryId, contestNumber, databaseDate, JSON.stringify(result)],
     });
   } catch (e) {
     if (!isMissingDbEnvError(e)) {

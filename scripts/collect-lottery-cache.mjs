@@ -115,6 +115,32 @@ function createPostgresAdapter(url) {
   };
 }
 
+function normalizeDatabaseDate(value) {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  const text = value.trim();
+  const brazilian = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(text);
+  if (brazilian) {
+    const [, day, month, year] = brazilian;
+    const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+    if (
+      date.getUTCFullYear() !== Number(year) ||
+      date.getUTCMonth() !== Number(month) - 1 ||
+      date.getUTCDate() !== Number(day)
+    ) return null;
+    return `${year}-${month}-${day}`;
+  }
+  const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(text);
+  if (!iso) return null;
+  const [, year, month, day] = iso;
+  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+  if (
+    date.getUTCFullYear() !== Number(year) ||
+    date.getUTCMonth() !== Number(month) - 1 ||
+    date.getUTCDate() !== Number(day)
+  ) return null;
+  return `${year}-${month}-${day}`;
+}
+
 async function saveIfNewer(db, lottery, result) {
   const current = await db.execute({
     sql: 'SELECT MAX(contest_num) AS latest FROM lottery_cache WHERE lottery = ?',
@@ -125,6 +151,16 @@ async function saveIfNewer(db, lottery, result) {
     return { lottery, status: 'skipped', contest: latest };
   }
 
+  const drawDate = normalizeDatabaseDate(result.dataApuracao);
+  if (!drawDate) {
+    return {
+      lottery,
+      status: 'skipped',
+      contest: result.numero,
+      reason: 'invalid draw date',
+    };
+  }
+
   await db.execute({
     sql: `INSERT OR REPLACE INTO lottery_cache
       (lottery, contest_num, draw_date, data_json, cached_at)
@@ -132,7 +168,7 @@ async function saveIfNewer(db, lottery, result) {
     args: [
       lottery,
       result.numero,
-      result.dataApuracao ?? '',
+      drawDate,
       JSON.stringify(result),
     ],
   });
