@@ -170,6 +170,14 @@ export default function LoginPage() {
         return;
       }
 
+      if (mode === 'register' && data.needsEmailConfirmation) {
+        setSuccess(
+          'Cadastro realizado. Verifique seu e-mail e clique no link de confirmação para liberar o acesso.'
+        );
+        setPassword('');
+        return;
+      }
+
       router.replace(nextUrl);
     } catch {
       setError('Erro de conexão com o servidor.');

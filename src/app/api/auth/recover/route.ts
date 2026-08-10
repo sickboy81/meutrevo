@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     const auth = getSupabaseAuth();
     if (auth) {
       const { error } = await auth.auth.resetPasswordForEmail(normalizedEmail, {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password`,
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/callback?next=/reset-password`,
       });
       if (error) console.error('Supabase recovery error:', error.message);
     }

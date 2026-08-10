@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { internalServerError } from '../../../../lib/api-auth';
 import { validateBody } from '../../../../lib/validate';
 import { resetSchema } from '../../../../schemas/auth';
+import { getSupabaseAccessToken } from '../../../../lib/supabase-session';
 
 export async function POST(request: Request) {
   try {
@@ -11,9 +12,9 @@ export async function POST(request: Request) {
       await request.json().catch(() => ({}))
     );
     if (validation.error) return validation.error;
-    const accessToken = request.headers
-      .get('authorization')
-      ?.replace(/^Bearer\s+/i, '');
+    const accessToken =
+      request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ||
+      (await getSupabaseAccessToken());
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
     if (!accessToken || !url || !key)
