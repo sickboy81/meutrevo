@@ -38,8 +38,13 @@ export default function UpgradeModal({
   onClose,
 }: UpgradeModalProps) {
   return (
-    <div className="modal-overlay">
-      <div className="modal-content-wrapper">
+    <div className="modal-overlay" role="presentation">
+      <div
+        className="modal-content-wrapper upgrade-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="upgrade-modal-title"
+      >
         <button
           className="modal-close-btn"
           onClick={onClose}
@@ -48,15 +53,12 @@ export default function UpgradeModal({
           ✕
         </button>
 
-        <div
-          style={{
-            textAlign: 'center',
-            borderBottom: '1px solid rgba(255,255,255,0.08)',
-            paddingBottom: '0.75rem',
-          }}
-        >
-          <span style={{ fontSize: '2rem' }}>👑</span>
+        <div className="upgrade-modal-header">
+          <span className="upgrade-modal-mark" aria-hidden="true">
+            PRO
+          </span>
           <h2
+            id="upgrade-modal-title"
             style={{
               fontFamily: 'var(--font-body)',
               fontSize: '1.25rem',
@@ -69,21 +71,14 @@ export default function UpgradeModal({
           >
             MEU TREVO PRO
           </h2>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            Desbloqueie o poder máximo da matemática nas loterias
+          <p className="upgrade-modal-subtitle">
+            Mais controle para montar, analisar e acompanhar seus jogos.
           </p>
         </div>
 
         {!checkoutLoading && !paymentData && (
           <>
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.5rem',
-                margin: '0.5rem 0',
-              }}
-            >
+            <div className="upgrade-benefits">
               <div className="benefit-item">
                 <span className="benefit-icon">✓</span>
                 <span>
@@ -94,7 +89,7 @@ export default function UpgradeModal({
               <div className="benefit-item">
                 <span className="benefit-icon">✓</span>
                 <span>
-                  <strong>Gerador Místico 🔮:</strong> Aposta com numerologia e
+                  <strong>Gerador Místico:</strong> Aposta com numerologia e
                   astrologia pessoal alinhada.
                 </span>
               </div>
@@ -124,47 +119,30 @@ export default function UpgradeModal({
             <div
               role="group"
               aria-label="Periodicidade da assinatura"
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '0.5rem',
-              }}
+              className="upgrade-plans"
             >
               <button
                 type="button"
                 aria-pressed={!isAnnual}
-                className="btn-action"
+                className={`upgrade-plan ${!isAnnual ? 'is-selected' : ''}`}
                 onClick={() => onPlanChange(false)}
-                style={{
-                  border: !isAnnual
-                    ? '1px solid #00e5ff'
-                    : '1px solid rgba(255,255,255,0.12)',
-                  background: !isAnnual
-                    ? 'rgba(0,229,255,0.12)'
-                    : 'rgba(255,255,255,0.03)',
-                }}
               >
-                Mensal
+                <span>Mensal</span>
+                <small>flexível</small>
               </button>
               <button
                 type="button"
                 aria-pressed={isAnnual}
-                className="btn-action"
+                className={`upgrade-plan ${isAnnual ? 'is-selected' : ''}`}
                 onClick={() => onPlanChange(true)}
-                style={{
-                  border: isAnnual
-                    ? '1px solid #00e676'
-                    : '1px solid rgba(255,255,255,0.12)',
-                  background: isAnnual
-                    ? 'rgba(0,230,118,0.12)'
-                    : 'rgba(255,255,255,0.03)',
-                }}
               >
-                Anual · economize
+                <span>Anual</span>
+                <small>economize</small>
+                <b>melhor valor</b>
               </button>
             </div>
 
-            <div style={{ textAlign: 'center', margin: '0.5rem 0' }}>
+            <div className="upgrade-price-panel">
               <span
                 style={{
                   fontSize: '0.75rem',
@@ -225,15 +203,9 @@ export default function UpgradeModal({
               </div>
             )}
 
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '0.6rem',
-              }}
-            >
+            <div className="upgrade-payment-actions">
               <button
-                className="btn-action"
+                className="btn-action upgrade-payment upgrade-payment-pix"
                 onClick={onStartPixCheckout}
                 style={{
                   background: 'linear-gradient(90deg, #ff007f, #ffd600)',
@@ -245,7 +217,7 @@ export default function UpgradeModal({
                 ASSINAR COM PIX
               </button>
               <button
-                className="btn-action"
+                className="btn-action upgrade-payment upgrade-payment-stripe"
                 onClick={onStartStripeCheckout}
                 style={{
                   background: 'rgba(99, 91, 255, 0.14)',

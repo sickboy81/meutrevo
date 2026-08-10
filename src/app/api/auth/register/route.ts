@@ -91,7 +91,10 @@ export async function POST(request: Request) {
           password,
           options: {
             data: { name: cleanName },
-            emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/callback?next=/app`,
+            emailRedirectTo: new URL(
+              '/auth/callback?next=/app',
+              request.url
+            ).toString(),
           },
         })
       : { data: null, error: null };

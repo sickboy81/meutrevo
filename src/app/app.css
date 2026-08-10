@@ -1251,6 +1251,156 @@ textarea:focus-visible {
   gap: 1rem;
 }
 
+.upgrade-modal {
+  max-height: min(720px, calc(100dvh - 2rem));
+  overflow-y: auto;
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  background:
+    radial-gradient(
+      circle at 50% -20%,
+      rgba(0, 229, 255, 0.12),
+      transparent 42%
+    ),
+    rgba(10, 11, 23, 0.98);
+}
+
+.upgrade-modal-header {
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.25rem 1.5rem 1rem;
+}
+
+.upgrade-modal-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 1px solid rgba(0, 229, 255, 0.55);
+  border-radius: 10px;
+  color: #00e5ff;
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.2);
+}
+
+.upgrade-modal-subtitle {
+  margin: 0.3rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.upgrade-benefits {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.35rem 0;
+}
+
+.upgrade-benefits .benefit-item {
+  padding: 0.45rem 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.upgrade-plans {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-top: 0.35rem;
+}
+
+.upgrade-plan {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  min-height: 4.1rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--text-main);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    transform 0.2s;
+}
+
+.upgrade-plan:hover {
+  transform: translateY(-1px);
+  border-color: rgba(0, 229, 255, 0.55);
+}
+.upgrade-plan.is-selected {
+  border-color: #00e5ff;
+  background: rgba(0, 229, 255, 0.12);
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.12);
+}
+.upgrade-plan span {
+  font-weight: 800;
+}
+.upgrade-plan small {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+}
+.upgrade-plan b {
+  position: absolute;
+  top: -0.5rem;
+  right: 0.55rem;
+  padding: 0.18rem 0.4rem;
+  border-radius: 4px;
+  background: #00e676;
+  color: #03150b;
+  font-size: 0.58rem;
+  text-transform: uppercase;
+}
+
+.upgrade-price-panel {
+  padding: 0.7rem 0;
+  text-align: center;
+}
+
+.upgrade-payment-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+.upgrade-payment {
+  min-height: 3.2rem;
+  font-size: 0.78rem;
+}
+.upgrade-payment-pix {
+  background: linear-gradient(100deg, #ff007f, #ffb800);
+  color: #090914;
+  box-shadow: 0 5px 18px rgba(255, 0, 127, 0.25);
+}
+.upgrade-payment-stripe {
+  background: rgba(99, 91, 255, 0.16);
+  border: 1px solid rgba(125, 116, 255, 0.65);
+  color: #fff;
+}
+
+@media (max-width: 480px) {
+  .modal-overlay {
+    padding: 0.5rem;
+    align-items: flex-end;
+  }
+  .upgrade-modal {
+    max-height: calc(100dvh - 1rem);
+    border-radius: 16px 16px 12px 12px;
+  }
+  .upgrade-payment-actions {
+    grid-template-columns: 1fr;
+  }
+  .upgrade-payment {
+    min-height: 2.9rem;
+  }
+}
+
 .modal-close-btn {
   position: absolute;
   top: 0.75rem;

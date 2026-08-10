@@ -12,40 +12,48 @@ export async function POST(request: Request) {
   );
   if (!parsed.success)
     return NextResponse.json({ error: 'E-mail inválido' }, { status: 400 });
+
   const email = parsed.data.email.trim().toLowerCase();
   const limit = await consumeRateLimit(
     request,
     { maxRequests: 3, windowMs: 15 * 60_000 },
-    { scope: 'magic-link-ip', identifier: email }
+    { scope: 'resend-confirmation-ip', identifier: email }
   );
   if (limit.blocked)
     return createRateLimitExceededResponse(
       limit,
-      'Muitas solicitações. Aguarde antes de tentar novamente.'
+      'Muitas solicitações. Aguarde alguns minutos antes de tentar novamente.'
     );
+
   const auth = getSupabaseAuth();
   if (!auth)
     return NextResponse.json(
       { error: 'Supabase Auth não configurado' },
       { status: 503 }
     );
-  const { error } = await auth.auth.signInWithOtp({
+
+  const { error } = await auth.auth.resend({
+    type: 'signup',
     email,
     options: {
-      shouldCreateUser: false,
       emailRedirectTo: new URL(
         '/auth/callback?next=/app',
         request.url
       ).toString(),
     },
   });
+
+  // Keep the response generic so the endpoint cannot be used to enumerate users.
   if (error)
-    return NextResponse.json(
-      { error: 'Não foi possível enviar o link de acesso.' },
-      { status: 400 }
-    );
+    return NextResponse.json({
+      success: true,
+      message:
+        'Se o cadastro estiver pendente, um novo e-mail de confirmação foi enviado.',
+    });
+
   return NextResponse.json({
     success: true,
-    message: 'Link mágico enviado. Verifique seu e-mail para entrar.',
+    message:
+      'Novo e-mail de confirmação enviado. Verifique também a pasta de spam.',
   });
 }

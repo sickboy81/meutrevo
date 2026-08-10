@@ -86,6 +86,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [confirmationPending, setConfirmationPending] = useState(false);
+  const [resendingConfirmation, setResendingConfirmation] = useState(false);
   const [nextUrl, setNextUrl] = useState('/app');
 
   useEffect(() => {
@@ -95,6 +97,15 @@ export default function LoginPage() {
       const nextPath =
         next && next.startsWith('/') && !next.startsWith('//') ? next : '/app';
       setNextUrl(nextPath);
+
+      const callbackError = params.get('error');
+      if (callbackError) {
+        setError(
+          decodeURIComponent(callbackError) === 'link-expirado'
+            ? 'O link de confirmação expirou. Solicite um novo e-mail.'
+            : `Não foi possível confirmar o e-mail: ${decodeURIComponent(callbackError)}`
+        );
+      }
 
       const requestedMode = params.get('mode');
       if (requestedMode === 'register') {
@@ -108,6 +119,7 @@ export default function LoginPage() {
   const resetFeedback = () => {
     setError(null);
     setSuccess(null);
+    setConfirmationPending(false);
   };
 
   const changeMode = (nextMode: AuthMode) => {
@@ -158,6 +170,7 @@ export default function LoginPage() {
 
       if (!response.ok) {
         setError(data.error || 'Não foi possível concluir a solicitação.');
+        if (data.code === 'email_not_confirmed') setConfirmationPending(true);
         return;
       }
 
@@ -171,6 +184,7 @@ export default function LoginPage() {
       }
 
       if (mode === 'register' && data.needsEmailConfirmation) {
+        setConfirmationPending(true);
         setSuccess(
           'Cadastro realizado. Verifique seu e-mail e clique no link de confirmação para liberar o acesso.'
         );
@@ -183,6 +197,32 @@ export default function LoginPage() {
       setError('Erro de conexão com o servidor.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!email.trim()) {
+      setError('Informe seu e-mail para reenviar a confirmação.');
+      return;
+    }
+    setResendingConfirmation(true);
+    setError(null);
+    try {
+      const response = await fetchWithCsrf('/api/auth/resend-confirmation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setError(data.error || 'Não foi possível reenviar o e-mail.');
+        return;
+      }
+      setSuccess(data.message);
+    } catch {
+      setError('Erro de conexão com o servidor.');
+    } finally {
+      setResendingConfirmation(false);
     }
   };
 
@@ -486,6 +526,28 @@ export default function LoginPage() {
             >
               {success}
             </div>
+          )}
+
+          {confirmationPending && (
+            <button
+              type="button"
+              onClick={handleResendConfirmation}
+              disabled={loading || resendingConfirmation}
+              style={{
+                border: '1px solid rgba(0, 229, 255, 0.45)',
+                background: 'rgba(0, 229, 255, 0.08)',
+                color: 'var(--accent-color)',
+                padding: '0.65rem',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+              }}
+            >
+              {resendingConfirmation
+                ? 'Enviando...'
+                : 'Reenviar e-mail de confirmação'}
+            </button>
           )}
 
           <button

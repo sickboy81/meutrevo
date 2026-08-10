@@ -36,11 +36,24 @@ export async function POST(request: Request) {
       email: normalizedEmail,
       password,
     });
-    if (error || !data.session || !data.user)
+    if (error || !data.session || !data.user) {
+      const isUnconfirmed =
+        error?.message?.toLowerCase().includes('email not confirmed') ||
+        error?.code === 'email_not_confirmed';
+      if (isUnconfirmed)
+        return NextResponse.json(
+          {
+            error:
+              'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada ou solicite um novo link.',
+            code: 'email_not_confirmed',
+          },
+          { status: 403 }
+        );
       return NextResponse.json(
         { error: 'Credenciais inválidas' },
         { status: 401 }
       );
+    }
 
     const response = NextResponse.json({
       success: true,
