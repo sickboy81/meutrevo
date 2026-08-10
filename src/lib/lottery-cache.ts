@@ -8,6 +8,8 @@ export type LotteryApiData = Record<string, unknown> & {
   fonteDados?: 'caixa' | 'mirror';
 };
 
+let cacheTableReady: Promise<void> | null = null;
+
 export function decorateResults(
   lotteryId: string,
   items: LotteryApiData[]
@@ -28,25 +30,30 @@ export function isIncompleteCachedResult(
 }
 
 export async function ensureCacheTable() {
-  try {
-    await db.execute(`
-      CREATE TABLE IF NOT EXISTS lottery_cache (
-        lottery TEXT NOT NULL,
-        contest_num INTEGER NOT NULL,
-        draw_date TEXT NOT NULL,
-        data_json TEXT NOT NULL,
-        cached_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (lottery, contest_num)
-      );
-    `);
-    await db
-      .execute(`ALTER TABLE lottery_cache ADD COLUMN cached_at DATETIME`)
-      .catch(() => {
-        /* already exists */
-      });
-  } catch (err) {
-    console.error('Failed to ensure lottery_cache table:', err);
+  if (!cacheTableReady) {
+    cacheTableReady = (async () => {
+      try {
+        await db.execute(`
+          CREATE TABLE IF NOT EXISTS lottery_cache (
+            lottery TEXT NOT NULL,
+            contest_num INTEGER NOT NULL,
+            draw_date TEXT NOT NULL,
+            data_json TEXT NOT NULL,
+            cached_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (lottery, contest_num)
+          );
+        `);
+        await db
+          .execute(`ALTER TABLE lottery_cache ADD COLUMN cached_at DATETIME`)
+          .catch(() => {
+            /* already exists */
+          });
+      } catch (err) {
+        console.error('Failed to ensure lottery_cache table:', err);
+      }
+    })();
   }
+  await cacheTableReady;
 }
 
 export async function saveToCache(

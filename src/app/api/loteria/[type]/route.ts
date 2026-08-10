@@ -280,45 +280,20 @@ export async function GET(
         latestData.dataApuracao || '',
         latestData
       );
-
-      // Backfill missing contests
-      if (limit > 1) {
-        const rangeStart = Math.max(1, latestNum - limit + 1);
-        const cachedNumsRes = await db.execute({
-          sql: `SELECT contest_num FROM lottery_cache WHERE lottery = ? AND contest_num >= ? AND contest_num <= ?`,
-          args: [type, rangeStart, latestNum],
-        });
-        const cachedSet = new Set(
-          cachedNumsRes.rows.map((r) => r.contest_num as number)
-        );
-        const missing: number[] = [];
-        for (let n = latestNum - 1; n >= rangeStart; n--) {
-          if (!cachedSet.has(n)) missing.push(n);
-        }
-        if (missing.length > 0) {
-          const BATCH = 20;
-          for (let i = 0; i < missing.length; i += BATCH) {
-            const batch = missing.slice(i, i + BATCH);
-            await Promise.all(
-              batch.map((num) =>
-                fetchAndCacheContest(type, num, fetchOfficialLotteryResult)
-              )
-            );
-          }
-        }
-      }
     }
 
     const history = await getHistoryFromDB(type, limit, filters);
+    const historyWithLatest = history.some(
+      (item) => item.numero === latestData.numero
+    )
+      ? history
+      : [latestData, ...history].slice(0, limit);
     return jsonNoStore(
       {
-        latest: decorateLotteryResult(
-          type,
-          (history[0] || latestData) as never
-        ),
+        latest: latestData,
         history: decorateResults(
           type,
-          history.length > 0 ? history : [latestData]
+          historyWithLatest.length > 0 ? historyWithLatest : [latestData]
         ),
       },
       { headers: { 'X-Cache': 'MISS', 'X-Cache-Source': 'caixa' } }
