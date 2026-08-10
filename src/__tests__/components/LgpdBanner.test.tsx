@@ -38,7 +38,7 @@ describe('LgpdBanner', () => {
       vi.advanceTimersByTime(2000);
     });
 
-    const acceptBtn = screen.getByText('Aceitar Termos');
+    const acceptBtn = screen.getByRole('button', { name: 'Aceitar' });
     fireEvent.click(acceptBtn);
     expect(setItemSpy).toHaveBeenCalledWith(
       'meutrevo-lgpd-consent',
