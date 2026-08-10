@@ -19,8 +19,10 @@ function getSupabaseClient() {
   if (!url) throw new Error(MISSING_DB_ENV_MESSAGE);
 
   pg = postgres(url, {
-    max: 5,
-    idle_timeout: 20,
+    // Vercel instances are short-lived; keep one client per instance.
+    // The Supabase transaction pooler (port 6543) handles concurrency.
+    max: 1,
+    idle_timeout: 10,
     connect_timeout: 10,
     prepare: false,
   });
