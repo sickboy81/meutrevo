@@ -28,10 +28,15 @@ export async function POST() {
       sql: 'DELETE FROM users WHERE id = ?',
       args: [user.id],
     });
+    await db.execute({
+      sql: 'DELETE FROM auth.users WHERE id = ?',
+      args: [user.id],
+    });
 
     // Clear the token cookie
     const cookieStore = await cookies();
-    cookieStore.delete('token');
+    cookieStore.delete('sb-access-token');
+    cookieStore.delete('sb-refresh-token');
 
     return NextResponse.json({ success: true });
   } catch (err: unknown) {

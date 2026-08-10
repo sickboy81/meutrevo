@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { AuthUser, UserRole } from '@/lib/auth-utils';
 import { getSupabaseSessionUser } from '@/lib/supabase-session';
+
+export type UserRole = 'free' | 'pro' | 'admin';
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+}
 
 export function internalServerError(context: string, error: unknown) {
   console.error(context, error);

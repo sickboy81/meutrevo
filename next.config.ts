@@ -18,7 +18,7 @@ const cspHeader = [
 function getConfig(): NextConfig {
   const config: NextConfig = {
     experimental: {
-      optimizePackageImports: ['jsonwebtoken'],
+      optimizePackageImports: [],
     },
     images: {
       formats: ['image/avif', 'image/webp'],

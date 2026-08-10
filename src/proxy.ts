@@ -38,11 +38,6 @@ const DEFAULT_API_LIMIT: RateLimitConfig = {
   windowMs: 60_000,
 };
 const APP_LOGIN_PATH = '/login';
-const JWT_ALGORITHM = 'HS256';
-
-interface ProxyAuthUser {
-  id: string;
-}
 
 function getRateLimitConfig(
   pathname: string,
@@ -120,47 +115,6 @@ function getTokenFromRequest(request: NextRequest): string | null {
   return request.cookies.get('sb-access-token')?.value ?? null;
 }
 
-function base64UrlToBytes(value: string): Uint8Array | null {
-  try {
-    const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
-    const padded = base64.padEnd(
-      base64.length + ((4 - (base64.length % 4)) % 4),
-      '='
-    );
-    const binary = atob(padded);
-    const bytes = new Uint8Array(binary.length);
-
-    for (let index = 0; index < binary.length; index += 1) {
-      bytes[index] = binary.charCodeAt(index);
-    }
-
-    return bytes;
-  } catch {
-    return null;
-  }
-}
-
-function bytesToArrayBuffer(bytes: Uint8Array): ArrayBuffer {
-  const buffer = new ArrayBuffer(bytes.byteLength);
-  new Uint8Array(buffer).set(bytes);
-  return buffer;
-}
-
-function base64UrlToJson(value: string): Record<string, unknown> | null {
-  const bytes = base64UrlToBytes(value);
-  if (!bytes) return null;
-
-  try {
-    const decoded = new TextDecoder().decode(bytes);
-    const parsed = JSON.parse(decoded) as unknown;
-    return parsed && typeof parsed === 'object'
-      ? (parsed as Record<string, unknown>)
-      : null;
-  } catch {
-    return null;
-  }
-}
-
 function timingSafeStringEqual(left: string, right: string): boolean {
   if (left.length !== right.length) return false;
 
@@ -170,45 +124,6 @@ function timingSafeStringEqual(left: string, right: string): boolean {
   }
 
   return difference === 0;
-}
-
-async function verifyProxyToken(token: string): Promise<ProxyAuthUser | null> {
-  const secret = process.env.JWT_SECRET;
-  if (!secret || secret.length < 32) return null;
-
-  const [encodedHeader, encodedPayload, encodedSignature] = token.split('.');
-  if (!encodedHeader || !encodedPayload || !encodedSignature) return null;
-
-  const header = base64UrlToJson(encodedHeader);
-  if (header?.alg !== JWT_ALGORITHM) return null;
-
-  const signature = base64UrlToBytes(encodedSignature);
-  if (!signature) return null;
-
-  const key = await crypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['verify']
-  );
-
-  const valid = await crypto.subtle.verify(
-    'HMAC',
-    key,
-    bytesToArrayBuffer(signature),
-    new TextEncoder().encode(`${encodedHeader}.${encodedPayload}`)
-  );
-  if (!valid) return null;
-
-  const payload = base64UrlToJson(encodedPayload);
-  if (typeof payload?.id !== 'string') return null;
-
-  if (typeof payload.exp === 'number' && payload.exp * 1000 < Date.now()) {
-    return null;
-  }
-
-  return { id: payload.id };
 }
 
 // ── CSRF: Double Submit Cookie Pattern ──
