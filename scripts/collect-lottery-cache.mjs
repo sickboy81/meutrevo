@@ -161,6 +161,8 @@ async function saveIfNewer(db, lottery, result) {
     };
   }
 
+  const cacheData = { ...result, fonteDados: 'caixa' };
+
   await db.execute({
     sql: `INSERT OR REPLACE INTO lottery_cache
       (lottery, contest_num, draw_date, data_json, cached_at)
@@ -169,7 +171,7 @@ async function saveIfNewer(db, lottery, result) {
       lottery,
       result.numero,
       drawDate,
-      JSON.stringify(result),
+      JSON.stringify(cacheData),
     ],
   });
   return { lottery, status: 'updated', contest: result.numero };

@@ -134,8 +134,7 @@ export async function GET(
 
   if (
     canServeCachedLatest(cacheState.age, cacheState.source) &&
-    !lotecaCacheEmpty &&
-    type !== 'loteca'
+    !lotecaCacheEmpty
   ) {
     const localHistory = await getHistoryFromDB(type, limit, filters);
     if (localHistory.length > 0) {
