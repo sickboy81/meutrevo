@@ -1417,17 +1417,28 @@ export default function Home() {
                 aria-label="Abrir configurações do aplicativo"
                 aria-expanded={showSettings}
                 style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-main)',
-                  fontSize: '1.25rem',
+                  background: showSettings
+                    ? 'rgba(0,229,255,0.14)'
+                    : 'rgba(255,255,255,0.04)',
+                  border: '1px solid',
+                  borderColor: showSettings
+                    ? 'rgba(0,229,255,0.7)'
+                    : 'var(--glass-border)',
+                  color: showSettings
+                    ? 'var(--accent-color)'
+                    : 'var(--text-main)',
                   cursor: 'pointer',
-                  padding: '0.25rem',
+                  width: '2.35rem',
+                  height: '2.35rem',
+                  borderRadius: '10px',
+                  padding: '0.45rem',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  transition: 'transform 0.3s ease',
-                  transform: showSettings ? 'rotate(45deg)' : 'none',
+                  transition: 'all 0.2s ease',
+                  boxShadow: showSettings
+                    ? '0 0 14px rgba(0,229,255,0.18)'
+                    : 'none',
                 }}
                 title="Configurações do App"
               >
@@ -1439,17 +1450,16 @@ export default function Home() {
                   aria-hidden="true"
                 >
                   <path
-                    d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"
+                    d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"
                     stroke="currentColor"
-                    strokeWidth="1.7"
+                    strokeWidth="1.8"
                   />
                   <path
-                    d="m19.4 15 .1.1a1.8 1.8 0 0 1-2.5 2.5l-.1-.1a1.8 1.8 0 0 0-3.1 1.3v.2a1.8 1.8 0 0 1-3.6 0v-.2a1.8 1.8 0 0 0-3.1-1.3l-.1.1a1.8 1.8 0 1 1-2.5-2.5l.1-.1A1.8 1.8 0 0 0 3.3 12a1.8 1.8 0 0 0-1.3-3.1h-.2a1.8 1.8 0 0 1 0-3.6H2A1.8 1.8 0 0 0 3.3 2.2l-.1-.1a1.8 1.8 0 1 1 2.5-2.5l.1.1A1.8 1.8 0 0 0 8.9-1.6v-.2a1.8 1.8 0 0 1 3.6 0v.2a1.8 1.8 0 0 0 3.1 1.3l.1-.1a1.8 1.8 0 1 1 2.5 2.5l-.1.1A1.8 1.8 0 0 0 19.4 5h.2a1.8 1.8 0 0 1 0 3.6h-.2a1.8 1.8 0 0 0 0 6.4Z"
+                    d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.8 1.8-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56v.1h-2.55v-.1a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.06.06-1.8-1.8.06-.06A1.7 1.7 0 0 0 8.1 15a1.7 1.7 0 0 0-1.56-1.03h-.1v-2.55h.1A1.7 1.7 0 0 0 8.1 10.4a1.7 1.7 0 0 0-.34-1.88L7.7 8.46l1.8-1.8.06.06a1.7 1.7 0 0 0 1.88.34 1.7 1.7 0 0 0 1.03-1.56v-.1h2.55v.1a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.88-.34l.06-.06 1.8 1.8-.06.06A1.7 1.7 0 0 0 19.4 10.4a1.7 1.7 0 0 0 1.56 1.03h.1v2.55h-.1A1.7 1.7 0 0 0 19.4 15Z"
                     stroke="currentColor"
-                    strokeWidth="1.3"
+                    strokeWidth="1.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    transform="translate(1.2 4.4) scale(.9)"
                   />
                 </svg>
               </button>

@@ -335,6 +335,7 @@ export default function UpgradeModal({
                   <div className="pix-copia-cola-box">
                     <input
                       type="text"
+                      autoComplete="off"
                       readOnly
                       value={paymentData.qr_code}
                       className="pix-input"

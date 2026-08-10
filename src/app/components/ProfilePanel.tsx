@@ -124,7 +124,10 @@ export default function ProfilePanel({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+    <div
+      className="profile-panel"
+      style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}
+    >
       <form
         onSubmit={handleSubmit}
         style={{
@@ -157,7 +160,7 @@ export default function ProfilePanel({
               letterSpacing: '0.5px',
             }}
           >
-            👤 Editar Dados
+            Editar dados
           </span>
           {feedback && (
             <span
@@ -255,6 +258,7 @@ export default function ProfilePanel({
                 <label style={labelStyle}>E-mail</label>
                 <input
                   type="email"
+                  autoComplete="username"
                   value={user.email}
                   readOnly
                   style={{
@@ -268,6 +272,7 @@ export default function ProfilePanel({
                 <label style={labelStyle}>Nome completo</label>
                 <input
                   type="text"
+                  autoComplete="name"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -288,6 +293,7 @@ export default function ProfilePanel({
           </label>
           <input
             type="password"
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Mínimo 6 caracteres"
@@ -301,6 +307,7 @@ export default function ProfilePanel({
           <label style={labelStyle}>CPF/CNPJ</label>
           <input
             type="text"
+            autoComplete="off"
             value={cpfCnpj}
             onChange={(e) => setCpfCnpj(e.target.value)}
             placeholder="Obrigatório para pagamentos"
@@ -325,6 +332,7 @@ export default function ProfilePanel({
               <label style={labelStyle}>Cidade</label>
               <input
                 type="text"
+                autoComplete="address-level2"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 placeholder="Sua cidade"
@@ -335,6 +343,7 @@ export default function ProfilePanel({
               <label style={labelStyle}>Estado</label>
               <select
                 value={state}
+                autoComplete="address-level1"
                 onChange={(e) => setState(e.target.value)}
                 style={{
                   ...inputStyle,
@@ -362,6 +371,7 @@ export default function ProfilePanel({
           <label style={labelStyle}>Loteria Favorita</label>
           <select
             value={favLottery}
+            autoComplete="off"
             onChange={(e) => setFavLottery(e.target.value)}
             style={{
               ...inputStyle,

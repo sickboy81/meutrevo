@@ -11,6 +11,7 @@ import { validateBody } from '../../../../lib/validate';
 import { registerSchema } from '../../../../schemas/auth';
 import { getSupabaseAuth } from '../../../../lib/supabase-auth';
 import { setSupabaseSessionCookies } from '../../../../lib/supabase-session';
+import { isAdminEmail } from '../../../../lib/admin';
 
 function normalizeEmail(email: unknown): string | null {
   if (typeof email !== 'string') return null;
@@ -107,13 +108,14 @@ export async function POST(request: Request) {
     }
 
     const userId = authData.user.id;
+    const role = isAdminEmail(normalizedEmail) ? 'admin' : 'free';
     const hashedPassword = 'supabase-auth';
 
     const cleanCity = city ? sanitize(String(city).trim()) : '';
     const cleanState = state ? String(state).trim().toUpperCase() : '';
 
     await db.execute({
-      sql: 'INSERT INTO users (id, email, name, password, cpf_cnpj, city, state) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      sql: 'INSERT INTO users (id, email, name, password, cpf_cnpj, city, state, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
       args: [
         userId,
         normalizedEmail,
@@ -122,6 +124,7 @@ export async function POST(request: Request) {
         normalizedCpfCnpj,
         cleanCity,
         cleanState,
+        role,
       ],
     });
 
@@ -132,7 +135,7 @@ export async function POST(request: Request) {
         id: userId,
         email: normalizedEmail,
         name: cleanName,
-        role: 'free',
+        role,
         cpf_cnpj: normalizedCpfCnpj,
         city: cleanCity,
         state: cleanState,

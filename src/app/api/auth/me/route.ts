@@ -4,6 +4,7 @@ import {
   internalServerError,
   requireAuthenticatedUser,
 } from '../../../../lib/api-auth';
+import { isAdminEmail } from '../../../../lib/admin';
 
 async function ensureUserRoleColumns() {
   try {
@@ -49,7 +50,11 @@ export async function GET() {
     });
 
     const dbUser = res.rows.length > 0 ? res.rows[0] : null;
-    const role = dbUser ? (dbUser.role as string) : payload.role;
+    const role = isAdminEmail(payload.email)
+      ? 'admin'
+      : dbUser
+        ? (dbUser.role as string)
+        : payload.role;
     const name = dbUser ? (dbUser.name as string) : payload.name;
     const avatar = dbUser && dbUser.avatar ? (dbUser.avatar as string) : '👤';
     const favorite_lottery =

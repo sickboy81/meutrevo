@@ -1236,6 +1236,89 @@ textarea:focus-visible {
   animation: fade-in 0.25s ease-out;
 }
 
+.settings-panel {
+  border-color: rgba(0, 229, 255, 0.25);
+  background: linear-gradient(
+    145deg,
+    rgba(15, 18, 31, 0.98),
+    rgba(8, 10, 19, 0.98)
+  );
+  backdrop-filter: blur(18px);
+}
+
+.settings-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.settings-panel-heading > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.settings-panel-heading strong {
+  color: #fff;
+  font-size: 0.95rem;
+}
+.settings-panel-kicker {
+  color: var(--accent-color);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+.settings-panel-close {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.settings-panel-close:hover {
+  color: #fff;
+  border-color: var(--accent-color);
+}
+.settings-panel .theme-pill-btn {
+  min-height: 2rem;
+  padding-inline: 0.55rem;
+}
+.settings-panel label span {
+  font-size: 0.78rem !important;
+  font-weight: 500 !important;
+}
+.settings-panel input[type='checkbox'] {
+  width: 18px !important;
+  height: 18px !important;
+}
+.profile-panel form {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+.profile-panel form > div:first-child {
+  padding: 0.75rem 0.9rem !important;
+}
+.profile-panel form input,
+.profile-panel form select {
+  min-height: 2.15rem;
+  border-radius: 8px !important;
+  font-size: 0.75rem !important;
+  padding: 0.45rem 0.6rem !important;
+}
+.profile-panel form label {
+  font-size: 0.65rem !important;
+}
+.profile-panel form button[type='submit'] {
+  min-height: 2.6rem;
+  border-radius: 9px !important;
+  font-size: 0.78rem !important;
+}
+
 .modal-content-wrapper {
   background: rgba(12, 12, 25, 0.95);
   border: 1.5px solid var(--accent-color, #00f0ff);

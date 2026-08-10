@@ -113,6 +113,16 @@ export default function PaymentSection({
       });
       const result = await res.json().catch(() => ({}));
 
+      if (res.status === 401) {
+        setCheckoutError(
+          'Sua sessão expirou. Você será encaminhado para entrar novamente.'
+        );
+        window.setTimeout(() => {
+          window.location.assign('/login?next=/app');
+        }, 900);
+        return;
+      }
+
       if (res.ok && result.success && result.data) {
         if (provider === 'stripe' && result.data.checkout_url) {
           window.location.assign(result.data.checkout_url);

@@ -104,7 +104,7 @@ export default function SettingsPanel({
   return (
     <div
       ref={settingsRef}
-      className="glass-panel"
+      className="glass-panel settings-panel"
       style={{
         position: 'absolute',
         top: '100%',
@@ -124,6 +124,20 @@ export default function SettingsPanel({
         overflowY: 'auto',
       }}
     >
+      <div className="settings-panel-heading">
+        <div>
+          <span className="settings-panel-kicker">CENTRAL DO APP</span>
+          <strong>Preferências e conta</strong>
+        </div>
+        <button
+          type="button"
+          className="settings-panel-close"
+          onClick={() => setShowSettings(false)}
+          aria-label="Fechar configurações"
+        >
+          ×
+        </button>
+      </div>
       {/* Menu Tabs Navigation */}
       <div
         style={{
@@ -137,7 +151,7 @@ export default function SettingsPanel({
       >
         {(
           [
-            ['config', '⚙️ Ajustes'],
+            ['config', 'Ajustes'],
             ['account', 'Conta'],
           ] as const
         ).map(([tab, label]) => (
@@ -181,7 +195,7 @@ export default function SettingsPanel({
                 fontWeight: 600,
               }}
             >
-              🎨 TEMA NEON VISUAL
+              TEMA VISUAL
             </span>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
               {(
@@ -280,7 +294,7 @@ export default function SettingsPanel({
                   fontWeight: 600,
                 }}
               >
-                🔊 Efeitos Sonoros Sintéticos (Web Audio)
+                Efeitos sonoros
               </span>
             </label>
             <label
@@ -304,7 +318,7 @@ export default function SettingsPanel({
                   fontWeight: 600,
                 }}
               >
-                📧 Alertas de Resultados por E-mail
+                Alertas de resultados por e-mail
               </span>
             </label>
             <label
@@ -359,7 +373,7 @@ export default function SettingsPanel({
                 gap: '0.35rem',
               }}
             >
-              🚀 INICIAR TOUR ONBOARDING
+              INICIAR TOUR DO APP
             </button>
           </div>
 
@@ -381,7 +395,7 @@ export default function SettingsPanel({
                 transition: 'background 0.2s',
               }}
             >
-              ⚠️ RESETAR APLICATIVO
+              RESETAR APLICATIVO
             </button>
           </div>
         </div>
@@ -500,7 +514,7 @@ export default function SettingsPanel({
                       display: 'block',
                     }}
                   >
-                    UPGRADE PARA PREMIUM PRO
+                    ATIVAR MEU TREVO PRO
                   </span>
                   <span
                     style={{
@@ -544,7 +558,7 @@ export default function SettingsPanel({
                   fontWeight: 'bold',
                 }}
               >
-                Sair da Conta
+                Sair da conta
               </button>
             </>
           ) : (

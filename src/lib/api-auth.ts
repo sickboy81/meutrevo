@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getSupabaseSessionUser } from '@/lib/supabase-session';
+import { isAdminEmail } from '@/lib/admin';
 
 export type UserRole = 'free' | 'pro' | 'admin';
 export interface AuthUser {
@@ -30,17 +31,37 @@ export async function getAuthenticatedUser(): Promise<AuthUser | null> {
     args: [authUser.id],
   });
   const row = result.rows[0];
+  const adminByEmail = isAdminEmail(authUser.email);
+  if (adminByEmail && row?.role !== 'admin') {
+    try {
+      await db.execute({
+        sql: "UPDATE users SET role = 'admin' WHERE id = ?",
+        args: [authUser.id],
+      });
+    } catch {}
+  }
   return {
     id: authUser.id,
     email: authUser.email,
     name: String(row?.name || authUser.user_metadata?.name || authUser.email),
-    role: (row?.role === 'pro' || row?.role === 'admin'
-      ? row.role
-      : 'free') as UserRole,
+    role: (adminByEmail
+      ? 'admin'
+      : row?.role === 'pro' || row?.role === 'admin'
+        ? row.role
+        : 'free') as UserRole,
   };
 }
 
 export async function getCurrentUserRole(user: AuthUser): Promise<UserRole> {
+  if (isAdminEmail(user.email)) {
+    try {
+      await db.execute({
+        sql: "UPDATE users SET role = 'admin' WHERE id = ?",
+        args: [user.id],
+      });
+    } catch {}
+    return 'admin';
+  }
   const result = await db.execute({
     sql: 'SELECT role, premium_until FROM users WHERE id = ? LIMIT 1',
     args: [user.id],
