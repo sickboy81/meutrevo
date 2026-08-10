@@ -352,6 +352,7 @@ async function fetchMirrorLotteryResult(
             { url: LOTECA_NEWS_MIRROR, parse: parseLotecaNewsHtml },
           ];
 
+      const candidates: LotteryApiData[] = [];
       for (const source of sources) {
         try {
           const response = await fetch(source.url, {
@@ -362,10 +363,36 @@ async function fetchMirrorLotteryResult(
           if (!response.ok) continue;
           const parsed = source.parse(await response.text());
           if (!parsed || (contestNum && parsed.numero !== contestNum)) continue;
-          return parsed;
+          candidates.push(parsed);
         } catch {}
       }
-      return null;
+
+      if (contestNum) return candidates[0] || null;
+
+      let latest = selectLatestLotteryResult(candidates);
+      if (!latest?.numero) return null;
+      const baseContest = latest.numero;
+
+      // The mirror landing page can lag behind its numbered contest pages.
+      // Probe a small forward window so an old landing page is not accepted as latest.
+      for (let offset = 1; offset <= 3; offset += 1) {
+        try {
+          const response = await fetch(
+            `${LOTECA_MIRROR_BASE}/${baseContest + offset}`,
+            {
+              headers: CAIXA_PAGE_HEADERS,
+              cache: 'no-store',
+              signal: AbortSignal.timeout(8000),
+            }
+          );
+          if (!response.ok) continue;
+          const parsed = parseLotecaMirrorHtml(await response.text());
+          if (parsed && (parsed.numero ?? 0) > (latest.numero ?? 0)) {
+            latest = parsed;
+          }
+        } catch {}
+      }
+      return latest;
     }
 
     const endpoint = contestNum ? String(contestNum) : 'latest';
