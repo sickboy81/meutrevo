@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { internalServerError, requireRole } from '@/lib/api-auth';
+import { isAdminEmail } from '@/lib/admin';
 
 export async function GET() {
   try {
@@ -11,16 +12,7 @@ export async function GET() {
     const totalUsersQuery = await db.execute(
       'SELECT COUNT(*) as count FROM users'
     );
-    const proUsersQuery = await db.execute(
-      "SELECT COUNT(*) as count FROM users WHERE role = 'pro'"
-    );
-    const adminUsersQuery = await db.execute(
-      "SELECT COUNT(*) as count FROM users WHERE role = 'admin'"
-    );
-
     const totalCount = Number(totalUsersQuery.rows[0].count);
-    const proCount = Number(proUsersQuery.rows[0].count);
-    const adminCount = Number(adminUsersQuery.rows[0].count);
 
     // List all users (excluding passwords)
     const usersQuery = await db.execute(
@@ -30,10 +22,12 @@ export async function GET() {
       id: row.id,
       name: row.name,
       email: row.email,
-      role: row.role || 'free',
-      blocked: Number(row.blocked || 0) === 1,
+      role: isAdminEmail(String(row.email)) ? 'admin' : row.role || 'free',
+      blocked: row.blocked === true || Number(row.blocked || 0) === 1,
       created_at: row.created_at,
     }));
+    const proCount = users.filter((user) => user.role === 'pro').length;
+    const adminCount = users.filter((user) => user.role === 'admin').length;
 
     return NextResponse.json({
       success: true,

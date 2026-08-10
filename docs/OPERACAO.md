@@ -3,13 +3,12 @@
 ## Setup local
 
 1. Copie `.env.example` para `.env.local`.
-2. Configure `TURSO_CONNECTION_URL` e `TURSO_AUTH_TOKEN`.
+2. Configure `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` e `SUPABASE_DATABASE_URL`.
 3. Gere um `JWT_SECRET` com pelo menos 32 caracteres.
 4. Rode:
 
 ```bash
 npm install
-npm run db:init
 npm run dev
 ```
 
@@ -17,7 +16,7 @@ O app abre em `http://localhost:3000`.
 
 ## Banco de dados
 
-O script `npm run db:init` valida ou cria:
+As migrations em `supabase/migrations` devem ser aplicadas ao projeto Supabase. O schema principal inclui:
 
 - `users`
 - `saved_games`

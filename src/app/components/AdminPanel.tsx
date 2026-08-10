@@ -40,17 +40,17 @@ export default function AdminPanel({ playSound }: AdminPanelProps) {
 
   const fetchData = useCallback(async () => {
     try {
-      const [statsRes, usersRes, configRes] = await Promise.all([
-        fetch('/api/admin/stats'),
+      const [usersRes, configRes] = await Promise.all([
         fetch('/api/admin/users'),
         fetch('/api/config'),
       ]);
-      if (statsRes.ok) {
-        setAdminStats(await statsRes.json());
-      }
       if (usersRes.ok) {
         const d = await usersRes.json();
+        if (d.stats) setAdminStats(d.stats);
         setAdminUsersList(d.users || []);
+      } else {
+        const d = await usersRes.json().catch(() => ({}));
+        setAdminFeedback(d.error || 'Não foi possível carregar os usuários.');
       }
       if (configRes.ok) {
         const d = await configRes.json();

@@ -16,8 +16,9 @@ Aplicacao Next.js para resultados oficiais das loterias da Caixa, landing comerc
 2. Preencha pelo menos:
 
 ```env
-TURSO_CONNECTION_URL=
-TURSO_AUTH_TOKEN=
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_DATABASE_URL=
 JWT_SECRET=
 PIXGO_API_KEY=
 PIXGO_WEBHOOK_SECRET=
@@ -27,7 +28,6 @@ PIXGO_WEBHOOK_SECRET=
 
 ```bash
 npm install
-npm run db:init
 npm run dev
 ```
 

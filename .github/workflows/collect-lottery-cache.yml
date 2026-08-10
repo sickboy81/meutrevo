@@ -26,8 +26,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Update Turso lottery cache
+      - name: Validate collector configuration
+        env:
+          SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+        run: |
+          if [ -z "$SUPABASE_DATABASE_URL" ]; then
+            echo "SUPABASE_DATABASE_URL is not configured in GitHub Actions secrets."
+            exit 1
+          fi
+          echo "Supabase database secret is configured."
+
+      - name: Update Supabase lottery cache
         run: node scripts/collect-lottery-cache.mjs
         env:
-          TURSO_CONNECTION_URL: ${{ secrets.TURSO_CONNECTION_URL }}
-          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+          SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}

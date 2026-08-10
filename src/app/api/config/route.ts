@@ -48,7 +48,8 @@ export async function POST(request: Request) {
     }
 
     await db.execute({
-      sql: 'INSERT OR REPLACE INTO app_config (key, value) VALUES (?, ?)',
+      sql: `INSERT INTO app_config (key, value) VALUES (?, ?)
+        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
       args: [key, String(value)],
     });
 
