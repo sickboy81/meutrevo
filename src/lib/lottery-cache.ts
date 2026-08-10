@@ -56,8 +56,12 @@ export async function saveToCache(
 ) {
   try {
     await db.execute({
-      sql: `INSERT OR REPLACE INTO lottery_cache (lottery, contest_num, draw_date, data_json, cached_at)
-            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+      sql: `INSERT INTO lottery_cache (lottery, contest_num, draw_date, data_json, cached_at)
+            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT (lottery, contest_num) DO UPDATE SET
+              draw_date = EXCLUDED.draw_date,
+              data_json = EXCLUDED.data_json,
+              cached_at = CURRENT_TIMESTAMP`,
       args: [lotteryId, contestNum, dateStr, JSON.stringify(data)],
     });
   } catch (e) {

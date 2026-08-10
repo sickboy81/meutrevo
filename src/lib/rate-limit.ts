@@ -109,7 +109,10 @@ export class SupabaseRateLimitStore implements RateLimitStore {
   async set(key: string, value: RateLimitEntry): Promise<void> {
     try {
       await db.execute({
-        sql: 'INSERT OR REPLACE INTO rate_limits (key, count, reset_at) VALUES (?, ?, ?)',
+        sql: `INSERT INTO rate_limits (key, count, reset_at) VALUES (?, ?, ?)
+              ON CONFLICT (key) DO UPDATE SET
+                count = EXCLUDED.count,
+                reset_at = EXCLUDED.reset_at`,
         args: [key, value.count, value.resetAt],
       });
     } catch {
