@@ -38,30 +38,6 @@ const BRAZIL_STATES = [
 ];
 
 function PasswordEyeIcon({ visible }: { visible: boolean }) {
-  const handleMagicLink = async () => {
-    resetFeedback();
-    if (!email.trim()) {
-      setError('Informe seu e-mail para receber o link mágico.');
-      return;
-    }
-    setLoading(true);
-    try {
-      const response = await fetchWithCsrf('/api/auth/magic-link', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok)
-        setError(data.error || 'Não foi possível enviar o link mágico.');
-      else setSuccess(data.message);
-    } catch {
-      setError('Erro de conexão com o servidor.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <svg
       width="18"
@@ -203,6 +179,30 @@ export default function LoginPage() {
       }
 
       router.replace(nextUrl);
+    } catch {
+      setError('Erro de conexão com o servidor.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMagicLink = async () => {
+    resetFeedback();
+    if (!email.trim()) {
+      setError('Informe seu e-mail para receber o link mágico.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await fetchWithCsrf('/api/auth/magic-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok)
+        setError(data.error || 'Não foi possível enviar o link mágico.');
+      else setSuccess(data.message);
     } catch {
       setError('Erro de conexão com o servidor.');
     } finally {
