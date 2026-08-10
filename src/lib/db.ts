@@ -1,44 +1,128 @@
+import postgres, { type Sql } from 'postgres';
 import { createClient } from '@libsql/client';
 
-type DbClient = ReturnType<typeof createClient>;
+type LibsqlClient = ReturnType<typeof createClient>;
+type Query = string | { sql: string; args?: unknown[] };
+type Result = {
+  rows: Record<string, unknown>[];
+  columns?: string[];
+  rowsAffected?: number;
+};
+
 const MISSING_DB_ENV_MESSAGE =
-  'TURSO_CONNECTION_URL não está definido nas variáveis de ambiente';
+  'Nenhuma conexão de banco foi definida nas variáveis de ambiente';
 
-let client: DbClient | null = null;
+let libsql: LibsqlClient | null = null;
+let pg: Sql<Record<string, unknown>> | null = null;
 
-function getDbClient(): DbClient {
-  if (client) {
-    return client;
-  }
+function getSupabaseClient() {
+  if (pg) return pg;
+
+  const url = process.env.SUPABASE_DATABASE_URL;
+  if (!url) throw new Error(MISSING_DB_ENV_MESSAGE);
+
+  pg = postgres(url, {
+    max: 5,
+    idle_timeout: 20,
+    connect_timeout: 10,
+    prepare: false,
+  });
+  return pg;
+}
+
+function getLibsqlClient() {
+  if (libsql) return libsql;
 
   const url = process.env.TURSO_CONNECTION_URL;
-  const authToken = process.env.TURSO_AUTH_TOKEN;
+  if (!url) throw new Error(MISSING_DB_ENV_MESSAGE);
 
-  if (!url) {
-    throw new Error(MISSING_DB_ENV_MESSAGE);
+  libsql = createClient({ url, authToken: process.env.TURSO_AUTH_TOKEN });
+  return libsql;
+}
+
+function shouldUseSupabase() {
+  return Boolean(process.env.SUPABASE_DATABASE_URL);
+}
+
+function normalizeQuery(query: Query) {
+  const sql = typeof query === 'string' ? query : query.sql;
+  const args = typeof query === 'string' ? [] : (query.args ?? []);
+  let index = 0;
+  let normalized = sql.replace(/\?/g, () => `$${++index}`);
+
+  // SQLite syntax used by the legacy initializer.
+  normalized = normalized.replace(
+    /INSERT\s+OR\s+IGNORE\s+INTO/gi,
+    'INSERT INTO'
+  );
+  if (
+    /^\s*INSERT\s+INTO/i.test(normalized) &&
+    !/ON\s+CONFLICT/i.test(normalized)
+  ) {
+    normalized += ' ON CONFLICT DO NOTHING';
   }
 
-  client = createClient({
-    url,
-    authToken,
-  });
+  return { sql: normalized, args };
+}
 
-  return client;
+async function executePostgres(
+  query: Query,
+  positionalArgs?: unknown[]
+): Promise<Result> {
+  const input =
+    typeof query === 'string' && positionalArgs
+      ? { sql: query, args: positionalArgs }
+      : query;
+  const { sql, args } = normalizeQuery(input);
+  const result = await getSupabaseClient().unsafe(sql, args);
+  return {
+    rows: result as unknown as Record<string, unknown>[],
+    rowsAffected: result.count,
+  };
 }
 
 export const db = {
-  execute: ((...args: unknown[]) =>
-    (getDbClient().execute as (...params: unknown[]) => unknown)(
-      ...args
-    )) as DbClient['execute'],
-  batch: ((...args: unknown[]) =>
-    (getDbClient().batch as (...params: unknown[]) => unknown)(
-      ...args
-    )) as DbClient['batch'],
-  close: ((...args: unknown[]) =>
-    (getDbClient().close as (...params: unknown[]) => unknown)(
-      ...args
-    )) as DbClient['close'],
+  async execute(query: Query, positionalArgs?: unknown[]): Promise<Result> {
+    if (!shouldUseSupabase()) {
+      return getLibsqlClient().execute(
+        positionalArgs
+          ? { sql: query as string, args: positionalArgs as never }
+          : (query as never)
+      ) as never;
+    }
+    return executePostgres(query, positionalArgs);
+  },
+
+  async batch(queries: Query[], mode?: string): Promise<Result[]> {
+    void mode;
+    if (!shouldUseSupabase()) {
+      return getLibsqlClient().batch(queries as never) as never;
+    }
+
+    const results: Result[] = [];
+    await getSupabaseClient().begin(async (transaction) => {
+      for (const query of queries) {
+        const { sql, args } = normalizeQuery(query);
+        const rows = await transaction.unsafe(sql, args);
+        results.push({
+          rows: rows as unknown as Record<string, unknown>[],
+          rowsAffected: rows.count,
+        });
+      }
+    });
+    return results;
+  },
+
+  async close() {
+    if (pg) {
+      await pg.end({ timeout: 5 });
+      pg = null;
+    }
+    if (libsql) {
+      libsql.close();
+      libsql = null;
+    }
+  },
 };
 
 export function isMissingDbEnvError(error: unknown): boolean {
@@ -53,8 +137,6 @@ export async function ensureConfigTable() {
         value TEXT NOT NULL
       );
     `);
-
-    // Seed default values if not exists
     await db.execute(
       "INSERT OR IGNORE INTO app_config (key, value) VALUES ('price_monthly', '14.90')"
     );
@@ -64,9 +146,9 @@ export async function ensureConfigTable() {
     await db.execute(
       "UPDATE app_config SET value = '129.90' WHERE key = 'price_annual' AND TRIM(value) IN ('11.17', '11,17')"
     );
-  } catch (e) {
-    if (!isMissingDbEnvError(e)) {
-      console.error('Failed to create/seed app_config:', e);
+  } catch (error) {
+    if (!isMissingDbEnvError(error)) {
+      console.error('Failed to create/seed app_config:', error);
     }
   }
 }

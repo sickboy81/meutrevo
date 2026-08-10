@@ -1,4 +1,5 @@
 import { createClient } from '@libsql/client';
+import postgres from 'postgres';
 
 const CAIXA_BASES = [
   'https://servicebus3.caixa.gov.br/portaldeloterias',
@@ -91,6 +92,30 @@ async function ensureTable(db) {
   `);
 }
 
+function createPostgresAdapter(url) {
+  const sql = postgres(url, { max: 1, connect_timeout: 15, prepare: false });
+  const normalize = (query) => {
+    const input = typeof query === 'string' ? { sql: query, args: [] } : query;
+    let index = 0;
+    let text = input.sql.replace(/\?/g, () => `$${++index}`);
+    text = text.replace(/INSERT OR REPLACE INTO/gi, 'INSERT INTO');
+    if (text.includes('INSERT INTO lottery_cache')) {
+      text = `${text} ON CONFLICT (lottery, contest_num) DO UPDATE SET draw_date = EXCLUDED.draw_date, data_json = EXCLUDED.data_json, cached_at = CURRENT_TIMESTAMP`;
+    }
+    return { text, args: input.args ?? [] };
+  };
+  return {
+    async execute(query) {
+      const { text, args } = normalize(query);
+      const rows = await sql.unsafe(text, args);
+      return { rows, rowsAffected: rows.count };
+    },
+    async close() {
+      await sql.end({ timeout: 5 });
+    },
+  };
+}
+
 async function saveIfNewer(db, lottery, result) {
   const current = await db.execute({
     sql: 'SELECT MAX(contest_num) AS latest FROM lottery_cache WHERE lottery = ?',
@@ -115,13 +140,18 @@ async function saveIfNewer(db, lottery, result) {
   return { lottery, status: 'updated', contest: result.numero };
 }
 
-const connectionUrl = process.env.TURSO_CONNECTION_URL;
-const authToken = process.env.TURSO_AUTH_TOKEN;
-if (!connectionUrl || !authToken) {
-  throw new Error('TURSO_CONNECTION_URL and TURSO_AUTH_TOKEN are required');
-}
-
-const db = createClient({ url: connectionUrl, authToken });
+const db = process.env.SUPABASE_DATABASE_URL
+  ? createPostgresAdapter(process.env.SUPABASE_DATABASE_URL)
+  : (() => {
+      const connectionUrl = process.env.TURSO_CONNECTION_URL;
+      const authToken = process.env.TURSO_AUTH_TOKEN;
+      if (!connectionUrl || !authToken) {
+        throw new Error(
+          'SUPABASE_DATABASE_URL or TURSO_CONNECTION_URL/TURSO_AUTH_TOKEN is required'
+        );
+      }
+      return createClient({ url: connectionUrl, authToken });
+    })();
 await ensureTable(db);
 
 const reports = await Promise.all(
@@ -143,3 +173,4 @@ const reports = await Promise.all(
 
 for (const report of reports) console.log(JSON.stringify(report));
 if (reports.some((report) => report.status === 'error')) process.exitCode = 1;
+await db.close?.();
