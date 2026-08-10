@@ -4,6 +4,7 @@ No Supabase, abra **Authentication → Email Templates** e cole os arquivos nos 
 
 - `confirmation.html` em **Confirm signup**
 - `recovery.html` em **Reset password**
+- `magic-link.html` em **Magic link**
 - `invite.html` em **Invite user**
 - `email-change.html` em **Change email address**
 
