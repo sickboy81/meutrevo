@@ -283,14 +283,19 @@ export async function GET(
     }
 
     const history = await getHistoryFromDB(type, limit, filters);
+    const cachedLatest = history[0];
+    const latest =
+      cachedLatest && (cachedLatest.numero ?? 0) > (latestData.numero ?? 0)
+        ? cachedLatest
+        : latestData;
     const historyWithLatest = history.some(
-      (item) => item.numero === latestData.numero
+      (item) => item.numero === latest.numero
     )
       ? history
-      : [latestData, ...history].slice(0, limit);
+      : [latest, ...history].slice(0, limit);
     return jsonNoStore(
       {
-        latest: latestData,
+        latest,
         history: decorateResults(
           type,
           historyWithLatest.length > 0 ? historyWithLatest : [latestData]
