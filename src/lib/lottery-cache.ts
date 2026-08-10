@@ -71,6 +71,16 @@ export async function saveToCache(
   }
 
   try {
+    const current = await db.execute({
+      sql: `SELECT contest_num FROM lottery_cache
+            WHERE lottery = ? ORDER BY contest_num DESC LIMIT 1`,
+      args: [lotteryId],
+    });
+    const currentContest = Number(current.rows[0]?.contest_num ?? 0);
+    if (currentContest > contestNum) {
+      return;
+    }
+
     await db.execute({
       sql: `INSERT INTO lottery_cache (lottery, contest_num, draw_date, data_json, cached_at)
             VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
