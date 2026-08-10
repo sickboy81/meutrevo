@@ -7,10 +7,14 @@ import AppEntryLink from '../components/AppEntryLink';
 import { fetchWithCsrf } from '@/lib/fetch';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-);
+const supabase =
+  process.env.NEXT_PUBLIC_SUPABASE_URL &&
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    ? createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+      )
+    : null;
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -25,7 +29,7 @@ function ResetPasswordForm() {
   const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    supabase?.auth.getSession().then(({ data }) => {
       setAccessToken(data.session?.access_token || '');
     });
   }, []);
