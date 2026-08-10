@@ -135,6 +135,7 @@ const CSRF_PROTECTED_ROUTES = [
   '/api/auth/delete',
   '/api/auth/reset',
   '/api/auth/recover',
+  '/api/auth/magic-link',
   '/api/auth/logout',
   '/api/games',
   '/api/bets',
