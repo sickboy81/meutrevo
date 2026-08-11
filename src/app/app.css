@@ -692,13 +692,31 @@ textarea:focus-visible {
 }
 
 .auth-input {
-  background: var(--bg-tertiary);
-  border: 1px solid var(--glass-border);
+  background: #fff;
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
   padding: 0.6rem;
-  color: white;
+  color: #111827;
   font-size: 0.9rem;
   font-family: var(--font-body);
+}
+
+.auth-input::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
+
+.auth-input option {
+  background: #fff;
+  color: #111827;
+}
+
+.auth-input:-webkit-autofill,
+.auth-input:-webkit-autofill:hover,
+.auth-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #111827;
+  -webkit-box-shadow: 0 0 0 1000px #fff inset;
+  box-shadow: 0 0 0 1000px #fff inset;
 }
 
 .auth-input:focus {

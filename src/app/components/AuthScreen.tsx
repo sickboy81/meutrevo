@@ -186,6 +186,7 @@ export default function AuthScreen({
                 Nome Completo
               </label>
               <input
+                className="auth-input"
                 type="text"
                 value={authName}
                 onChange={(e) => setAuthName(e.target.value)}
@@ -196,8 +197,8 @@ export default function AuthScreen({
                   padding: '0.75rem',
                   borderRadius: '8px',
                   border: '1px solid var(--glass-border)',
-                  background: 'rgba(0,0,0,0.2)',
-                  color: 'white',
+                  background: '#fff',
+                  color: '#111827',
                   boxSizing: 'border-box',
                 }}
               />
@@ -216,6 +217,7 @@ export default function AuthScreen({
               E-mail
             </label>
             <input
+              className="auth-input"
               type="email"
               value={authEmail}
               onChange={(e) => setAuthEmail(e.target.value)}
@@ -226,8 +228,8 @@ export default function AuthScreen({
                 padding: '0.75rem',
                 borderRadius: '8px',
                 border: '1px solid var(--glass-border)',
-                background: 'rgba(0,0,0,0.2)',
-                color: 'white',
+                background: '#fff',
+                color: '#111827',
                 boxSizing: 'border-box',
               }}
             />
@@ -246,6 +248,7 @@ export default function AuthScreen({
                 CPF/CNPJ
               </label>
               <input
+                className="auth-input"
                 type="text"
                 value={authCpfCnpj}
                 onChange={(e) => setAuthCpfCnpj(e.target.value)}
@@ -255,8 +258,8 @@ export default function AuthScreen({
                   padding: '0.75rem',
                   borderRadius: '8px',
                   border: '1px solid var(--glass-border)',
-                  background: 'rgba(0,0,0,0.2)',
-                  color: 'white',
+                  background: '#fff',
+                  color: '#111827',
                   boxSizing: 'border-box',
                 }}
               />
@@ -277,6 +280,7 @@ export default function AuthScreen({
               </label>
               <div style={{ position: 'relative' }}>
                 <input
+                  className="auth-input"
                   type={showPassword ? 'text' : 'password'}
                   value={authPassword}
                   onChange={(e) => setAuthPassword(e.target.value)}
@@ -291,8 +295,8 @@ export default function AuthScreen({
                     padding: '0.75rem',
                     borderRadius: '8px',
                     border: '1px solid var(--glass-border)',
-                    background: 'rgba(0,0,0,0.2)',
-                    color: 'white',
+                    background: '#fff',
+                    color: '#111827',
                     boxSizing: 'border-box',
                   }}
                 />
