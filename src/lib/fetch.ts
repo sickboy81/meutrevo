@@ -8,9 +8,12 @@ function getCsrfToken(): string | null {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
+const DEFAULT_REQUEST_TIMEOUT_MS = 15_000;
+
 export async function fetchWithCsrf(
   url: string | URL | Request,
-  init?: RequestInit
+  init?: RequestInit,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS
 ): Promise<Response> {
   const method = (init?.method ?? 'GET').toUpperCase();
 
@@ -23,5 +26,21 @@ export async function fetchWithCsrf(
     }
   }
 
-  return fetch(url, init);
+  const controller = new AbortController();
+  const sourceSignal = init?.signal;
+  const abortFromSource = () => controller.abort(sourceSignal?.reason);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  if (sourceSignal?.aborted) {
+    abortFromSource();
+  } else {
+    sourceSignal?.addEventListener('abort', abortFromSource, { once: true });
+  }
+
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+    sourceSignal?.removeEventListener('abort', abortFromSource);
+  }
 }

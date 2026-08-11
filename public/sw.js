@@ -1,8 +1,8 @@
 // Meu Trevo - Service Worker
 // Handles: PWA install, offline caching, push notifications
 
-const CACHE_NAME = 'meu-trevo-v2';
-const RESULTS_CACHE = 'meu-trevo-results-v2';
+const CACHE_NAME = 'meu-trevo-v3';
+const RESULTS_CACHE = 'meu-trevo-results-v3';
 
 // App shell files to cache
 const APP_SHELL = [
@@ -66,7 +66,15 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          return caches.match(request);
+          return caches.match(request).then((cached) => {
+            return cached || new Response(
+              JSON.stringify({ error: 'Sem conexão para carregar os dados.' }),
+              {
+                status: 503,
+                headers: { 'Content-Type': 'application/json' },
+              }
+            );
+          });
         })
     );
     return;
