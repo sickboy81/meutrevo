@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { fetchOfficialLotteryResult } from '@/lib/caixa';
-import { ensureCacheTable, saveToCache } from '@/lib/lottery-cache';
+import { saveToCache } from '@/lib/lottery-cache';
 import { LOTTERY_CONFIGS } from '@/lib/lottery-math';
 
 export const dynamic = 'force-dynamic';
@@ -17,8 +17,6 @@ export async function GET(request: Request) {
   if (!isAuthorized(request)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
-
-  await ensureCacheTable();
 
   const reports = await Promise.all(
     Object.keys(LOTTERY_CONFIGS).map(async (lottery) => {

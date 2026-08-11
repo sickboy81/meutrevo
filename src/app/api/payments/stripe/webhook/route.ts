@@ -6,18 +6,6 @@ import { claimOneTimeToken } from '@/lib/rate-limit';
 import { getStripe } from '@/lib/stripe';
 import Stripe from 'stripe';
 
-async function ensureStripeColumns() {
-  await db
-    .execute('ALTER TABLE users ADD COLUMN stripe_customer_id TEXT')
-    .catch(() => {});
-  await db
-    .execute('ALTER TABLE users ADD COLUMN stripe_subscription_id TEXT')
-    .catch(() => {});
-  await db
-    .execute('ALTER TABLE users ADD COLUMN stripe_subscription_status TEXT')
-    .catch(() => {});
-}
-
 async function grantProAccess(params: {
   userId?: string | null;
   customerId?: string | null;
@@ -118,8 +106,6 @@ function getSubscriptionPeriodEnd(
 
 export async function POST(request: Request) {
   try {
-    await ensureStripeColumns();
-
     const headerList = await headers();
     const signature = headerList.get('stripe-signature');
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;

@@ -6,39 +6,7 @@ import {
 } from '../../../../lib/api-auth';
 import { isAdminEmail } from '../../../../lib/admin';
 
-async function ensureUserRoleColumns() {
-  try {
-    await db.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'free'");
-  } catch {}
-  try {
-    await db.execute('ALTER TABLE users ADD COLUMN premium_until DATETIME');
-  } catch {}
-  try {
-    await db.execute("ALTER TABLE users ADD COLUMN avatar TEXT DEFAULT '👤'");
-  } catch {}
-  try {
-    await db.execute(
-      "ALTER TABLE users ADD COLUMN favorite_lottery TEXT DEFAULT 'megasena'"
-    );
-  } catch {}
-  try {
-    await db.execute('ALTER TABLE users ADD COLUMN cpf_cnpj TEXT');
-  } catch {}
-  try {
-    await db.execute('ALTER TABLE users ADD COLUMN city TEXT');
-  } catch {}
-  try {
-    await db.execute('ALTER TABLE users ADD COLUMN state TEXT');
-  } catch {}
-  try {
-    await db.execute(
-      'ALTER TABLE users ADD COLUMN show_in_ranking INTEGER DEFAULT 1'
-    );
-  } catch {}
-}
-
 export async function GET() {
-  await ensureUserRoleColumns();
   try {
     const { user: payload, response } = await requireAuthenticatedUser();
     if (response || !payload) return response;

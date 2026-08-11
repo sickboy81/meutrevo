@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db, ensureConfigTable } from '../../../../lib/db';
+import { db } from '../../../../lib/db';
 import {
   internalServerError,
   requireAuthenticatedUser,
@@ -13,31 +13,16 @@ import {
   normalizeMonthlyPrice,
 } from '@/lib/pricing-config';
 
-async function ensureStripeColumns() {
-  await db
-    .execute('ALTER TABLE users ADD COLUMN stripe_customer_id TEXT')
-    .catch(() => {});
-  await db
-    .execute('ALTER TABLE users ADD COLUMN stripe_subscription_id TEXT')
-    .catch(() => {});
-  await db
-    .execute('ALTER TABLE users ADD COLUMN stripe_subscription_status TEXT')
-    .catch(() => {});
-}
-
 export async function POST(request: Request) {
   try {
     const { user, response } = await requireAuthenticatedUser();
     if (response || !user) return response;
-    await ensureStripeColumns();
-
     const userProfileRes = await db.execute({
       sql: 'SELECT cpf_cnpj FROM users WHERE id = ? LIMIT 1',
       args: [user.id],
     });
     const userCpfCnpj = userProfileRes.rows[0]?.cpf_cnpj as string | undefined;
 
-    await ensureConfigTable();
     const { planType, provider } = await request
       .json()
       .catch(() => ({ planType: 'monthly', provider: 'pixgo' }));

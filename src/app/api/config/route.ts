@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db, ensureConfigTable } from '@/lib/db';
+import { db } from '@/lib/db';
 import { internalServerError, requireRole } from '@/lib/api-auth';
 import {
   consumeRateLimit,
@@ -7,7 +7,6 @@ import {
 } from '@/lib/rate-limit';
 
 export async function GET() {
-  await ensureConfigTable();
   try {
     const res = await db.execute('SELECT key, value FROM app_config');
     const config: Record<string, string> = {};
@@ -21,7 +20,6 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  await ensureConfigTable();
   try {
     // Rate limiting: 20 requests/min por IP para endpoints admin
     const { user, response } = await requireRole(['admin']);

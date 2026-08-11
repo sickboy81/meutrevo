@@ -109,27 +109,3 @@ export const db = {
 export function isMissingDbEnvError(error: unknown): boolean {
   return error instanceof Error && error.message === MISSING_DB_ENV_MESSAGE;
 }
-
-export async function ensureConfigTable() {
-  try {
-    await db.execute(`
-      CREATE TABLE IF NOT EXISTS app_config (
-        key TEXT PRIMARY KEY,
-        value TEXT NOT NULL
-      );
-    `);
-    await db.execute(
-      "INSERT OR IGNORE INTO app_config (key, value) VALUES ('price_monthly', '14.90')"
-    );
-    await db.execute(
-      "INSERT OR IGNORE INTO app_config (key, value) VALUES ('price_annual', '129.90')"
-    );
-    await db.execute(
-      "UPDATE app_config SET value = '129.90' WHERE key = 'price_annual' AND TRIM(value) IN ('11.17', '11,17')"
-    );
-  } catch (error) {
-    if (!isMissingDbEnvError(error)) {
-      console.error('Failed to create/seed app_config:', error);
-    }
-  }
-}

@@ -15,7 +15,6 @@ import {
   LotteryApiData,
   decorateResults,
   isIncompleteCachedResult,
-  ensureCacheTable,
   saveToCache,
   getHistoryFromDB,
   getContestFromDB,
@@ -36,8 +35,6 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ type: string }> }
 ) {
-  await ensureCacheTable();
-
   const { type } = await params;
 
   if (!LOTTERY_CONFIGS[type]) {
