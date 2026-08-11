@@ -25,9 +25,19 @@ import {
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-function jsonNoStore(body: unknown, init?: ResponseInit) {
+const LOTTERY_RESPONSE_CACHE_CONTROL =
+  'public, s-maxage=60, stale-while-revalidate=300';
+
+function jsonLotteryResponse(body: unknown, init?: ResponseInit) {
   const response = NextResponse.json(body, init);
-  response.headers.set('Cache-Control', 'no-store, max-age=0');
+  // Results are public and updated by the collector. CDN caching avoids a
+  // database round-trip for every visitor without hiding new draws for long.
+  response.headers.set(
+    'Cache-Control',
+    (init?.status ?? 200) >= 400
+      ? 'no-store, max-age=0'
+      : LOTTERY_RESPONSE_CACHE_CONTROL
+  );
   return response;
 }
 
@@ -38,7 +48,7 @@ export async function GET(
   const { type } = await params;
 
   if (!LOTTERY_CONFIGS[type]) {
-    return jsonNoStore(
+    return jsonLotteryResponse(
       {
         error: `Lottery type '${type}' is not supported. Valid types: ${Object.keys(LOTTERY_CONFIGS).join(', ')}`,
       },
@@ -64,7 +74,7 @@ export async function GET(
   if (concurso) {
     const contestNumVal = parseInt(concurso, 10);
     if (isNaN(contestNumVal)) {
-      return jsonNoStore(
+      return jsonLotteryResponse(
         { error: 'Número de concurso inválido' },
         { status: 400 }
       );
@@ -81,15 +91,18 @@ export async function GET(
             enriched?.dataApuracao || '',
             enriched!
           );
-          return jsonNoStore(decorateLotteryResult(type, enriched as never), {
-            headers: {
-              'X-Cache': 'ENRICHED',
-              'X-Cache-Source': 'caixa-retry',
-            },
-          });
+          return jsonLotteryResponse(
+            decorateLotteryResult(type, enriched as never),
+            {
+              headers: {
+                'X-Cache': 'ENRICHED',
+                'X-Cache-Source': 'caixa-retry',
+              },
+            }
+          );
         }
       }
-      return jsonNoStore(decorateLotteryResult(type, cached as never), {
+      return jsonLotteryResponse(decorateLotteryResult(type, cached as never), {
         headers: { 'X-Cache': 'HIT', 'X-Cache-Source': 'db' },
       });
     }
@@ -100,12 +113,12 @@ export async function GET(
       fetchOfficialLotteryResult
     );
     if (data) {
-      return jsonNoStore(decorateLotteryResult(type, data as never), {
+      return jsonLotteryResponse(decorateLotteryResult(type, data as never), {
         headers: { 'X-Cache': 'MISS', 'X-Cache-Source': 'caixa' },
       });
     }
 
-    return jsonNoStore(
+    return jsonLotteryResponse(
       { error: `Concurso ${contestNumVal} não encontrado` },
       { status: 404 }
     );
@@ -205,7 +218,7 @@ export async function GET(
         }
       }
 
-      return jsonNoStore(
+      return jsonLotteryResponse(
         {
           latest,
           history: decorateResults(type, localHistory),
@@ -289,7 +302,7 @@ export async function GET(
     )
       ? history
       : [latest, ...history].slice(0, limit);
-    return jsonNoStore(
+    return jsonLotteryResponse(
       {
         latest,
         history: decorateResults(
@@ -337,7 +350,7 @@ export async function GET(
         .filter((item) => !isIncompleteCachedResult(type, item));
 
       if (cachedHistory.length > 0) {
-        return jsonNoStore(
+        return jsonLotteryResponse(
           {
             latest: decorateLotteryResult(type, cachedHistory[0] as never),
             history: decorateResults(type, cachedHistory),
@@ -349,7 +362,7 @@ export async function GET(
       // DB also failed
     }
 
-    return jsonNoStore(
+    return jsonLotteryResponse(
       {
         error: `API da Caixa offline e sem cache local disponível: ${message}`,
       },
