@@ -121,12 +121,15 @@ function normalizeDatabaseDate(value) {
   const brazilian = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(text);
   if (brazilian) {
     const [, day, month, year] = brazilian;
-    const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+    const date = new Date(
+      Date.UTC(Number(year), Number(month) - 1, Number(day))
+    );
     if (
       date.getUTCFullYear() !== Number(year) ||
       date.getUTCMonth() !== Number(month) - 1 ||
       date.getUTCDate() !== Number(day)
-    ) return null;
+    )
+      return null;
     return `${year}-${month}-${day}`;
   }
   const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(text);
@@ -137,7 +140,8 @@ function normalizeDatabaseDate(value) {
     date.getUTCFullYear() !== Number(year) ||
     date.getUTCMonth() !== Number(month) - 1 ||
     date.getUTCDate() !== Number(day)
-  ) return null;
+  )
+    return null;
   return `${year}-${month}-${day}`;
 }
 
@@ -167,12 +171,7 @@ async function saveIfNewer(db, lottery, result) {
     sql: `INSERT OR REPLACE INTO lottery_cache
       (lottery, contest_num, draw_date, data_json, cached_at)
       VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-    args: [
-      lottery,
-      result.numero,
-      drawDate,
-      JSON.stringify(cacheData),
-    ],
+    args: [lottery, result.numero, drawDate, JSON.stringify(cacheData)],
   });
   return { lottery, status: 'updated', contest: result.numero };
 }
