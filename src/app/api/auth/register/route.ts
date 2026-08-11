@@ -12,6 +12,7 @@ import { registerSchema } from '../../../../schemas/auth';
 import { getSupabaseAuth } from '../../../../lib/supabase-auth';
 import { setSupabaseSessionCookies } from '../../../../lib/supabase-session';
 import { isAdminEmail } from '../../../../lib/admin';
+import { getAuthRedirectUrl } from '@/lib/app-url';
 
 function normalizeEmail(email: unknown): string | null {
   if (typeof email !== 'string') return null;
@@ -92,10 +93,10 @@ export async function POST(request: Request) {
           password,
           options: {
             data: { name: cleanName },
-            emailRedirectTo: new URL(
+            emailRedirectTo: getAuthRedirectUrl(
               '/auth/callback?next=/app',
-              request.url
-            ).toString(),
+              request
+            ),
           },
         })
       : { data: null, error: null };

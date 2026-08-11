@@ -5,6 +5,7 @@ import {
   createRateLimitExceededResponse,
 } from '@/lib/rate-limit';
 import { recoverSchema } from '@/schemas/auth';
+import { getAuthRedirectUrl } from '@/lib/app-url';
 
 export async function POST(request: Request) {
   const parsed = recoverSchema.safeParse(
@@ -36,10 +37,7 @@ export async function POST(request: Request) {
     type: 'signup',
     email,
     options: {
-      emailRedirectTo: new URL(
-        '/auth/callback?next=/app',
-        request.url
-      ).toString(),
+      emailRedirectTo: getAuthRedirectUrl('/auth/callback?next=/app', request),
     },
   });
 

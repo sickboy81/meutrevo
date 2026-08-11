@@ -5,6 +5,7 @@ import {
   createRateLimitExceededResponse,
 } from '../../../../lib/rate-limit';
 import { getSupabaseAuth } from '../../../../lib/supabase-auth';
+import { getAuthRedirectUrl } from '@/lib/app-url';
 
 export async function POST(request: Request) {
   try {
@@ -30,10 +31,10 @@ export async function POST(request: Request) {
     const auth = getSupabaseAuth();
     if (auth) {
       const { error } = await auth.auth.resetPasswordForEmail(normalizedEmail, {
-        redirectTo: new URL(
+        redirectTo: getAuthRedirectUrl(
           '/auth/callback?next=/reset-password',
-          request.url
-        ).toString(),
+          request
+        ),
       });
       if (error) console.error('Supabase recovery error:', error.message);
     }
