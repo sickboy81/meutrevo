@@ -11,8 +11,6 @@ const MISSING_DB_ENV_MESSAGE =
   'Nenhuma conexão de banco foi definida nas variáveis de ambiente';
 const DATABASE_QUERY_TIMEOUT_MS = 8_000;
 
-let pg: Sql<Record<string, unknown>> | null = null;
-
 type CancellableQuery<T> = PromiseLike<T> & { cancel: () => void };
 
 export class DatabaseQueryTimeoutError extends Error {
@@ -45,30 +43,25 @@ export function executeWithDatabaseTimeout<T>(
   });
 }
 
-function getSupabaseClient() {
-  if (pg) return pg;
-
+function createSupabaseClient(): Sql<Record<string, unknown>> {
   const url = process.env.SUPABASE_DATABASE_URL;
   if (!url) throw new Error(MISSING_DB_ENV_MESSAGE);
 
-  pg = postgres(url, {
-    // The Supabase transaction pooler handles concurrency. A single client
-    // avoids exhausting it, while max_lifetime prevents stale Vercel sockets.
+  return postgres(url, {
+    // Each serverless operation gets an isolated connection. Sharing one
+    // global connection makes a cancelled query fail unrelated requests.
     max: 1,
-    idle_timeout: 10,
-    connect_timeout: 10,
-    max_lifetime: 60,
+    idle_timeout: 5,
+    connect_timeout: 5,
     prepare: false,
-  });
-  return pg;
+  }) as Sql<Record<string, unknown>>;
 }
 
-function discardSupabaseClient(client: Sql<Record<string, unknown>>) {
-  if (pg !== client) return;
-
-  pg = null;
-  // Do not wait for a broken socket: the next request receives a fresh client.
-  void client.end({ timeout: 1 }).catch(() => {});
+async function closeSupabaseClient(
+  client: Sql<Record<string, unknown>>,
+  timeout = 1
+) {
+  await client.end({ timeout }).catch(() => {});
 }
 
 function shouldUseSupabase() {
@@ -109,7 +102,7 @@ async function executePostgres(
       ? { sql: query, args: positionalArgs }
       : query;
   const { sql, args } = normalizeQuery(input);
-  const client = getSupabaseClient();
+  const client = createSupabaseClient();
 
   try {
     const result = await executeWithDatabaseTimeout(client.unsafe(sql, args));
@@ -117,11 +110,8 @@ async function executePostgres(
       rows: result as unknown as Record<string, unknown>[],
       rowsAffected: result.count,
     };
-  } catch (error) {
-    // A stuck transaction-pooler connection must never block every request
-    // handled by this Vercel instance.
-    discardSupabaseClient(client);
-    throw error;
+  } finally {
+    await closeSupabaseClient(client);
   }
 }
 
@@ -135,7 +125,7 @@ export const db = {
     void mode;
     requireSupabase();
 
-    const client = getSupabaseClient();
+    const client = createSupabaseClient();
     const results: Result[] = [];
     let timer: ReturnType<typeof setTimeout> | undefined;
 
@@ -153,25 +143,20 @@ export const db = {
         }),
         new Promise<never>((_, reject) => {
           timer = setTimeout(() => {
-            discardSupabaseClient(client);
             reject(new DatabaseQueryTimeoutError(DATABASE_QUERY_TIMEOUT_MS));
           }, DATABASE_QUERY_TIMEOUT_MS);
         }),
       ]);
       return results;
-    } catch (error) {
-      discardSupabaseClient(client);
-      throw error;
     } finally {
       if (timer) clearTimeout(timer);
+      // A transaction that exceeded the limit must be destroyed immediately.
+      await closeSupabaseClient(client, 0);
     }
   },
 
   async close() {
-    if (pg) {
-      await pg.end({ timeout: 5 });
-      pg = null;
-    }
+    // Connections are closed at the end of every database operation.
   },
 };
 
