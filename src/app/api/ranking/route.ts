@@ -29,13 +29,13 @@ export async function GET(req: Request) {
     let dateFilter = '';
     let rankingSubqueryDateFilter = '';
     if (period === 'month') {
-      dateFilter = "AND r.created_at >= datetime('now', '-30 days')";
+      dateFilter = "AND r.created_at >= CURRENT_TIMESTAMP - INTERVAL '30 days'";
       rankingSubqueryDateFilter =
-        "AND created_at >= datetime('now', '-30 days')";
+        "AND created_at >= CURRENT_TIMESTAMP - INTERVAL '30 days'";
     } else if (period === 'week') {
-      dateFilter = "AND r.created_at >= datetime('now', '-7 days')";
+      dateFilter = "AND r.created_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'";
       rankingSubqueryDateFilter =
-        "AND created_at >= datetime('now', '-7 days')";
+        "AND created_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'";
     }
 
     const rankingLotteryFilter = lottery !== 'all' ? 'AND r.lottery = ?' : '';
@@ -56,7 +56,7 @@ export async function GET(req: Request) {
         LEFT JOIN rankings r ON r.user_id = u.id ${rankingLotteryFilter} ${dateFilter}
         WHERE (u.show_in_ranking IS NULL OR u.show_in_ranking = 1)
         GROUP BY u.id
-        HAVING total_hits > 0
+        HAVING COALESCE(SUM(r.hits), 0) > 0
         ORDER BY total_hits DESC, total_prize DESC
         LIMIT 50
       `,
