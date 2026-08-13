@@ -1769,9 +1769,9 @@ export default function Home() {
                         maxWidth: '420px',
                       }}
                     >
-                      O gerador Smart, desdobramentos, gerador místico e bolões
-                      agora exigem conta para uso no app. Assim seus jogos,
-                      filtros e recursos ficam vinculados ao seu perfil.
+                      O gerador Smart, desdobramentos, gerador alternativo e
+                      bolões agora exigem conta para uso no app. Assim seus
+                      jogos, filtros e recursos ficam vinculados ao seu perfil.
                     </p>
                     <div
                       style={{
@@ -1860,7 +1860,7 @@ export default function Home() {
                           }
                         }}
                       >
-                        Gerador Místico
+                        Gerador Alternativo
                       </button>
                       <button
                         className={`sub-tab-btn ${genSubTab === 'bolao' ? 'active' : ''}`}
@@ -3035,7 +3035,7 @@ export default function Home() {
                     </div>
                   )}
 
-                {/* SUB-ABA: MÍSTICO (dentro do Gerador) */}
+                {/* SUB-ABA: GERADOR ALTERNATIVO (dentro do Gerador) */}
                 {activeTab === 'generator' &&
                   user &&
                   genSubTab === 'mystic' && (

@@ -89,8 +89,8 @@ export default function UpgradeModal({
               <div className="benefit-item">
                 <span className="benefit-icon">✓</span>
                 <span>
-                  <strong>Gerador Místico:</strong> Aposta com numerologia e
-                  astrologia pessoal alinhada.
+                  <strong>Gerador Alternativo:</strong> Combinações recreativas
+                  com diferentes formas de seleção.
                 </span>
               </div>
               <div className="benefit-item">

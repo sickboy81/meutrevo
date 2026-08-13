@@ -9,42 +9,42 @@ interface Props {
   playSound: (type: 'click' | 'success' | 'delete') => void;
 }
 
-const MYSTIC_CATEGORIES = [
+const ALTERNATIVE_CATEGORIES = [
   {
     key: 'astro',
-    label: 'Astrologia',
-    icon: '🌟',
-    desc: 'Baseado no mapa astral — use sua data e hora de nascimento para gerar números únicos.',
+    label: 'Data de referência',
+    icon: '◷',
+    desc: 'Use uma data e horário como ponto de partida para uma combinação recreativa.',
   },
   {
     key: 'tarot',
-    label: 'Tarô',
-    icon: '🔮',
-    desc: 'Carta do dia — selecione uma carta do Tarô para revelar seus números.',
+    label: 'Cartas simbólicas',
+    icon: '▣',
+    desc: 'Escolha uma carta simbólica para influenciar a seleção de números.',
   },
   {
-    key: 'numerologia',
-    label: 'Numerologia',
-    icon: '🔢',
-    desc: 'Vibração do nome — use seu nome completo e data de nascimento.',
+    key: 'nameDate',
+    label: 'Nome e data',
+    icon: '#',
+    desc: 'Use um nome e uma data como entradas para uma combinação personalizada.',
   },
   {
     key: 'fenShui',
-    label: 'Feng Shui',
-    icon: '☯️',
-    desc: 'Elemento vital — escolha seu elemento e gere harmonia numérica.',
+    label: 'Elementos',
+    icon: '◇',
+    desc: 'Escolha uma categoria de elementos para variar a composição do jogo.',
   },
   {
     key: 'sonho',
-    label: 'Sonho',
-    icon: '🌙',
-    desc: 'Interpretação onírica — descreva o que sonhou para gerar números.',
+    label: 'Palavras-chave',
+    icon: 'Aa',
+    desc: 'Insira palavras para gerar uma combinação baseada no texto informado.',
   },
   {
     key: 'sincronicidade',
-    label: 'Sincronicidade',
-    icon: '🎲',
-    desc: 'O universo decide — números aleatórios com toque místico.',
+    label: 'Seleção aleatória',
+    icon: '↻',
+    desc: 'Gere uma combinação aleatória para uma alternativa rápida.',
   },
 ];
 
@@ -460,7 +460,7 @@ function generateNumerologyNumbers(
 
   const nums = new Set<number>();
 
-  // Adiciona os números da numerologia
+  // Adiciona os números derivados das entradas informadas
   [lifePath, soulUrge, personalYear].forEach((n) => {
     if (n >= 1 && n <= maxNum) nums.add(n);
   });
@@ -703,7 +703,7 @@ export default function MysticGenerator({
         desc = `${card.name}: ${card.meaning}. Esta carta guia seus números com sua energia única.`;
         break;
       }
-      case 'numerologia': {
+      case 'nameDate': {
         if (!fullName.trim() || !birthDate) {
           setRevealPhase(0);
           return;
@@ -746,7 +746,7 @@ export default function MysticGenerator({
           if (!nums.includes(n)) nums.push(n);
         }
         nums.sort((a, b) => a - b);
-        desc = 'O universo enviou seus números. A sincronicidade está ativa.';
+        desc = 'Uma combinação aleatória foi gerada como alternativa rápida.';
         break;
       }
     }
@@ -775,7 +775,7 @@ export default function MysticGenerator({
         return !!birthDate;
       case 'tarot':
         return selectedTarotCard !== null;
-      case 'numerologia':
+      case 'nameDate':
         return fullName.trim().length > 0 && !!birthDate;
       case 'fenShui':
         return true;
@@ -817,7 +817,7 @@ export default function MysticGenerator({
             margin: 0,
           }}
         >
-          <span>🔮</span> GERADOR MÍSTICO
+          <span>✦</span> GERADOR ALTERNATIVO
         </h3>
         <p
           style={{
@@ -826,7 +826,7 @@ export default function MysticGenerator({
             marginTop: '0.25rem',
           }}
         >
-          Gere números baseados em temas místicos para diversão.
+          Gere combinações recreativas a partir de diferentes entradas.
         </p>
       </div>
 
@@ -842,8 +842,9 @@ export default function MysticGenerator({
           border: '1px solid rgba(255,214,0,0.12)',
         }}
       >
-        ⚠️ <strong>Diversão apenas:</strong> O Gerador Místico é entretenimento.
-        Os números são gerados por algoritmos — não há base científica.
+        ⚠️ <strong>Uso recreativo:</strong> esta ferramenta não prevê
+        resultados, não usa evidência científica para escolher dezenas e não
+        aumenta suas chances de ganhar.
       </div>
 
       {/* Category selector */}
@@ -854,7 +855,7 @@ export default function MysticGenerator({
           gap: '0.4rem',
         }}
       >
-        {MYSTIC_CATEGORIES.map((cat) => (
+        {ALTERNATIVE_CATEGORIES.map((cat) => (
           <button
             key={cat.key}
             onClick={() => {
@@ -917,13 +918,13 @@ export default function MysticGenerator({
             lineHeight: 1.5,
           }}
         >
-          {MYSTIC_CATEGORIES.find((c) => c.key === selectedCategory)?.desc}
+          {ALTERNATIVE_CATEGORIES.find((c) => c.key === selectedCategory)?.desc}
         </p>
       </div>
 
       {/* ========== FORMS POR CATEGORIA ========== */}
 
-      {/* ASTROLOGIA */}
+      {/* DATA DE REFERÊNCIA */}
       {selectedCategory === 'astro' && (
         <div
           style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
@@ -975,8 +976,7 @@ export default function MysticGenerator({
             }}
           />
           <span style={{ fontSize: '0.5rem', color: 'var(--text-muted)' }}>
-            A hora é usada para calcular a posição planetária no momento do
-            nascimento.
+            A data e a hora servem apenas como entradas para variar a seleção.
           </span>
           {birthDate &&
             (() => {
@@ -1001,7 +1001,7 @@ export default function MysticGenerator({
         </div>
       )}
 
-      {/* TARÔ */}
+      {/* CARTAS SIMBÓLICAS */}
       {selectedCategory === 'tarot' && (
         <div>
           <label
@@ -1013,7 +1013,7 @@ export default function MysticGenerator({
               display: 'block',
             }}
           >
-            Selecione uma carta que &quot;chama sua atenção&quot;:
+            Selecione uma carta simbólica:
           </label>
           <div
             style={{
@@ -1106,8 +1106,8 @@ export default function MysticGenerator({
         </div>
       )}
 
-      {/* NUMEROLOGIA */}
-      {selectedCategory === 'numerologia' && (
+      {/* NOME E DATA */}
+      {selectedCategory === 'nameDate' && (
         <div
           style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
         >
@@ -1140,7 +1140,7 @@ export default function MysticGenerator({
               }}
             />
             <span style={{ fontSize: '0.5rem', color: 'var(--text-muted)' }}>
-              O nome completo revela vibrações numéricas únicas.
+              O texto informado é usado apenas para variar a combinação.
             </span>
           </div>
           <div>
@@ -1206,7 +1206,7 @@ export default function MysticGenerator({
         </div>
       )}
 
-      {/* FENG SHUI */}
+      {/* ELEMENTOS */}
       {selectedCategory === 'fenShui' && (
         <div>
           <label
@@ -1218,7 +1218,7 @@ export default function MysticGenerator({
               display: 'block',
             }}
           >
-            Escolha seu elemento vital:
+            Escolha uma categoria de elementos:
           </label>
           <div
             style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}
@@ -1278,7 +1278,7 @@ export default function MysticGenerator({
         </div>
       )}
 
-      {/* SONHO */}
+      {/* PALAVRAS-CHAVE */}
       {selectedCategory === 'sonho' && (
         <div>
           <label
@@ -1290,7 +1290,7 @@ export default function MysticGenerator({
               display: 'block',
             }}
           >
-            Descreva o que você sonhou:
+            Informe algumas palavras-chave:
           </label>
           <textarea
             value={dreamText}
@@ -1312,8 +1312,7 @@ export default function MysticGenerator({
             }}
           />
           <span style={{ fontSize: '0.5rem', color: 'var(--text-muted)' }}>
-            Quanto mais detalhes, mais únicos os números. Se vazio, usa o
-            dicionário de sonhos padrão.
+            O texto serve apenas como entrada para variar a combinação.
           </span>
           {dreamText.trim().length > 0 && (
             <div
@@ -1373,7 +1372,7 @@ export default function MysticGenerator({
           >
             A Sincronicidade é a &quot;lei do acaso significativo&quot;.
             <br />
-            Clique em gerar e o universo escolherá seus números.
+            Clique em gerar para criar uma combinação alternativa.
           </p>
         </div>
       )}
@@ -1400,8 +1399,8 @@ export default function MysticGenerator({
         }}
       >
         {revealPhase === 1
-          ? '🔮 Consultando os astros...'
-          : '🔮 Gerar Números Místicos'}
+          ? 'Gerando combinação...'
+          : 'Gerar combinação alternativa'}
       </button>
 
       {/* Mystical message */}
