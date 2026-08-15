@@ -30,6 +30,11 @@ import {
   buildBolaoText,
 } from '@/lib/lottery-exports';
 import { getSimpleBetPrice } from '@/lib/lottery-prices';
+import {
+  analyzeHistoricalWindow,
+  scoreGame,
+  type NumericHistoricalAnalysis,
+} from '@/lib/game-intelligence';
 
 let _mathMod: typeof import('../../lib/lottery-math') | null = null;
 async function loadMath() {
@@ -84,6 +89,8 @@ const SettingsPanel = lazy(() => import('../components/SettingsPanel'));
 const PaymentSection = lazy(() => import('../components/PaymentSection'));
 import VolanteGrid from '../components/VolanteGrid';
 import JsonLd from '../components/JsonLd';
+import GameScoreCard from '../components/GameScoreCard';
+import NumberIntelligencePanel from '../components/NumberIntelligencePanel';
 
 // Lightweight fallback for lazy-loaded tabs
 function TabFallback() {
@@ -538,6 +545,33 @@ export default function Home() {
 
   const config = LOTTERY_CONFIGS[activeLottery];
   const isPro = user?.role === 'pro' || user?.role === 'admin';
+  const historicalAnalysis = useMemo(() => {
+    const analysisConfig = LOTTERY_CONFIGS[activeLottery];
+    if (
+      !analysisConfig ||
+      activeLottery === 'loteca' ||
+      activeLottery === 'loteriafederal'
+    ) {
+      return null;
+    }
+    const draws = history
+      .map((draw) => ({
+        contest: draw.numero,
+        numbers: draw.listaDezenas || draw.dezenasSorteadasOrdemSorteio || [],
+      }))
+      .filter(
+        (draw) =>
+          draw.contest > 0 && draw.numbers.length === analysisConfig.drawCount
+      );
+    if (!draws.length) return null;
+    const cutoffContest = Math.max(...draws.map((draw) => draw.contest)) + 1;
+    const analysis = analyzeHistoricalWindow({
+      lottery: activeLottery as keyof typeof LOTTERY_CONFIGS,
+      draws,
+      cutoffContest,
+    });
+    return analysis.kind === 'numeric' ? analysis : null;
+  }, [activeLottery, history]);
 
   // Fetch saved games from DB
   const fetchSavedGames = async () => {
@@ -2498,6 +2532,29 @@ export default function Home() {
                                       {game.metrics.quadrantsCount} quad.
                                     </span>
                                   </div>
+                                  {historicalAnalysis && (
+                                    <div style={{ marginTop: '0.55rem' }}>
+                                      {(() => {
+                                        const score = scoreGame({
+                                          lottery:
+                                            activeLottery as NumericHistoricalAnalysis['lottery'],
+                                          numbers: game.numbers,
+                                          analysis: historicalAnalysis,
+                                        });
+                                        return (
+                                          <>
+                                            <GameScoreCard score={score} />
+                                            <NumberIntelligencePanel
+                                              selectedNumbers={game.numbers}
+                                              numberTemperatures={
+                                                historicalAnalysis.numberTemperatures
+                                              }
+                                            />
+                                          </>
+                                        );
+                                      })()}
+                                    </div>
+                                  )}
                                 </div>
                               ))}
                             </div>
