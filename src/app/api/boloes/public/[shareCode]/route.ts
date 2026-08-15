@@ -25,10 +25,13 @@ export async function GET(_request: Request, { params }: Context) {
 
   try {
     const result = await db.execute({
-      sql: `SELECT id, lottery, title, games_json, total_cost, cotas_total,
-          cotas_taken, taxa_pct, status, created_at
-        FROM boloes
-        WHERE share_code = ?
+      sql: `SELECT b.id, b.lottery, b.title, b.games_json, b.total_cost,
+          b.cotas_total, b.cotas_taken, b.taxa_pct, b.status, b.created_at
+        FROM bolao_public_access access
+        JOIN boloes b ON b.id = access.bolao_id
+        WHERE access.share_code = ?
+          AND access.is_active = true
+          AND access.revoked_at IS NULL
         LIMIT 1`,
       args: [normalizedCode],
     });
