@@ -4,6 +4,7 @@ import {
   getRecentLotteryResults,
 } from '@/lib/lottery-results';
 import { LOTTERY_SEO_LIST } from '@/lib/lottery-seo';
+import { STRATEGY_IDS } from '@/lib/strategy-catalog';
 
 const SITE_URL = 'https://www.meutrevo.com';
 const SEO_RELEASE_DATE = new Date('2026-07-31T12:00:00.000Z');
@@ -52,6 +53,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'yearly',
       priority: 0.3,
     },
+    ...STRATEGY_IDS.map((id) => ({
+      url: `${SITE_URL}/estrategias/${id}`,
+      lastModified: SEO_RELEASE_DATE,
+      changeFrequency: 'monthly' as const,
+      priority: 0.75,
+    })),
   ];
 
   const lotteryPages: MetadataRoute.Sitemap = recentByLottery.map(
