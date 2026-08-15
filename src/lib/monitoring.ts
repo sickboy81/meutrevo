@@ -1,4 +1,4 @@
-import { captureException } from '@sentry/nextjs';
+import * as Sentry from '@sentry/nextjs';
 import { logger } from '@/lib/logger';
 
 const SAFE_CONTEXT_KEYS = new Set([
@@ -33,7 +33,8 @@ export function reportServerError(
   logger.error('Erro monitorado', safeContext);
 
   if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
-    captureException(error, {
+    Sentry.logger.error('Erro monitorado', safeContext);
+    Sentry.captureException(error, {
       tags: Object.fromEntries(
         Object.entries(safeContext).filter(
           ([, value]) => typeof value === 'string'
