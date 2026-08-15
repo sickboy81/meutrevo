@@ -142,8 +142,10 @@ export default function TermsPage() {
               </p>
               <p style={{ marginTop: '0.5rem' }}>
                 Os jogos e fechamentos matemáticos gerados na plataforma servem
-                estritamente para otimização probabilística, restando ao usuário
-                a decisão de registrá-los em canais oficiais autorizados.
+                para organização, análise histórica e cobertura combinatória
+                condicional. Eles não preveem resultados nem alteram as
+                probabilidades oficiais; o usuário decide se deseja registrá-los
+                em canais oficiais autorizados.
               </p>
             </div>
 

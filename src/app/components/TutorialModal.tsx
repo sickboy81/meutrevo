@@ -31,8 +31,8 @@ export default function TutorialModal({
   const titles = [
     'Bem-vindo ao Meu Trevo!',
     '1. Resultados da Caixa',
-    '2. Geração Inteligente',
-    '3. Bolão IA de Sucesso',
+    '2. Planeje antes de gerar',
+    '3. Bolão com custo claro',
     '4. Simulador & Testador',
     '5. Análise de Tendências',
     '6. Customização & Temas',
@@ -41,8 +41,8 @@ export default function TutorialModal({
   const contents = [
     <p key="0">
       O <strong>Meu Trevo</strong> é um assistente completo para analisar,
-      simular e otimizar suas apostas lotéricas com matemática real. Vamos fazer
-      um tour de 1 minuto pelos recursos?
+      organizar jogos, acompanhar resultados e comparar critérios históricos.
+      Nenhuma ferramenta prevê sorteios. Vamos fazer um tour de 1 minuto?
     </p>,
     <p key="1">
       Na aba <strong>Resultados</strong>, acompanhe os últimos sorteios
@@ -50,15 +50,14 @@ export default function TutorialModal({
       checar resultados históricos instantaneamente!
     </p>,
     <p key="2">
-      Na aba <strong>Gerador</strong>, selecione a estratégia (Quentes,
-      Atrasadas, Equilibradas) e a IA montará seus bilhetes. Fixe ou exclua
-      dezenas direto no volante e ative regras matemáticas avançadas como evitar
-      consecutivos!
+      Em <strong>Planejar</strong>, escolha modalidade, orçamento e quantidade
+      de concursos antes de gerar. Os critérios usam dados históricos e cada
+      jogo pode ser salvo para conferência posterior.
     </p>,
     <p key="3">
       Deseja jogar em grupo? Na sub-aba <strong>Gerador Bolão</strong>, crie
-      cartões homogêneos para dispersar os números e maximize as chances de
-      cobertura total do prêmio.
+      cartões com regras claras. Confira custo total, valor por cota e condição
+      de cobertura antes de compartilhar; isso não garante premiação.
     </p>,
     <p key="4">
       Na aba <strong>Simulador</strong>, marque dezenas no volante e simule a
@@ -69,7 +68,8 @@ export default function TutorialModal({
     <p key="5">
       Na aba <strong>Estatísticas</strong>, explore gráficos SVG interativos
       neon de proporção par/ímpar, histogramas de dezenas e o gráfico de
-      tendência temporal da evolução das somas.
+      frequência, atraso e distribuição. Use como contexto descritivo, não como
+      previsão.
     </p>,
     <p key="6">
       No ícone de <strong>Configurações (⚙️)</strong> no cabeçalho, ative

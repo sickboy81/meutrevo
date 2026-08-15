@@ -89,7 +89,7 @@ export default async function LandingHome() {
                   priceCurrency: 'BRL',
                 },
                 description:
-                  'Assistente Lotérico Inteligente com desdobramentos combinatórios matemáticos e análises estatísticas em tempo real das loterias da Caixa.',
+                  'Ferramenta para acompanhar resultados, organizar jogos, planejar orçamento e consultar análises históricas das loterias da Caixa.',
               },
               {
                 '@type': 'FAQPage',
@@ -99,7 +99,7 @@ export default async function LandingHome() {
                     name: 'O Meu Trevo garante que eu vou ganhar na loteria?',
                     acceptedAnswer: {
                       '@type': 'Answer',
-                      text: 'Não. Loterias são jogos baseados em aleatoriedade pura e sorte. Nenhuma ferramenta pode prever os números que vão sair. O Meu Trevo utiliza estatística histórica real e análise combinatória para otimizar suas apostas, permitindo que você cubra mais números com menos cartões de forma matemática.',
+                      text: 'Não. Loterias dependem de aleatoriedade. O Meu Trevo organiza jogos, custos e dados históricos, mas não prevê resultados nem altera as probabilidades oficiais.',
                     },
                   },
                   {
@@ -107,7 +107,7 @@ export default async function LandingHome() {
                     name: 'Como funcionam os desdobramentos (fechamentos)?',
                     acceptedAnswer: {
                       '@type': 'Answer',
-                      text: 'O desdobramento combinatório seleciona jogos específicos dentro de um grupo de números escolhidos. Por exemplo, em vez de pagar por todas as combinações de 10 números (o que seria extremamente caro), o algoritmo seleciona um conjunto otimizado de cartões simples que garante 100% de chance de Quadra se pelo menos 4 dos sorteados estiverem no seu grupo.',
+                      text: 'O desdobramento distribui um grupo de dezenas em vários cartões. A cobertura é condicional: ela só se aplica quando a quantidade definida de dezenas sorteadas estiver dentro do grupo selecionado, sem prever o sorteio ou garantir premiação.',
                     },
                   },
                   {
@@ -427,7 +427,7 @@ export default async function LandingHome() {
                     />
                     <strong>QUINA</strong>
                     <span style={{ color: '#ffd600', fontWeight: 600 }}>
-                      Acúmulo Crítico
+                      Prêmio acumulado
                     </span>
                   </>
                 ),
@@ -503,7 +503,7 @@ export default async function LandingHome() {
                     />
                     <strong>LOTOFÁCIL</strong>
                     <span style={{ color: '#00f0ff', fontWeight: 600 }}>
-                      Atraso Crítico
+                      Atraso histórico
                     </span>
                   </>
                 ),
@@ -522,7 +522,7 @@ export default async function LandingHome() {
                     />
                     <strong>MEGA-SENA</strong>
                     <span style={{ color: 'var(--text-muted)' }}>
-                      Soma Ideal 110–180
+                      Faixa histórica de soma
                     </span>
                   </>
                 ),
@@ -803,8 +803,8 @@ export default async function LandingHome() {
               >
                 Não. Loterias são jogos baseados em aleatoriedade pura e sorte.
                 Nenhuma ferramenta pode prever os números que vão sair. O Meu
-                Trevo utiliza estatística histórica real e análise combinatória
-                para otimizar suas apostas.
+                Trevo organiza resultados, jogos, custos e critérios históricos.
+                Ele não prevê resultados nem altera as chances oficiais.
               </div>
             </div>
             <div className="faq-item">
@@ -825,8 +825,9 @@ export default async function LandingHome() {
                 }}
               >
                 O desdobramento combinatório seleciona jogos específicos dentro
-                de um grupo de números escolhidos para garantir premiações se
-                uma certa quantidade de dezenas sorteadas estiver no seu grupo.
+                de um grupo de números escolhidos. A cobertura é condicional e
+                só se aplica quando a quantidade indicada de dezenas sorteadas
+                estiver no grupo escolhido.
               </div>
             </div>
           </div>

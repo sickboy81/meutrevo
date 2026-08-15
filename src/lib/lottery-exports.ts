@@ -153,8 +153,8 @@ export function buildBolaoText(
   isPro: boolean
 ): { text: string; shareUrl: string } {
   let totalCost = 0;
-  let text = `🍀 *BOLÃO MEU TREVO - JOGOS OTIMIZADOS* 🍀\n`;
-  text += `Abaixo estão nossos jogos gerados matematicamente no Meu Trevo:\n\n`;
+  let text = `*BOLÃO MEU TREVO*\n`;
+  text += `Jogos organizados no Meu Trevo para conferência coletiva.\n\n`;
 
   selectedGames.forEach((game, idx) => {
     const cfg = LOTTERY_CONFIGS[game.lottery];
@@ -177,7 +177,7 @@ export function buildBolaoText(
   } else {
     text += `\n`;
   }
-  text += `🤖 Gerado de forma inteligente com IA. Vamos ganhar juntos!`;
+  text += `Cobertura e histórico não preveem resultados nem garantem premiação. Jogue com responsabilidade.`;
 
   return {
     text,

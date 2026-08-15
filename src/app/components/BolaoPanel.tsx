@@ -68,6 +68,15 @@ export default function BolaoPanel({
   >([]);
 
   const config = LOTTERY_CONFIGS[activeLottery as keyof typeof LOTTERY_CONFIGS];
+  const selectedCost = selectedGames.reduce((total, id) => {
+    const game = savedGames.find((saved) => saved.id === id);
+    return total + (game ? getSimpleBetPrice(game.lottery) : 0);
+  }, 0);
+  const quotaCount = Math.max(1, Number.parseInt(cotasTotal, 10) || 1);
+  const organizationFee = isPro
+    ? Math.max(0, Number.parseFloat(taxaPct) || 0)
+    : 0;
+  const bolaoTotal = selectedCost * (1 + organizationFee / 100);
 
   const handleAutoGenerate = () => {
     playSound('click');
@@ -259,7 +268,7 @@ export default function BolaoPanel({
       msg += `\n🔗 *Entre pelo link:*\nwww.meutrevo.com/bolao?c=${bolao.share_code}\n`;
     }
 
-    msg += `\n🤖 Montado no Meu Trevo — IA + Estatística`;
+    msg += `\nOrganizado no Meu Trevo com critérios históricos e custo visível.`;
     return msg;
   };
 
@@ -344,9 +353,10 @@ export default function BolaoPanel({
         Compartilhe o código
         <br />
         <br />
-        <strong style={{ color: 'white' }}>Dica:</strong> Quanto mais jogos no
-        bolão, maiores as chances. O sistema gera jogos com{' '}
-        <em>números dispersos</em> para maximizar a cobertura.
+        <strong style={{ color: 'white' }}>Planeje antes:</strong> mais jogos
+        aumentam o custo. Compare jogos, cotas e cobertura antes de criar o
+        bolão. A dispersão reduz sobreposição entre cartões, mas não prevê
+        resultados nem garante prêmio.
       </div>
 
       {/* Sub-nav */}
@@ -415,6 +425,37 @@ export default function BolaoPanel({
       {/* CREATE VIEW */}
       {subView === 'create' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div
+            aria-live="polite"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+              gap: '0.45rem',
+              padding: '0.65rem',
+              borderRadius: '8px',
+              background: 'rgba(0, 230, 118, 0.06)',
+              border: '1px solid rgba(0, 230, 118, 0.18)',
+              fontSize: '0.65rem',
+            }}
+          >
+            <span>
+              Jogos
+              <br />
+              <strong>{selectedGames.length}</strong>
+            </span>
+            <span>
+              Custo total
+              <br />
+              <strong>R$ {bolaoTotal.toFixed(2).replace('.', ',')}</strong>
+            </span>
+            <span>
+              Por cota
+              <br />
+              <strong>
+                R$ {(bolaoTotal / quotaCount).toFixed(2).replace('.', ',')}
+              </strong>
+            </span>
+          </div>
           {/* Title */}
           <div>
             <label

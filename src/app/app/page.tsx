@@ -1341,7 +1341,7 @@ export default function Home() {
                   setActiveTab('generator');
                 }}
               >
-                Gerador
+                Planejar
               </button>
               <button
                 className={`nav-item-desktop ${activeTab === 'games' ? 'active' : ''}`}
@@ -1361,7 +1361,7 @@ export default function Home() {
                   setActiveTab('plans');
                 }}
               >
-                Meu Plano
+                Plano e orçamento
               </button>
               <button
                 className={`nav-item-desktop ${activeTab === 'simulator' ? 'active' : ''}`}
@@ -1916,7 +1916,7 @@ export default function Home() {
                           <span style={{ color: 'var(--accent-color)' }}>
                             ✦
                           </span>{' '}
-                          SUGERIR JOGO IA
+                          SUGERIR JOGO COM CRITÉRIOS
                         </div>
                         <span className="contest-badge">{config.name}</span>
                       </div>
@@ -1935,7 +1935,7 @@ export default function Home() {
                         }}
                       >
                         <strong style={{ color: 'white' }}>
-                          Como funciona o Gerador IA:
+                          Como funciona o gerador:
                         </strong>{' '}
                         O sistema analisa o histórico de sorteios e gera jogos
                         que seguem padrões estatísticos (soma, primos,
@@ -1944,8 +1944,9 @@ export default function Home() {
                         <strong style={{ color: 'var(--accent-color)' }}>
                           pontuação (score)
                         </strong>{' '}
-                        de 0 a 100 - quanto maior, mais &quot;equilibrado&quot;
-                        estatisticamente.
+                        de 0 a 100. O score indica aderência aos critérios
+                        configurados; não prevê resultados nem altera as
+                        probabilidades oficiais.
                       </div>
 
                       {/* Strategy Selector */}
@@ -2612,13 +2613,11 @@ export default function Home() {
                         <br />
                         <br />
                         <strong style={{ color: 'var(--accent-color)' }}>
-                          Garantia CONDICIONAL:
+                          Cobertura combinatória condicional:
                         </strong>{' '}
-                        O fechamento garante o prêmio <em>apenas se</em> os
-                        números sorteados estiverem dentro do grupo que você
-                        escolheu. Isso <em>não</em> significa que eles vão
-                        sortear — apenas que, <em>caso sorteu-se</em>, você
-                        estaria coberto.
+                        A cobertura só se aplica <em>se</em> os números
+                        sorteados estiverem no grupo que você escolheu. Isso não
+                        prevê o resultado nem garante premiação.
                         <br />
                         <br />
                         <strong style={{ color: '#00e676' }}>Quadra:</strong> Se

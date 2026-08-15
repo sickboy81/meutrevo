@@ -24,7 +24,7 @@ const jsonLd = {
         priceCurrency: 'BRL',
       },
       description:
-        'Assistente Lotérico Inteligente com desdobramentos combinatórios matemáticos e análises estatísticas em tempo real das loterias da Caixa.',
+        'Ferramenta para acompanhar resultados, organizar jogos, planejar orçamento e consultar análises históricas das loterias da Caixa.',
     },
     {
       '@type': 'FAQPage',
@@ -34,7 +34,7 @@ const jsonLd = {
           name: 'O Meu Trevo garante que eu vou ganhar na loteria?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Não. Loterias são jogos baseados em aleatoriedade pura e sorte. Nenhuma ferramenta pode prever os números que vão sair. O Meu Trevo utiliza estatística histórica real e análise combinatória para otimizar suas apostas, permitindo que você cubra mais números com menos cartões de forma matemática.',
+            text: 'Não. Loterias dependem de aleatoriedade. O Meu Trevo organiza jogos, custos e dados históricos, mas não prevê resultados nem altera as probabilidades oficiais.',
           },
         },
         {
@@ -42,7 +42,7 @@ const jsonLd = {
           name: 'Como funcionam os desdobramentos (fechamentos)?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'O desdobramento combinatório seleciona jogos específicos dentro de um grupo de números escolhidos. Por exemplo, em vez de pagar por todas as combinações de 10 números (o que seria extremamente caro), o algoritmo seleciona um conjunto otimizado de cartões simples que garante 100% de chance de Quadra se pelo menos 4 dos sorteados estiverem no seu grupo.',
+            text: 'O desdobramento distribui um grupo de dezenas em vários cartões. A cobertura é condicional e só se aplica quando a quantidade indicada de dezenas sorteadas estiver no grupo selecionado.',
           },
         },
         {
