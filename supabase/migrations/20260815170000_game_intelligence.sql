@@ -102,6 +102,7 @@ revoke insert, delete on table public.notification_events from authenticated;
 revoke update on table public.notification_events from authenticated;
 grant select, update (read_at) on table public.notification_events to authenticated;
 
+drop function if exists public.get_public_bolao(text);
 create or replace function public.get_public_bolao(p_share_code text)
 returns table (
   lottery text,

@@ -160,4 +160,23 @@ describe('game intelligence schemas', () => {
     expect(publicBolaoFunction).toBeDefined();
     expect(publicBolaoFunction).not.toMatch(/\btitle\b/i);
   });
+
+  it('drops the legacy public bolao RPC before redefining its return table', () => {
+    const migration = readFileSync(
+      resolve(
+        process.cwd(),
+        'supabase/migrations/20260815170000_game_intelligence.sql'
+      ),
+      'utf8'
+    );
+    const legacyFunctionDrop =
+      'drop function if exists public.get_public_bolao(text);';
+    const publicBolaoDefinition =
+      'create or replace function public.get_public_bolao(p_share_code text)';
+
+    expect(migration.indexOf(legacyFunctionDrop)).toBeGreaterThanOrEqual(0);
+    expect(migration.indexOf(legacyFunctionDrop)).toBeLessThan(
+      migration.indexOf(publicBolaoDefinition)
+    );
+  });
 });
