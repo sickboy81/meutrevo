@@ -1750,7 +1750,7 @@ export default function Home() {
                 }}
               />
             )}
-            {!result ? (
+            {!result && activeTab === 'results' ? (
               resultError ? (
                 <div
                   role="alert"

@@ -15,6 +15,7 @@ type Plan = {
   lottery: string;
   budget: number;
   contests_count: number;
+  objective?: 'economy' | 'coverage' | 'balance' | 'conference';
   strategy: string;
   status: 'active' | 'paused' | 'completed' | 'cancelled';
   games_count: number;
@@ -66,6 +67,12 @@ const statusColors: Record<Plan['status'], string> = {
   paused: '#ffd600',
   completed: '#7dd3fc',
   cancelled: '#ff6b8a',
+};
+const objectiveLabels: Record<NonNullable<Plan['objective']>, string> = {
+  economy: 'Economizar',
+  coverage: 'Cobertura',
+  balance: 'Equilibrio',
+  conference: 'Conferência',
 };
 
 export default function GamePlansPanel({
@@ -667,9 +674,10 @@ export default function GamePlansPanel({
                     marginTop: 3,
                   }}
                 >
-                  {plan.lottery} · {plan.games_count} jogos ·{' '}
-                  {money.format(Number(plan.budget))} · {plan.contests_count}{' '}
-                  concurso(s)
+                  {plan.lottery} ·{' '}
+                  {objectiveLabels[plan.objective || 'balance']} ·{' '}
+                  {plan.games_count} jogos · {money.format(Number(plan.budget))}{' '}
+                  · {plan.contests_count} concurso(s)
                   {plan.next_contest
                     ? ` · próximo ${plan.next_contest}`
                     : ''} · {plan.pending_count} pendente(s)

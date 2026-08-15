@@ -188,6 +188,7 @@ export default function AuthScreen({
               <input
                 className="auth-input"
                 type="text"
+                autoComplete="name"
                 value={authName}
                 onChange={(e) => setAuthName(e.target.value)}
                 required
@@ -219,6 +220,7 @@ export default function AuthScreen({
             <input
               className="auth-input"
               type="email"
+              autoComplete={authMode === 'register' ? 'email' : 'username'}
               value={authEmail}
               onChange={(e) => setAuthEmail(e.target.value)}
               required
@@ -250,8 +252,10 @@ export default function AuthScreen({
               <input
                 className="auth-input"
                 type="text"
+                autoComplete="off"
                 value={authCpfCnpj}
                 onChange={(e) => setAuthCpfCnpj(e.target.value)}
+                required
                 placeholder="000.000.000-00"
                 style={{
                   width: '100%',
@@ -282,6 +286,11 @@ export default function AuthScreen({
                 <input
                   className="auth-input"
                   type={showPassword ? 'text' : 'password'}
+                  autoComplete={
+                    authMode === 'register'
+                      ? 'new-password'
+                      : 'current-password'
+                  }
                   value={authPassword}
                   onChange={(e) => setAuthPassword(e.target.value)}
                   required
@@ -302,6 +311,8 @@ export default function AuthScreen({
                 />
                 <button
                   type="button"
+                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  aria-pressed={showPassword}
                   onClick={() => setShowPassword(!showPassword)}
                   style={{
                     position: 'absolute',
@@ -435,6 +446,7 @@ export default function AuthScreen({
               >
                 Não tem conta?{' '}
                 <button
+                  type="button"
                   onClick={() => {
                     setAuthMode('register');
                     setAuthError(null);
@@ -453,6 +465,7 @@ export default function AuthScreen({
                 </button>
               </p>
               <button
+                type="button"
                 onClick={() => {
                   setAuthMode('recover');
                   setAuthError(null);
@@ -475,6 +488,7 @@ export default function AuthScreen({
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
               Já tem uma conta?{' '}
               <button
+                type="button"
                 onClick={() => {
                   setAuthMode('login');
                   setAuthError(null);
@@ -498,6 +512,7 @@ export default function AuthScreen({
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
               Lembrou sua senha?{' '}
               <button
+                type="button"
                 onClick={() => {
                   setAuthMode('login');
                   setAuthError(null);
