@@ -41,7 +41,12 @@ type PlanGame = {
 type Props = {
   lottery: string;
   generatedGames: GeneratedGame[];
-  onOpenGenerator: () => void;
+  onOpenGenerator: (draft: {
+    title: string;
+    budget: string;
+    contestsCount: string;
+    lottery: string;
+  }) => void;
 };
 
 const money = new Intl.NumberFormat('pt-BR', {
@@ -336,8 +341,9 @@ export default function GamePlansPanel({
           lineHeight: 1.5,
         }}
       >
-        Organize jogos por orçamento e concursos. O plano não prevê resultados
-        nem aumenta as chances reais.
+        Primeiro defina modalidade, objetivo e orçamento. Depois revise a
+        estratégia explicada, gere os jogos e só então salve o plano. O plano
+        não prevê resultados nem aumenta as chances reais.
       </p>
 
       <div
@@ -392,8 +398,9 @@ export default function GamePlansPanel({
             marginTop: 4,
           }}
         >
-          {generatedGames.length} jogo(s) gerado(s) aguardando inclusão no
-          plano.
+          Etapa 1: {generatedGames.length} jogo(s) gerado(s) aguardando inclusão
+          no plano. O orçamento e a quantidade de concursos ficam registrados
+          antes da geração.
         </div>
       </div>
 
@@ -438,9 +445,11 @@ export default function GamePlansPanel({
         <button
           type="button"
           className="theme-pill-btn"
-          onClick={onOpenGenerator}
+          onClick={() =>
+            onOpenGenerator({ title, budget, contestsCount, lottery })
+          }
         >
-          Gerar jogos
+          Etapa 2: revisar e gerar jogos
         </button>
         <button
           type="button"

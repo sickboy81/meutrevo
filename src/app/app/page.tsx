@@ -85,6 +85,9 @@ const CameraScanner = lazy(() => import('../components/CameraScanner'));
 const QuickSimulator = lazy(() => import('../components/QuickSimulator'));
 const SavedGamesPanel = lazy(() => import('../components/SavedGamesPanel'));
 const GamePlansPanel = lazy(() => import('../components/GamePlansPanel'));
+const GeneratedGamesHistory = lazy(
+  () => import('../components/GeneratedGamesHistory')
+);
 const SettingsPanel = lazy(() => import('../components/SettingsPanel'));
 const PaymentSection = lazy(() => import('../components/PaymentSection'));
 import VolanteGrid from '../components/VolanteGrid';
@@ -351,6 +354,10 @@ export default function Home() {
       games.push({ numbers: game.numbers, metrics: game.metrics });
     }
     setGeneratedGames(games);
+    void persistGeneratedHistory(
+      games.map((game) => game.numbers),
+      'smart_generator'
+    );
   };
 
   const handleGenerateWheel = async () => {
@@ -367,6 +374,7 @@ export default function Home() {
       wheelGuarantee
     );
     setWheelGeneratedGames(games);
+    void persistGeneratedHistory(games, 'closure');
   };
 
   const handleSaveGeneratedGame = async (
@@ -572,6 +580,51 @@ export default function Home() {
     });
     return analysis.kind === 'numeric' ? analysis : null;
   }, [activeLottery, history]);
+
+  const persistGeneratedHistory = async (
+    games: number[][],
+    source:
+      | 'smart_generator'
+      | 'strategy'
+      | 'closure'
+      | 'bolao'
+      | 'manual' = 'smart_generator'
+  ) => {
+    if (!user || !historicalAnalysis?.dataWindow) return;
+    const snapshot = {
+      lottery: historicalAnalysis.lottery,
+      cutoffContest: historicalAnalysis.cutoffContest,
+      analyzedAt: new Date().toISOString(),
+      dataWindow: historicalAnalysis.dataWindow,
+      numberTemperatures: historicalAnalysis.numberTemperatures,
+      disclaimer: historicalAnalysis.disclaimer,
+    };
+    await Promise.all(
+      games.map(async (numbers) => {
+        const score = scoreGame({
+          lottery: historicalAnalysis.lottery,
+          numbers,
+          analysis: historicalAnalysis,
+        });
+        try {
+          await fetchWithCsrf('/api/generated-games', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              lottery: historicalAnalysis.lottery,
+              selectedNumbers: numbers,
+              source,
+              strategyId: `${source}@v1/${intensity}`,
+              score,
+              analysisSnapshot: snapshot,
+            }),
+          });
+        } catch (error) {
+          console.warn('Generated history unavailable:', error);
+        }
+      })
+    );
+  };
 
   // Fetch saved games from DB
   const fetchSavedGames = async () => {
@@ -3149,6 +3202,7 @@ export default function Home() {
                               ),
                             },
                           ]);
+                          void persistGeneratedHistory([nums], 'strategy');
                           playSound('success');
                         }}
                         playSound={playSound}
@@ -3223,6 +3277,14 @@ export default function Home() {
                         bolaoShareUrl={bolaoShareUrl}
                       />
                     </Suspense>
+                    {user && (
+                      <Suspense fallback={<TabFallback />}>
+                        <GeneratedGamesHistory
+                          key={activeLottery}
+                          lottery={activeLottery}
+                        />
+                      </Suspense>
+                    )}
                   </div>
                 )}
 
@@ -3231,7 +3293,16 @@ export default function Home() {
                     <GamePlansPanel
                       lottery={activeLottery}
                       generatedGames={generatedGames}
-                      onOpenGenerator={() => setActiveTab('generator')}
+                      onOpenGenerator={(draft) => {
+                        sessionStorage.setItem(
+                          'meu-trevo-plan-draft',
+                          JSON.stringify({ ...draft, savedAt: Date.now() })
+                        );
+                        setActiveTab('generator');
+                        setSaveFeedback(
+                          'Orçamento registrado. Revise a estratégia antes de gerar.'
+                        );
+                      }}
                     />
                   </Suspense>
                 )}
