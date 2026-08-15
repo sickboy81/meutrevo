@@ -76,7 +76,7 @@ export default async function MegaSenaLanding() {
                   },
                   {
                     '@type': 'Question',
-                    name: 'Qual é a soma ideal para jogos da Mega-Sena?',
+                    name: 'Qual é a faixa histórica de soma da Mega-Sena?',
                     acceptedAnswer: {
                       '@type': 'Answer',
                       text: 'Estatisticamente, a maioria dos sorteios da Mega-Sena tem a soma total de suas 6 dezenas entre 120 e 240. Gerar cartões dentro dessa faixa de soma elimina jogos altamente improváveis, como sequências consecutivas puras.',

@@ -442,7 +442,7 @@ export default function LandingPage({
                 />
                 <strong>LOTOFÁCIL</strong>
                 <span style={{ color: '#00f0ff', fontWeight: 600 }}>
-                  Atraso Crítico
+                  Atraso observado
                 </span>
               </div>
               <div
@@ -458,7 +458,7 @@ export default function LandingPage({
                 />
                 <strong>MEGA-SENA</strong>
                 <span style={{ color: 'var(--text-muted)' }}>
-                  Soma Ideal 110–180
+                  Faixa histórica 110–180
                 </span>
               </div>
             </>
@@ -659,7 +659,7 @@ export default function LandingPage({
                   fontWeight: 'bold',
                 }}
               >
-                🎲 Completar com IA
+                🎲 Completar com critérios históricos
               </button>
               <button
                 className="btn-action"
@@ -1206,7 +1206,7 @@ export default function LandingPage({
               )}
               <ul className="price-features-list">
                 <li className="price-feature-item checked">
-                  <strong>Desdobramentos otimizados para bolões</strong>
+                  <strong>Desdobramentos com cobertura condicional</strong>
                 </li>
                 <li className="price-feature-item checked">
                   Gerador avançado com filtros de soma, repetição e atraso
@@ -1253,11 +1253,11 @@ export default function LandingPage({
           {[
             {
               q: 'O Meu Trevo garante que eu vou ganhar na loteria?',
-              a: 'Não. Loterias são jogos baseados em aleatoriedade pura e sorte. Nenhuma ferramenta pode prever os números que vão sair. O Meu Trevo utiliza estatística histórica real e análise combinatória para otimizar suas apostas, permitindo que você cubra mais números com menos cartões de forma matemática.',
+              a: 'Não. Loterias são jogos baseados em aleatoriedade. O Meu Trevo organiza dados históricos, custos e combinações para você tomar decisões com mais transparência, sem prever resultados.',
             },
             {
               q: 'Como funcionam os desdobramentos (fechamentos)?',
-              a: 'O desdobramento combinatório seleciona jogos específicos dentro de um grupo de números escolhidos. Por exemplo, em vez de pagar por todas as combinações de 10 números (o que seria extremamente caro), o algoritmo seleciona um conjunto otimizado de cartões simples que garante 100% de chance de Quadra se pelo menos 4 dos sorteados estiverem no seu grupo.',
+              a: 'O desdobramento combinatório distribui um grupo de números em cartões simples. A cobertura é condicional: só se aplica quando a quantidade definida de dezenas sorteadas estiver dentro do grupo escolhido; não é previsão nem garantia de premiação.',
             },
             {
               q: 'Como funciona a assinatura PRO e a ativação?',

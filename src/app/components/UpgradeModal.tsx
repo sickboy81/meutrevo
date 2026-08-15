@@ -82,8 +82,8 @@ export default function UpgradeModal({
               <div className="benefit-item">
                 <span className="benefit-icon">✓</span>
                 <span>
-                  <strong>Desdobramentos Otimizados:</strong> Wheeling avançado
-                  com garantias de Quina e Quadra.
+                  <strong>Desdobramentos com cobertura condicional:</strong>{' '}
+                  Wheeling avançado com regras e limites transparentes.
                 </span>
               </div>
               <div className="benefit-item">

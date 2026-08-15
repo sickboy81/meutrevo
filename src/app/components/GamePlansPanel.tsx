@@ -46,6 +46,8 @@ type Props = {
     budget: string;
     contestsCount: string;
     lottery: string;
+    objective: 'economy' | 'coverage' | 'balance' | 'conference';
+    strategy: 'balanced' | 'aggressive' | 'delayed' | 'random';
   }) => void;
 };
 
@@ -78,6 +80,12 @@ export default function GamePlansPanel({
   const [title, setTitle] = useState('Meu plano de jogo');
   const [budget, setBudget] = useState('');
   const [contestsCount, setContestsCount] = useState('1');
+  const [objective, setObjective] = useState<
+    'economy' | 'coverage' | 'balance' | 'conference'
+  >('balance');
+  const [strategy, setStrategy] = useState<
+    'balanced' | 'aggressive' | 'delayed' | 'random'
+  >('balanced');
   const [status, setStatus] = useState('');
   const [loadingPlans, setLoadingPlans] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -164,7 +172,8 @@ export default function GamePlansPanel({
           lottery,
           budget: numericBudget,
           contestsCount: contests,
-          strategy: 'balanced',
+          objective,
+          strategy,
           games: generatedGames.map((game) => game.numbers),
         }),
       });
@@ -380,6 +389,34 @@ export default function GamePlansPanel({
             max="100"
           />
         </label>
+        <label>
+          Objetivo
+          <select
+            value={objective}
+            onChange={(event) =>
+              setObjective(event.target.value as typeof objective)
+            }
+          >
+            <option value="balance">Equilibrar critérios</option>
+            <option value="economy">Economizar</option>
+            <option value="coverage">Ampliar cobertura</option>
+            <option value="conference">Conferir histórico</option>
+          </select>
+        </label>
+        <label>
+          Estratégia
+          <select
+            value={strategy}
+            onChange={(event) =>
+              setStrategy(event.target.value as typeof strategy)
+            }
+          >
+            <option value="balanced">Equilibrada</option>
+            <option value="aggressive">Mais variação</option>
+            <option value="delayed">Priorizar atraso histórico</option>
+            <option value="random">Aleatória para comparação</option>
+          </select>
+        </label>
       </div>
 
       <div
@@ -446,7 +483,14 @@ export default function GamePlansPanel({
           type="button"
           className="theme-pill-btn"
           onClick={() =>
-            onOpenGenerator({ title, budget, contestsCount, lottery })
+            onOpenGenerator({
+              title,
+              budget,
+              contestsCount,
+              lottery,
+              objective,
+              strategy,
+            })
           }
         >
           Etapa 2: revisar e gerar jogos

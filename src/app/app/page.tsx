@@ -306,7 +306,7 @@ export default function Home() {
     );
     setLandingQuickNums(game.numbers);
     setLandingQuickResult(
-      'Números gerados pela nossa IA! Clique em "Testar Jogo" para conferir contra o último concurso.'
+      'Jogo gerado com critérios básicos. Clique em "Testar Jogo" para conferir contra o último concurso.'
     );
   };
 
@@ -515,6 +515,14 @@ export default function Home() {
     'balanced' | 'aggressive' | 'surpresa' | 'delayed'
   >('balanced');
   const [gameQuantity, setGameQuantity] = useState<number>(1);
+  const [planDraft, setPlanDraft] = useState<{
+    title: string;
+    budget: string;
+    contestsCount: string;
+    lottery: string;
+    objective: 'economy' | 'coverage' | 'balance' | 'conference';
+    strategy: 'balanced' | 'aggressive' | 'delayed' | 'random';
+  } | null>(null);
 
   // Advanced filters map: number -> 'fixed' | 'excluded' | 'none'
   const [filtersMap, setFiltersMap] = useState<
@@ -1992,6 +2000,20 @@ export default function Home() {
                       </button>
                     </div>
 
+                    <div
+                      style={{
+                        margin: '0.55rem 0 0.8rem',
+                        fontSize: '0.72rem',
+                      }}
+                    >
+                      <Link
+                        href={`/estrategias/${activeLottery}`}
+                        style={{ color: 'var(--accent-color)' }}
+                      >
+                        Ver metodologia e limites desta modalidade
+                      </Link>
+                    </div>
+
                     {/* SUB-TAB: SMART GENERATOR */}
                     <div
                       style={{
@@ -2007,6 +2029,34 @@ export default function Home() {
                         </div>
                         <span className="contest-badge">{config.name}</span>
                       </div>
+
+                      {planDraft && planDraft.lottery === activeLottery && (
+                        <div
+                          role="status"
+                          style={{
+                            marginBottom: '0.75rem',
+                            padding: '0.65rem',
+                            border: '1px solid rgba(0,240,255,0.2)',
+                            borderRadius: 8,
+                            color: 'var(--text-muted)',
+                            fontSize: '0.72rem',
+                          }}
+                        >
+                          <strong style={{ color: 'var(--accent-color)' }}>
+                            Plano: {planDraft.title}
+                          </strong>{' '}
+                          · objetivo:{' '}
+                          {planDraft.objective === 'economy'
+                            ? 'economizar'
+                            : planDraft.objective === 'coverage'
+                              ? 'ampliar cobertura'
+                              : planDraft.objective === 'conference'
+                                ? 'conferir histórico'
+                                : 'equilibrar critérios'}{' '}
+                          · orçamento: {planDraft.budget || 'não informado'} ·{' '}
+                          {planDraft.contestsCount} concurso(s)
+                        </div>
+                      )}
 
                       {/* Explanation */}
                       <div
@@ -2403,7 +2453,7 @@ export default function Home() {
                         >
                           Gerar{' '}
                           {gameQuantity > 1 ? `${gameQuantity} Jogos` : 'Jogo'}{' '}
-                          com IA
+                          com critérios históricos
                         </button>
 
                         {/* Generated Games Display */}
@@ -2532,23 +2582,13 @@ export default function Home() {
                                         fontSize: '0.5rem',
                                         padding: '0.1rem 0.3rem',
                                         borderRadius: '3px',
-                                        background:
-                                          game.metrics.score >= 85
-                                            ? 'rgba(0,230,118,0.12)'
-                                            : game.metrics.score >= 65
-                                              ? 'rgba(255,214,0,0.12)'
-                                              : 'rgba(255,68,102,0.12)',
-                                        color:
-                                          game.metrics.score >= 85
-                                            ? '#00e676'
-                                            : game.metrics.score >= 65
-                                              ? '#ffd600'
-                                              : '#ff4466',
+                                        background: 'rgba(255,255,255,0.06)',
+                                        color: 'var(--text-muted)',
                                         fontWeight: 700,
                                         fontFamily: 'var(--font-numbers)',
                                       }}
                                     >
-                                      Score: {game.metrics.score}
+                                      Métricas descritivas
                                     </span>
                                     <span
                                       style={{
@@ -2656,6 +2696,9 @@ export default function Home() {
                         <LotofacilStrategyPanel
                           history={history}
                           onSaveGame={handleSaveGeneratedGame}
+                          onGeneratedGame={(games) =>
+                            void persistGeneratedHistory(games, 'strategy')
+                          }
                         />
                       </Suspense>
                     </div>
@@ -2676,6 +2719,9 @@ export default function Home() {
                           history={history}
                           config={config}
                           onSaveGame={handleSaveGeneratedGame}
+                          onGeneratedGame={(games) =>
+                            void persistGeneratedHistory(games, 'strategy')
+                          }
                         />
                       </Suspense>
                     </div>
@@ -3282,6 +3328,13 @@ export default function Home() {
                         <GeneratedGamesHistory
                           key={activeLottery}
                           lottery={activeLottery}
+                          onRegenerate={() => {
+                            setActiveTab('generator');
+                            setGenSubTab('smart');
+                            setSaveFeedback(
+                              'Contexto carregado. Revise os critérios e gere um novo jogo.'
+                            );
+                          }}
                         />
                       </Suspense>
                     )}
@@ -3294,6 +3347,13 @@ export default function Home() {
                       lottery={activeLottery}
                       generatedGames={generatedGames}
                       onOpenGenerator={(draft) => {
+                        setPlanDraft(draft);
+                        setActiveLottery(draft.lottery);
+                        setIntensity(
+                          draft.strategy === 'random'
+                            ? 'balanced'
+                            : draft.strategy
+                        );
                         sessionStorage.setItem(
                           'meu-trevo-plan-draft',
                           JSON.stringify({ ...draft, savedAt: Date.now() })

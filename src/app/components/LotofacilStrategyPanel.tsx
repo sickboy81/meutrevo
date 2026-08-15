@@ -12,6 +12,7 @@ import {
 type Props = {
   history: LotteryResult[];
   onSaveGame: (numbers: number[]) => void;
+  onGeneratedGame?: (games: number[][]) => void;
 };
 
 const hits = [11, 12, 13, 14, 15] as const;
@@ -27,7 +28,11 @@ function formatAverage(value: number) {
   });
 }
 
-export default function LotofacilStrategyPanel({ history, onSaveGame }: Props) {
+export default function LotofacilStrategyPanel({
+  history,
+  onSaveGame,
+  onGeneratedGame,
+}: Props) {
   const [strategy, setStrategy] = useState<LotofacilStrategyResult | null>(
     null
   );
@@ -45,9 +50,11 @@ export default function LotofacilStrategyPanel({ history, onSaveGame }: Props) {
   const generate = () => {
     setGenerating(true);
     window.setTimeout(() => {
-      startTransition(() =>
-        setStrategy(generateLotofacilStrategy(usableDraws))
-      );
+      startTransition(() => {
+        const result = generateLotofacilStrategy(usableDraws);
+        setStrategy(result);
+        if (result) onGeneratedGame?.(result.games.map((game) => game.numbers));
+      });
       setGenerating(false);
     }, 0);
   };

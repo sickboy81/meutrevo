@@ -32,7 +32,7 @@ const props: LoteriaPageProps = {
         'A Dupla Sena realiza dois sorteios por concurso. Você pode ganhar acertando 3, 4, 5 ou 6 números em qualquer um dos dois sorteios. Isso dobra suas chances comparado a loterias de sorteio único.',
     },
     {
-      question: 'Qual a soma ideal para a Dupla Sena?',
+      question: 'Qual a faixa histórica de soma para a Dupla Sena?',
       answer:
         'Estatisticamente, a soma das 6 dezenas sorteadas na Dupla Sena fica entre 100 e 200 na maioria dos concursos.',
     },

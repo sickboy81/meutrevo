@@ -203,7 +203,7 @@ const adapted: Record<string, Omit<StrategyCatalogEntry, 'id' | 'name'>> = {
     ],
     notAnalyzed: [
       'Numero garantido',
-      'Soma ideal',
+      'Soma que garanta resultado',
       'Aumento de chance por estar atrasado',
     ],
     method: [

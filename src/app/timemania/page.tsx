@@ -32,7 +32,7 @@ const props: LoteriaPageProps = {
         'Na Timemania são sorteados 10 números dentre 80 disponíveis. Você escolhe de 7 a 10 números e também um Time do Coração. Ganha acertando 3, 4, 5, 6 ou 7 números.',
     },
     {
-      question: 'Qual a soma ideal na Timemania?',
+      question: 'Qual a faixa histórica de soma na Timemania?',
       answer:
         'A soma das 10 dezenas sorteadas geralmente fica entre 320 e 480.',
     },

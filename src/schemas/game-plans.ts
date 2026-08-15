@@ -8,6 +8,9 @@ export const createGamePlanSchema = z
     lottery: z.enum(LOTTERY_IDS),
     budget: z.number().min(0).max(1_000_000),
     contestsCount: z.number().int().min(1).max(100),
+    objective: z
+      .enum(['economy', 'coverage', 'balance', 'conference'])
+      .default('balance'),
     strategy: z
       .enum(['balanced', 'aggressive', 'delayed', 'random'])
       .default('balanced'),

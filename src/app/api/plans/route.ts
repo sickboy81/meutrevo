@@ -39,8 +39,15 @@ export async function POST(request: Request) {
       );
     }
 
-    const { title, lottery, budget, contestsCount, strategy, games } =
-      parsed.data;
+    const {
+      title,
+      lottery,
+      budget,
+      contestsCount,
+      objective,
+      strategy,
+      games,
+    } = parsed.data;
     const minimumBudget = calculateGamePlanCost(
       lottery,
       games.length,
@@ -69,8 +76,8 @@ export async function POST(request: Request) {
     const queries = [
       {
         sql: `INSERT INTO game_plans
-          (id, user_id, title, lottery, budget, contests_count, strategy)
-          VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          (id, user_id, title, lottery, budget, contests_count, objective, strategy)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         args: [
           planId,
           user.id,
@@ -78,6 +85,7 @@ export async function POST(request: Request) {
           lottery,
           budget,
           contestsCount,
+          objective,
           strategy,
         ],
       },

@@ -236,3 +236,27 @@ export async function GET(request: Request) {
     return internalServerError('Generated game list error:', error);
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const { user, response } = await requireAuthenticatedUser();
+    if (response || !user) return response;
+    const id = new URL(request.url).searchParams.get('id');
+    if (!id || id.length > 120) {
+      return invalidDataResponse({ fieldErrors: { id: ['ID invalido'] } });
+    }
+    const result = await db.execute({
+      sql: 'DELETE FROM generated_games WHERE id = ? AND user_id = ?',
+      args: [id, user.id],
+    });
+    if (!result.rowsAffected) {
+      return NextResponse.json(
+        { error: 'Registro não encontrado.' },
+        { status: 404 }
+      );
+    }
+    return NextResponse.json({ success: true });
+  } catch (error: unknown) {
+    return internalServerError('Generated game delete error:', error);
+  }
+}

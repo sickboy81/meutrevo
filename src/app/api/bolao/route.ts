@@ -14,32 +14,14 @@ export async function GET(req: Request) {
   const shareCode = searchParams.get('code');
 
   try {
-    // Get by share code (public)
     if (shareCode) {
-      const result = await db.execute({
-        sql: `SELECT b.*, u.name as creator_name FROM boloes b
-              JOIN users u ON b.creator_id = u.id
-              WHERE b.share_code = ? LIMIT 1`,
-        args: [shareCode],
-      });
-
-      if (result.rows.length === 0) {
-        return NextResponse.json(
-          { error: 'Bolão não encontrado' },
-          { status: 404 }
-        );
-      }
-
-      const bolao = result.rows[0];
-      const participants = await db.execute({
-        sql: `SELECT * FROM bolao_participants WHERE bolao_id = ? ORDER BY cota_num`,
-        args: [bolao.id],
-      });
-
-      return NextResponse.json({
-        bolao: { ...bolao, games: JSON.parse(bolao.games_json as string) },
-        participants: participants.rows,
-      });
+      return NextResponse.json(
+        {
+          error:
+            'Esta rota de compartilhamento foi descontinuada. Use o link público do bolão.',
+        },
+        { status: 410 }
+      );
     }
 
     // List user's bolões

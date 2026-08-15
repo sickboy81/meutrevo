@@ -14,6 +14,7 @@ type Props = {
   history: LotteryResult[];
   config: LotteryConfig;
   onSaveGame: (numbers: number[]) => void;
+  onGeneratedGame?: (games: number[][]) => void;
 };
 
 function numbersText(numbers: number[]) {
@@ -31,6 +32,7 @@ export default function NumericStrategyPanel({
   history,
   config,
   onSaveGame,
+  onGeneratedGame,
 }: Props) {
   const [strategy, setStrategy] = useState<NumericStrategyResult | null>(null);
   const [backtest, setBacktest] = useState<NumericBacktestResult | null>(null);
@@ -44,9 +46,11 @@ export default function NumericStrategyPanel({
   const runGeneration = () => {
     setBusy('generate');
     window.setTimeout(() => {
-      startTransition(() =>
-        setStrategy(generateNumericStrategy(usableHistory, config))
-      );
+      startTransition(() => {
+        const result = generateNumericStrategy(usableHistory, config);
+        setStrategy(result);
+        if (result) onGeneratedGame?.(result.games.map((game) => game.numbers));
+      });
       setBusy(null);
     }, 0);
   };

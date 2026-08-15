@@ -32,7 +32,7 @@ const props: LoteriaPageProps = {
         "O Dia de Sorte sorteia 7 números dentre 31 disponíveis. Você pode ganhar acertando 4, 5, 6 ou 7 números. Além disso, há o sorteio de um 'Mês da Sorte' que pode premiar você.",
     },
     {
-      question: 'Qual a soma ideal no Dia de Sorte?',
+      question: 'Qual a faixa histórica de soma no Dia de Sorte?',
       answer:
         'A maioria dos sorteios tem soma total das 7 dezenas entre 80 e 145.',
     },
@@ -46,7 +46,7 @@ const props: LoteriaPageProps = {
     },
     {
       icon: '⚡',
-      title: 'Soma Ideal',
+      title: 'Faixa histórica de soma',
       description:
         'Mantenha a soma das suas dezenas entre 80 e 145 para jogos mais alinhados com a média histórica.',
     },

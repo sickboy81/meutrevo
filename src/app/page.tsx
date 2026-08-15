@@ -484,7 +484,7 @@ export default async function LandingHome() {
                     />
                     <strong>QUINA</strong>
                     <span style={{ color: '#ffd600', fontWeight: 600 }}>
-                      Frequência Alta
+                      Frequência histórica
                     </span>
                   </>
                 ),
@@ -915,9 +915,8 @@ export default async function LandingHome() {
                 lineHeight: 1.6,
               }}
             >
-              Inteligência estatística, combinatória matemática avançada e
-              análise histórica em tempo real para otimizar seus jogos de
-              loteria de forma inteligente.
+              Dados históricos, combinações transparentes e controle de custo
+              para organizar seus jogos de loteria com clareza.
             </p>
           </div>
           <div style={{ display: 'flex', gap: '4rem', flexWrap: 'wrap' }}>
