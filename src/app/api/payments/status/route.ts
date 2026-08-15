@@ -4,6 +4,7 @@ import {
   internalServerError,
   requireAuthenticatedUser,
 } from '../../../../lib/api-auth';
+import { reportServerError } from '@/lib/monitoring';
 
 export async function GET(request: Request) {
   try {
@@ -86,6 +87,14 @@ export async function GET(request: Request) {
     const result = await pixgoResponse.json();
 
     if (!pixgoResponse.ok || !result.success) {
+      reportServerError(
+        new Error(result.message || 'PixGo status check failed'),
+        {
+          provider: 'pixgo',
+          operation: 'status',
+          statusCode: pixgoResponse.status,
+        }
+      );
       return NextResponse.json(
         {
           error: result.message || 'Erro ao consultar status no PixGo',
@@ -110,6 +119,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(result);
   } catch (err: unknown) {
+    reportServerError(err, { operation: 'status' });
     return internalServerError('Status check error:', err);
   }
 }

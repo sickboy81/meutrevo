@@ -115,7 +115,7 @@ export default async function LandingHome() {
                     name: 'Como funciona a assinatura PRO e a ativação?',
                     acceptedAnswer: {
                       '@type': 'Answer',
-                      text: 'A ativação é 100% automatizada. Ao clicar em Assinar PRO, nossa API gera um QR Code Pix dinâmico. Assim que você realiza o pagamento no aplicativo do seu banco, o sistema reconhece a liquidação em segundos e libera a sua conta imediatamente.',
+                      text: 'A ativação é automatizada. Ao clicar em Assinar PRO, você escolhe Pix ou Stripe. No Pix, nossa API gera um QR Code dinâmico; no Stripe, o pagamento é processado pelo checkout seguro. Após a confirmação, o sistema libera os recursos PRO na sua conta.',
                     },
                   },
                   {
@@ -265,6 +265,8 @@ export default async function LandingHome() {
             <p className="landing-subtitle">
               Consulte concursos da Caixa, teste suas dezenas antes de apostar e
               gere combinações com filtros de soma, atraso, par/ímpar e custo.
+              Organize seus jogos, use temas e confira apostas por câmera ou QR
+              Code dentro do app.
             </p>
 
             <div
@@ -278,7 +280,7 @@ export default async function LandingHome() {
                 <strong>Simulação</strong> histórico recente
               </span>
               <span>
-                <strong>Pix</strong> Pro imediato
+                <strong>Pix ou Stripe</strong> Pro automatizado
               </span>
             </div>
 
@@ -734,6 +736,9 @@ export default async function LandingHome() {
                 <ul className="price-features-list">
                   <li className="price-feature-item checked">
                     <strong>Desdobramentos otimizados para bolões</strong>
+                  </li>
+                  <li className="price-feature-item checked">
+                    Gerador por temas, scanner OCR e QR Code para compartilhar
                   </li>
                   <li className="price-feature-item checked">
                     Gerador avançado com filtros de soma, repetição e atraso

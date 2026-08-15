@@ -5,6 +5,7 @@ import { internalServerError } from '@/lib/api-auth';
 import { claimOneTimeToken } from '@/lib/rate-limit';
 import { getStripe } from '@/lib/stripe';
 import Stripe from 'stripe';
+import { reportServerError } from '@/lib/monitoring';
 
 async function grantProAccess(params: {
   userId?: string | null;
@@ -201,6 +202,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ received: true });
   } catch (err: unknown) {
+    reportServerError(err, { provider: 'stripe', operation: 'webhook' });
     return internalServerError('Stripe webhook processing error:', err);
   }
 }

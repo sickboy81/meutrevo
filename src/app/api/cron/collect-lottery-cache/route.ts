@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { fetchOfficialLotteryResult } from '@/lib/caixa';
 import { saveToCache } from '@/lib/lottery-cache';
 import { LOTTERY_CONFIGS } from '@/lib/lottery-math';
+import { checkScheduledGames } from '@/lib/game-schedule-service';
+import { reportServerError } from '@/lib/monitoring';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -23,6 +25,10 @@ export async function GET(request: Request) {
       try {
         const result = await fetchOfficialLotteryResult(lottery);
         if (!result?.numero) {
+          reportServerError(new Error('Resultado oficial indisponível'), {
+            operation: 'collect_lottery',
+            lottery,
+          });
           return { lottery, status: 'error', reason: 'resultado indisponível' };
         }
 
@@ -32,8 +38,22 @@ export async function GET(request: Request) {
           result.dataApuracao || '',
           result
         );
-        return { lottery, status: 'updated', contest: result.numero };
+        const schedules = await checkScheduledGames(
+          lottery,
+          result.numero,
+          result as unknown as import('@/app/types').LotteryResult
+        );
+        return {
+          lottery,
+          status: 'updated',
+          contest: result.numero,
+          schedulesChecked: schedules.checked,
+        };
       } catch (error) {
+        reportServerError(error, {
+          operation: 'collect_lottery',
+          lottery,
+        });
         return {
           lottery,
           status: 'error',

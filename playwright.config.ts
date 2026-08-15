@@ -11,7 +11,12 @@ const config: PlaywrightTestConfig = {
   },
   webServer: {
     command:
-      'cross-env PIXGO_API_KEY=pk_placeholder_e2e PIXGO_WEBHOOK_SECRET=whsec_placeholder_e2e PORT=3001 npm run start',
+      'cross-env E2E_TEST_MODE=1 PIXGO_API_KEY=pk_placeholder_e2e PIXGO_WEBHOOK_SECRET=whsec_placeholder_e2e PORT=3001 npm run start',
+    env: {
+      E2E_TEST_MODE: '1',
+      PIXGO_API_KEY: 'pk_placeholder_e2e',
+      PIXGO_WEBHOOK_SECRET: 'whsec_placeholder_e2e',
+    },
     port: 3001,
     reuseExistingServer: false,
     timeout: 120000,

@@ -817,7 +817,7 @@ export default function MysticGenerator({
             margin: 0,
           }}
         >
-          <span>✦</span> GERADOR ALTERNATIVO
+          GERADOR POR TEMAS
         </h3>
         <p
           style={{

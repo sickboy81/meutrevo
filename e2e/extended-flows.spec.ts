@@ -34,10 +34,24 @@ async function createSessionUser(label: string): Promise<SessionUser> {
     });
     expect(registerResponse.status()).toBe(200);
 
+    // O cadastro pode não devolver sessão mesmo com confirmação desativada;
+    // o login explícito valida o fluxo real e garante os cookies para os testes seguintes.
+    const preLoginState = await context.storageState();
+    const csrfCookie = preLoginState.cookies.find(
+      (cookie) => cookie.name === 'csrf_token'
+    );
+    const loginResponse = await context.post('/api/auth/login', {
+      headers: csrfCookie?.value
+        ? { 'x-csrf-token': csrfCookie.value }
+        : undefined,
+      data: { email, password: 'Test123456' },
+    });
+    expect(loginResponse.status()).toBe(200);
+
     const registerData = await registerResponse.json();
     const storageState = await context.storageState();
     const token = storageState.cookies.find(
-      (cookie) => cookie.name === 'token'
+      (cookie) => cookie.name === 'sb-access-token'
     );
     const csrf = storageState.cookies.find(
       (cookie) => cookie.name === 'csrf_token'
@@ -47,7 +61,7 @@ async function createSessionUser(label: string): Promise<SessionUser> {
     expect(csrf?.value).toBeTruthy();
 
     const csrfToken = csrf!.value;
-    const cookieHeader = `token=${token!.value}; csrf_token=${csrfToken}`;
+    const cookieHeader = `sb-access-token=${token!.value}; csrf_token=${csrfToken}`;
     return {
       email,
       userId: registerData.user.id,
@@ -193,7 +207,8 @@ test('fluxo funcional completo cobre rotas autenticadas, bolao, push, recovery, 
   expect(checkoutData.data.payment_id).toContain('mock_dep_');
 
   const paymentStatus = await request.get(
-    `/api/payments/status?id=${checkoutData.data.payment_id}&confirm=true`
+    `/api/payments/status?id=${checkoutData.data.payment_id}&confirm=true`,
+    { headers: user.authHeaders }
   );
   expect(paymentStatus.status()).toBe(200);
 

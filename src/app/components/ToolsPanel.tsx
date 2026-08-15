@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { subscribeToPush, unsubscribeFromPush } from '@/lib/push';
 
 interface Props {
   playSound: (type: 'click' | 'success' | 'delete') => void;
@@ -38,6 +39,15 @@ export default function ToolsPanel({ playSound }: Props) {
     }
 
     const newState = !notifEnabled;
+    const subscription = newState
+      ? await subscribeToPush()
+      : await unsubscribeFromPush();
+    if (newState && !subscription) {
+      setBackupMsg(
+        'Não foi possível ativar as notificações neste dispositivo.'
+      );
+      return;
+    }
     setNotifEnabled(newState);
     localStorage.setItem('meu-trevo-notif-enabled', String(newState));
 
@@ -45,6 +55,16 @@ export default function ToolsPanel({ playSound }: Props) {
       new Notification('Meu Trevo 🍀', {
         body: 'Notificações ativadas! Você será avisado quando saírem resultados.',
         icon: '/trevo.png',
+      });
+      await fetch('/api/notifications/preferences', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lotteryIds: notifLotteries,
+          resultAvailable: true,
+          gameChecked: true,
+          prizeFound: true,
+        }),
       });
     }
     setBackupMsg(

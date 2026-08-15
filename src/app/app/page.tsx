@@ -79,6 +79,7 @@ const ExportImportModal = lazy(() => import('../components/ExportImportModal'));
 const CameraScanner = lazy(() => import('../components/CameraScanner'));
 const QuickSimulator = lazy(() => import('../components/QuickSimulator'));
 const SavedGamesPanel = lazy(() => import('../components/SavedGamesPanel'));
+const GamePlansPanel = lazy(() => import('../components/GamePlansPanel'));
 const SettingsPanel = lazy(() => import('../components/SettingsPanel'));
 const PaymentSection = lazy(() => import('../components/PaymentSection'));
 import VolanteGrid from '../components/VolanteGrid';
@@ -106,6 +107,7 @@ type ActiveTab =
   | 'results'
   | 'generator'
   | 'games'
+  | 'plans'
   | 'simulator'
   | 'stats'
   | 'profile'
@@ -173,6 +175,7 @@ export default function Home() {
       'results',
       'generator',
       'games',
+      'plans',
       'simulator',
       'stats',
       'profile',
@@ -479,6 +482,19 @@ export default function Home() {
     window.location.assign('/login?next=/app');
   };
 
+  const setEmailAlertsPersisted = async (enabled: boolean) => {
+    setEmailAlerts(enabled);
+    try {
+      await fetchWithCsrf('/api/notifications/preferences', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emailEnabled: enabled }),
+      });
+    } catch {
+      setEmailAlerts(!enabled);
+    }
+  };
+
   // --- GERADOR INTELIGENTE STATES ---
   const [intensity, setIntensity] = useState<
     'balanced' | 'aggressive' | 'surpresa' | 'delayed'
@@ -702,6 +718,13 @@ export default function Home() {
           setUser(data.user);
           setShowInRanking(data.user?.show_in_ranking !== false);
           fetchSavedGames();
+          fetchWithCsrf('/api/notifications/preferences')
+            .then((response) => (response.ok ? response.json() : null))
+            .then((data) => {
+              if (data?.preferences)
+                setEmailAlerts(Boolean(data.preferences.email_enabled));
+            })
+            .catch(() => {});
         }
 
         // Config
@@ -1331,6 +1354,16 @@ export default function Home() {
                 Meus Jogos
               </button>
               <button
+                className={`nav-item-desktop ${activeTab === 'plans' ? 'active' : ''}`}
+                aria-current={activeTab === 'plans' ? 'page' : undefined}
+                onClick={() => {
+                  playSound('click');
+                  setActiveTab('plans');
+                }}
+              >
+                Meu Plano
+              </button>
+              <button
                 className={`nav-item-desktop ${activeTab === 'simulator' ? 'active' : ''}`}
                 aria-current={activeTab === 'simulator' ? 'page' : undefined}
                 onClick={() => {
@@ -1473,7 +1506,7 @@ export default function Home() {
                   showInRanking={showInRanking}
                   onSetShowInRanking={setShowInRanking}
                   emailAlerts={emailAlerts}
-                  onSetEmailAlerts={setEmailAlerts}
+                  onSetEmailAlerts={setEmailAlertsPersisted}
                   enableSounds={enableSounds}
                   onSetEnableSounds={setEnableSounds}
                   theme={theme}
@@ -1769,7 +1802,7 @@ export default function Home() {
                         maxWidth: '420px',
                       }}
                     >
-                      O gerador Smart, desdobramentos, gerador alternativo e
+                      O gerador Smart, desdobramentos, gerador por temas e
                       bolões agora exigem conta para uso no app. Assim seus
                       jogos, filtros e recursos ficam vinculados ao seu perfil.
                     </p>
@@ -1860,7 +1893,7 @@ export default function Home() {
                           }
                         }}
                       >
-                        Gerador Alternativo
+                        Gerador por Temas
                       </button>
                       <button
                         className={`sub-tab-btn ${genSubTab === 'bolao' ? 'active' : ''}`}
@@ -3035,7 +3068,7 @@ export default function Home() {
                     </div>
                   )}
 
-                {/* SUB-ABA: GERADOR ALTERNATIVO (dentro do Gerador) */}
+                {/* SUB-ABA: GERADOR POR TEMAS (dentro do Gerador) */}
                 {activeTab === 'generator' &&
                   user &&
                   genSubTab === 'mystic' && (
@@ -3135,6 +3168,16 @@ export default function Home() {
                       />
                     </Suspense>
                   </div>
+                )}
+
+                {activeTab === 'plans' && (
+                  <Suspense fallback={<TabFallback />}>
+                    <GamePlansPanel
+                      lottery={activeLottery}
+                      generatedGames={generatedGames}
+                      onOpenGenerator={() => setActiveTab('generator')}
+                    />
+                  </Suspense>
                 )}
 
                 {/* ==========================================
@@ -3293,6 +3336,13 @@ export default function Home() {
               onClick={() => setActiveTab('games')}
             >
               Meus Jogos
+            </button>
+            <button
+              className={`nav-item ${activeTab === 'plans' ? 'active' : ''}`}
+              aria-current={activeTab === 'plans' ? 'page' : undefined}
+              onClick={() => setActiveTab('plans')}
+            >
+              Meu Plano
             </button>
             <button
               className={`nav-item ${activeTab === 'simulator' ? 'active' : ''}`}

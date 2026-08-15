@@ -89,7 +89,7 @@ export default function UpgradeModal({
               <div className="benefit-item">
                 <span className="benefit-icon">✓</span>
                 <span>
-                  <strong>Gerador Alternativo:</strong> Combinações recreativas
+                  <strong>Gerador por Temas:</strong> Combinações recreativas
                   com diferentes formas de seleção.
                 </span>
               </div>

@@ -12,6 +12,7 @@ import {
   normalizeAnnualPrice,
   normalizeMonthlyPrice,
 } from '@/lib/pricing-config';
+import { reportServerError } from '@/lib/monitoring';
 
 export async function POST(request: Request) {
   try {
@@ -107,10 +108,16 @@ export async function POST(request: Request) {
     }
 
     const apiKey = process.env.PIXGO_API_KEY;
+    const localE2eMode =
+      process.env.E2E_TEST_MODE === '1' &&
+      process.env.VERCEL_ENV !== 'production';
     const webhookUrl = `${origin}/api/payments/webhook`;
 
     // Se a API Key for do tipo placeholder, entra em modo Sandbox para testes locais
-    if (!apiKey || apiKey.startsWith('pk_placeholder')) {
+    if (
+      (process.env.NODE_ENV !== 'production' || localE2eMode) &&
+      (!apiKey || apiKey.startsWith('pk_placeholder'))
+    ) {
       const mockPaymentId = `mock_dep_${Math.random().toString(36).substring(2, 18)}`;
       const qrData = `00020126580014BR.GOV.BCB.PIX2572pixgo.org/mock-payment-${user.id}`;
 
@@ -127,6 +134,13 @@ export async function POST(request: Request) {
           created_at: new Date().toISOString(),
         },
       });
+    }
+
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: 'PixGo não está configurado para este ambiente.' },
+        { status: 503 }
+      );
     }
 
     if (!userCpfCnpj) {
@@ -175,6 +189,11 @@ export async function POST(request: Request) {
     const result = await pixgoResponse.json();
 
     if (!pixgoResponse.ok || !result.success) {
+      reportServerError(new Error(result.message || 'PixGo checkout failed'), {
+        provider: 'pixgo',
+        operation: 'checkout',
+        statusCode: pixgoResponse.status,
+      });
       return NextResponse.json(
         {
           error: result.message || 'Erro ao gerar pagamento no PixGo',
@@ -186,6 +205,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(result);
   } catch (err: unknown) {
+    reportServerError(err, { operation: 'checkout' });
     return internalServerError('Checkout error:', err);
   }
 }

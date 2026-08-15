@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { extractLotteryNumbers } from '@/lib/scanner-utils';
 
 interface Props {
   onNumbersDetected: (numbers: string[]) => void;
@@ -27,6 +28,7 @@ export default function CameraScanner({ onNumbersDetected, onClose }: Props) {
   const [error, setError] = useState('');
   const [detectedNumbers, setDetectedNumbers] = useState<string[]>([]);
   const [manualInput, setManualInput] = useState('');
+  const [ocrBusy, setOcrBusy] = useState(false);
   const streamRef = useRef<MediaStream | null>(null);
 
   const startCamera = useCallback(async () => {
@@ -76,7 +78,7 @@ export default function CameraScanner({ onNumbersDetected, onClose }: Props) {
         const barcodes = await detector.detect(videoRef.current);
         if (barcodes.length > 0) {
           const value = barcodes[0].rawValue ?? '';
-          const nums = extractNumbers(value);
+          const nums = extractLotteryNumbers(value);
           if (nums.length > 0) {
             setDetectedNumbers(nums);
           }
@@ -85,78 +87,85 @@ export default function CameraScanner({ onNumbersDetected, onClose }: Props) {
         /* detection failed, try again */
       }
     }
-
-    // Use OCR-like heuristic: scan canvas for high-contrast regions
-    try {
-      const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(videoRef.current, 0, 0);
-        // Simple brightness-based number detection (placeholder for real OCR)
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const avgBrightness =
-          imageData.data.reduce(
-            (sum, _, i) => (i % 4 === 3 ? sum : sum + imageData.data[i]),
-            0
-          ) /
-          (imageData.data.length * 0.75);
-
-        if (avgBrightness > 80 && avgBrightness < 220) {
-          // Good lighting - could attempt OCR here
-        }
-      }
-    } catch {
-      /* canvas access denied */
-    }
-
-    if (isActive) {
-      requestAnimationFrame(scanFrame);
-    }
   }, [isActive]);
 
   useEffect(() => {
-    if (isActive) {
-      const id = requestAnimationFrame(scanFrame);
-      return () => cancelAnimationFrame(id);
-    }
+    if (!isActive) return;
+
+    let cancelled = false;
+    const loop = () => {
+      if (cancelled) return;
+      void scanFrame().finally(() => {
+        if (!cancelled) requestAnimationFrame(loop);
+      });
+    };
+
+    loop();
+    return () => {
+      cancelled = true;
+    };
   }, [isActive, scanFrame]);
 
-  // Extract numbers from text (barcode value, OCR text, etc.)
-  function extractNumbers(text: string): string[] {
-    const cleaned = text.replace(/[^\d\s\-,.]/g, ' ');
-    const nums = cleaned.match(/\d{1,2}/g) || [];
-    return nums
-      .map((n) => parseInt(n, 10))
-      .filter((n) => n >= 1 && n <= 100)
-      .map((n) => String(n).padStart(2, '0'))
-      .slice(0, 15);
-  }
-
   const handleManualSubmit = () => {
-    const nums = extractNumbers(manualInput);
+    const nums = extractLotteryNumbers(manualInput);
     if (nums.length > 0) {
       onNumbersDetected(nums);
       stopCamera();
     }
   };
 
-  const handleCapture = () => {
-    if (videoRef.current) {
-      const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(videoRef.current, 0, 0);
-        // Here you would run actual OCR on the canvas
-        // For now, let the user enter manually
-        setDetectedNumbers([]);
-        setError(
-          'Captura feita. Para melhor precisão, digite os números manualmente.'
-        );
+  const handleOcr = async () => {
+    const video = videoRef.current;
+    if (!video || !video.videoWidth || ocrBusy) return;
+
+    setOcrBusy(true);
+    setError('Lendo os números da imagem...');
+
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+      setOcrBusy(false);
+      setError('Não foi possível preparar a imagem para leitura.');
+      return;
+    }
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    try {
+      const { createWorker, PSM } = await import('tesseract.js');
+      const worker = await createWorker('eng');
+      try {
+        await worker.setParameters({
+          tessedit_char_whitelist: '0123456789',
+          tessedit_pageseg_mode: PSM.SINGLE_BLOCK,
+        });
+        const result = await worker.recognize(canvas);
+        const numbers = extractLotteryNumbers(result.data.text);
+
+        if (numbers.length === 0) {
+          setDetectedNumbers([]);
+          setError(
+            'Nenhum número foi identificado. Aproxime e tente novamente.'
+          );
+        } else {
+          setDetectedNumbers(numbers);
+          setError(
+            `${numbers.length} número(s) identificado(s). Confira antes de usar.`
+          );
+        }
+      } finally {
+        await worker.terminate();
       }
+    } catch (ocrError) {
+      console.error('[Camera OCR]', ocrError);
+      setError(
+        'Não foi possível ler a imagem. Tente com mais luz ou digite os números.'
+      );
+    } finally {
+      setOcrBusy(false);
     }
   };
 
@@ -360,7 +369,8 @@ export default function CameraScanner({ onNumbersDetected, onClose }: Props) {
             style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}
           >
             <button
-              onClick={handleCapture}
+              onClick={handleOcr}
+              disabled={ocrBusy}
               style={{
                 flex: 1,
                 padding: '0.6rem',
@@ -373,7 +383,7 @@ export default function CameraScanner({ onNumbersDetected, onClose }: Props) {
                 cursor: 'pointer',
               }}
             >
-              📸 Capturar
+              {ocrBusy ? 'Lendo...' : 'Ler números (OCR)'}
             </button>
             <button
               onClick={stopCamera}

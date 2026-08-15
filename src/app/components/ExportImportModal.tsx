@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   createShareableGame,
   generateWhatsAppText,
@@ -10,6 +10,7 @@ import {
   decodeGame,
   type ShareableGame,
 } from '../../lib/game-share';
+import { createQrDataUrl } from '@/lib/qr-code';
 
 interface Props {
   lottery: string;
@@ -38,55 +39,25 @@ export default function ExportImportModal({
   const shareUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/jogo?g=${encodeGame(game)}`;
   const whatsappText = generateWhatsAppText(game);
 
-  // Simple QR code generator using canvas
-  const generateQR = (text: string) => {
-    const canvas = document.createElement('canvas');
-    const size = 200;
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+  const [qrDataUrl, setQrDataUrl] = useState('');
 
-    // Simple visual QR-like pattern (placeholder - real QR would use a library)
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, size, size);
-    ctx.fillStyle = '#000000';
+  useEffect(() => {
+    let cancelled = false;
 
-    // Position detection patterns
-    const drawFinderPattern = (x: number, y: number) => {
-      ctx.fillRect(x, y, 28, 28);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(x + 4, y + 4, 20, 20);
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(x + 8, y + 8, 12, 12);
+    if (tab !== 'export') {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    void createQrDataUrl(shareUrl).then((dataUrl) => {
+      if (!cancelled) setQrDataUrl(dataUrl);
+    });
+
+    return () => {
+      cancelled = true;
     };
-
-    drawFinderPattern(4, 4);
-    drawFinderPattern(size - 32, 4);
-    drawFinderPattern(4, size - 32);
-
-    // Data pattern based on text hash
-    let hash = 0;
-    for (let i = 0; i < text.length; i++) {
-      hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0;
-    }
-
-    const moduleSize = 6;
-    for (let y = 40; y < size - 40; y += moduleSize) {
-      for (let x = 40; x < size - 40; x += moduleSize) {
-        hash = (hash * 1103515245 + 12345) & 0x7fffffff;
-        if (hash % 3 !== 0) {
-          ctx.fillRect(x, y, moduleSize - 1, moduleSize - 1);
-        }
-      }
-    }
-
-    return canvas.toDataURL();
-  };
-  const qrDataUrl = useMemo(
-    () => (tab === 'export' ? generateQR(shareUrl) : ''),
-    [shareUrl, tab]
-  );
+  }, [shareUrl, tab]);
 
   const handleImport = () => {
     // Try to decode as base64 game

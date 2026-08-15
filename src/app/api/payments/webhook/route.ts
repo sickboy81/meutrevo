@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { db } from '../../../../lib/db';
 import { internalServerError } from '../../../../lib/api-auth';
 import { claimOneTimeToken } from '@/lib/rate-limit';
+import { reportServerError } from '@/lib/monitoring';
 
 export async function POST(request: Request) {
   try {
@@ -13,12 +14,32 @@ export async function POST(request: Request) {
     const rawBody = await request.text();
 
     const webhookSecret = process.env.PIXGO_WEBHOOK_SECRET;
+    const localE2eMode =
+      process.env.E2E_TEST_MODE === '1' &&
+      process.env.VERCEL_ENV !== 'production';
+    const productionWithoutSecret =
+      process.env.NODE_ENV === 'production' &&
+      !localE2eMode &&
+      (!webhookSecret || webhookSecret.startsWith('whsec_placeholder'));
+    if (productionWithoutSecret) {
+      return NextResponse.json(
+        { error: 'Webhook PixGo não configurado corretamente' },
+        { status: 503 }
+      );
+    }
 
     // Se o segredo de webhook for placeholder, podemos ignorar assinatura para fins de teste local
     const bypassSignature =
-      !webhookSecret || webhookSecret.startsWith('whsec_placeholder');
+      (process.env.NODE_ENV !== 'production' || localE2eMode) &&
+      (!webhookSecret || webhookSecret.startsWith('whsec_placeholder'));
 
     if (!bypassSignature) {
+      if (!webhookSecret) {
+        return NextResponse.json(
+          { error: 'Webhook PixGo não configurado corretamente' },
+          { status: 503 }
+        );
+      }
       if (!timestamp || !signature) {
         return NextResponse.json(
           { error: 'Assinatura ou timestamp ausentes' },
@@ -90,6 +111,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ received: true });
   } catch (err: unknown) {
+    reportServerError(err, { provider: 'pixgo', operation: 'webhook' });
     return internalServerError('Webhook processing error:', err);
   }
 }
