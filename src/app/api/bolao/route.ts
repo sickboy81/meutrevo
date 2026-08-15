@@ -97,34 +97,43 @@ export async function POST(req: Request) {
     const id = `bol_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const shareCode = Math.random().toString(36).slice(2, 10);
 
-    await db.execute({
-      sql: `INSERT INTO boloes (id, creator_id, lottery, title, games_json, total_cost, cotas_total, cotas_taken, taxa_pct, share_code)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`,
-      args: [
-        id,
-        user.id,
-        lottery,
-        title,
-        JSON.stringify(games.map((g: string[]) => g.map(String))),
-        totalCost,
-        cotas_total || 1,
-        taxa_pct || 0,
-        shareCode,
-      ],
-    });
-
-    // Creator takes first cota
-    await db.execute({
-      sql: `INSERT INTO bolao_participants (id, bolao_id, user_id, cota_num, name, amount_due)
-            VALUES (?, ?, ?, 1, ?, ?)`,
-      args: [
-        `bp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-        id,
-        user.id,
-        user.name,
-        totalCost / (cotas_total || 1),
-      ],
-    });
+    // Keep the bolão, its public link and the creator's cota atomic.
+    await db.batch([
+      {
+        sql: `INSERT INTO boloes (id, creator_id, lottery, title, games_json, total_cost, cotas_total, cotas_taken, taxa_pct, share_code)
+              VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+              ON CONFLICT (id) DO NOTHING`,
+        args: [
+          id,
+          user.id,
+          lottery,
+          title,
+          JSON.stringify(games.map((g: string[]) => g.map(String))),
+          totalCost,
+          cotas_total || 1,
+          taxa_pct || 0,
+          shareCode,
+        ],
+      },
+      {
+        sql: `INSERT INTO bolao_public_access (bolao_id, share_code)
+              VALUES (?, ?)
+              ON CONFLICT (bolao_id) DO NOTHING`,
+        args: [id, shareCode],
+      },
+      {
+        sql: `INSERT INTO bolao_participants (id, bolao_id, user_id, cota_num, name, amount_due)
+              VALUES (?, ?, ?, 1, ?, ?)
+              ON CONFLICT (bolao_id, user_id) DO NOTHING`,
+        args: [
+          `bp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+          id,
+          user.id,
+          user.name,
+          totalCost / (cotas_total || 1),
+        ],
+      },
+    ]);
 
     return NextResponse.json({ success: true, id, shareCode });
   } catch (err) {
