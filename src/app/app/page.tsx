@@ -3328,9 +3328,15 @@ export default function Home() {
                         <GeneratedGamesHistory
                           key={activeLottery}
                           lottery={activeLottery}
-                          onRegenerate={() => {
+                          onRegenerate={(item) => {
                             setActiveTab('generator');
-                            setGenSubTab('smart');
+                            setGenSubTab(
+                              item.source === 'closure'
+                                ? 'wheeling'
+                                : item.source === 'strategy'
+                                  ? 'advanced'
+                                  : 'smart'
+                            );
                             setSaveFeedback(
                               'Contexto carregado. Revise os critérios e gere um novo jogo.'
                             );
