@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { getCleanDezenas as getCleanDezenasHelper } from '../../../lib/lottery-helpers';
 import {
+  buildBolaoText,
   downloadPDF,
   downloadTXT,
   printGames,
@@ -16,6 +17,10 @@ export default function SavedPage() {
   const app = useApp();
   const [selectedForPool, setSelectedForPool] = useState<string[]>([]);
   const [bolaoText, setBolaoText] = useState('');
+  const [bolaoCotas, setBolaoCotas] = useState('5');
+  const [bolaoTaxa, setBolaoTaxa] = useState('0');
+  const [copyFeedback, setCopyFeedback] = useState('');
+  const [bolaoShareUrl, setBolaoShareUrl] = useState('');
 
   const getCleanDezenas = (r: Parameters<typeof getCleanDezenasHelper>[0]) =>
     getCleanDezenasHelper(r, app.activeLottery);
@@ -26,6 +31,29 @@ export default function SavedPage() {
       { method: 'DELETE' }
     );
     if (response.ok) await app.fetchSavedGames();
+  };
+  const handleBuildBolao = () => {
+    const selectedGames = app.savedGames.filter((game) =>
+      selectedForPool.includes(game.id)
+    );
+    if (selectedGames.length === 0) return;
+    const result = buildBolaoText(
+      selectedGames,
+      bolaoCotas,
+      bolaoTaxa,
+      app.isPro
+    );
+    setBolaoText(result.text);
+    setBolaoShareUrl(result.shareUrl);
+  };
+  const handleCopyText = async (text: string, type: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyFeedback(type === 'url' ? 'Link copiado.' : 'Texto copiado.');
+      window.setTimeout(() => setCopyFeedback(''), 2500);
+    } catch {
+      setCopyFeedback('Não foi possível copiar.');
+    }
   };
 
   return (
@@ -48,16 +76,16 @@ export default function SavedPage() {
           printGames(games, app.activeLottery, playSound)
         }
         isPro={app.isPro}
-        bolaoCotas="5"
-        setBolaoCotas={() => {}}
-        bolaoTaxa="0"
-        setBolaoTaxa={() => {}}
+        bolaoCotas={bolaoCotas}
+        setBolaoCotas={setBolaoCotas}
+        bolaoTaxa={bolaoTaxa}
+        setBolaoTaxa={setBolaoTaxa}
         setShowUpgradeModal={app.setShowUpgradeModal}
-        handleBuildBolao={() => {}}
+        handleBuildBolao={handleBuildBolao}
         bolaoText={bolaoText}
-        handleCopyText={() => {}}
-        copyFeedback=""
-        bolaoShareUrl=""
+        handleCopyText={handleCopyText}
+        copyFeedback={copyFeedback}
+        bolaoShareUrl={bolaoShareUrl}
       />
     </Suspense>
   );
