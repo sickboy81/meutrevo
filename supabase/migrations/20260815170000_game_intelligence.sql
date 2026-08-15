@@ -105,7 +105,6 @@ grant select, update (read_at) on table public.notification_events to authentica
 create or replace function public.get_public_bolao(p_share_code text)
 returns table (
   lottery text,
-  title text,
   contest_num integer,
   total_cost numeric,
   cotas_total integer,
@@ -118,7 +117,6 @@ set search_path = pg_catalog, public
 as $$
   select
     b.lottery,
-    b.title,
     b.contest_num,
     b.total_cost,
     b.cotas_total,

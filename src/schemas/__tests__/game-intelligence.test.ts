@@ -1,5 +1,8 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+  analysisSnapshotSchema,
   gameScoreSchema,
   generatedGameRecordSchema,
 } from '../game-intelligence';
@@ -58,6 +61,15 @@ describe('game intelligence schemas', () => {
     );
   });
 
+  it('rejects a score criterion with points above its maximum', () => {
+    expect(
+      gameScoreSchema.safeParse({
+        ...validScore,
+        criteria: [{ ...validScore.criteria[0], points: 21 }],
+      }).success
+    ).toBe(false);
+  });
+
   it('rejects selected number lists with duplicates or values outside the lottery range', () => {
     expect(
       generatedGameRecordSchema.safeParse({
@@ -107,5 +119,45 @@ describe('game intelligence schemas', () => {
         },
       }).success
     ).toBe(false);
+  });
+
+  it('rejects a temperature number outside the snapshot lottery range', () => {
+    expect(
+      analysisSnapshotSchema.safeParse({
+        ...validGeneratedGame.analysisSnapshot,
+        numberTemperatures: [
+          {
+            ...validGeneratedGame.analysisSnapshot.numberTemperatures[0],
+            number: 61,
+          },
+        ],
+      }).success
+    ).toBe(false);
+  });
+
+  it('rejects an analysis snapshot whose cutoff is not after its data window', () => {
+    expect(
+      analysisSnapshotSchema.safeParse({
+        ...validGeneratedGame.analysisSnapshot,
+        cutoffContest:
+          validGeneratedGame.analysisSnapshot.dataWindow.lastContest,
+      }).success
+    ).toBe(false);
+  });
+
+  it('does not expose a user-supplied title from the public bolao function', () => {
+    const migration = readFileSync(
+      resolve(
+        process.cwd(),
+        'supabase/migrations/20260815170000_game_intelligence.sql'
+      ),
+      'utf8'
+    );
+    const publicBolaoFunction = migration.match(
+      /create or replace function public\.get_public_bolao[\s\S]*?\$\$;/
+    )?.[0];
+
+    expect(publicBolaoFunction).toBeDefined();
+    expect(publicBolaoFunction).not.toMatch(/\btitle\b/i);
   });
 });

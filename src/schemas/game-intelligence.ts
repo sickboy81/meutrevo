@@ -12,13 +12,23 @@ const moneySchema = z.number().finite().min(0);
 
 export const lotteryIdSchema = z.enum(LOTTERY_IDS);
 
-export const scoreBreakdownSchema = z.object({
-  id: z.string().trim().min(1).max(80),
-  title: z.string().trim().min(1).max(120),
-  points: z.number().finite().min(0),
-  maxPoints: z.number().finite().positive(),
-  explanation: z.string().trim().min(1).max(500),
-});
+export const scoreBreakdownSchema = z
+  .object({
+    id: z.string().trim().min(1).max(80),
+    title: z.string().trim().min(1).max(120),
+    points: z.number().finite().min(0),
+    maxPoints: z.number().finite().positive(),
+    explanation: z.string().trim().min(1).max(500),
+  })
+  .superRefine((criterion, context) => {
+    if (criterion.points > criterion.maxPoints) {
+      context.addIssue({
+        code: 'custom',
+        path: ['points'],
+        message: 'Os pontos nao podem exceder a pontuacao maxima.',
+      });
+    }
+  });
 
 export const gameScoreSchema = z.object({
   total: z.number().int().min(0).max(100),
@@ -52,14 +62,39 @@ const analysisWindowSchema = z
     }
   });
 
-export const analysisSnapshotSchema = z.object({
-  lottery: lotteryIdSchema,
-  cutoffContest: z.number().int().positive(),
-  analyzedAt: z.string().datetime(),
-  dataWindow: analysisWindowSchema,
-  numberTemperatures: z.array(numberTemperatureSchema).min(1),
-  disclaimer: z.literal(historicalAnalysisDisclaimer).optional(),
-});
+export const analysisSnapshotSchema = z
+  .object({
+    lottery: lotteryIdSchema,
+    cutoffContest: z.number().int().positive(),
+    analyzedAt: z.string().datetime(),
+    dataWindow: analysisWindowSchema,
+    numberTemperatures: z.array(numberTemperatureSchema).min(1),
+    disclaimer: z.literal(historicalAnalysisDisclaimer).optional(),
+  })
+  .superRefine((snapshot, context) => {
+    const config = LOTTERY_CONFIGS[snapshot.lottery];
+
+    if (snapshot.cutoffContest <= snapshot.dataWindow.lastContest) {
+      context.addIssue({
+        code: 'custom',
+        path: ['cutoffContest'],
+        message: 'O corte deve ser posterior ao ultimo concurso analisado.',
+      });
+    }
+
+    snapshot.numberTemperatures.forEach((temperature, index) => {
+      if (
+        temperature.number < config.minNum ||
+        temperature.number > config.maxNum
+      ) {
+        context.addIssue({
+          code: 'custom',
+          path: ['numberTemperatures', index, 'number'],
+          message: `As dezenas devem estar entre ${config.minNum} e ${config.maxNum}.`,
+        });
+      }
+    });
+  });
 
 export const generationSourceSchema = z.enum([
   'smart_generator',
