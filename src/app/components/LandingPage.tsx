@@ -1261,7 +1261,7 @@ export default function LandingPage({
             },
             {
               q: 'Como funciona a assinatura PRO e a ativação?',
-              a: 'A ativação é 100% automatizada. Ao clicar em Assinar PRO, nossa API gera um QR Code Pix dinâmico. Assim que você realiza o pagamento no aplicativo do seu banco, o sistema reconhece a liquidação em segundos e libera a sua conta imediatamente.',
+              a: 'A ativação é automatizada. Ao clicar em Assinar PRO, você escolhe Pix ou Stripe. Após a confirmação do pagamento, o sistema libera os recursos PRO na sua conta.',
             },
             {
               q: 'Posso exportar os meus jogos gerados?',

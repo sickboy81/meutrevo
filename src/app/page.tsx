@@ -286,6 +286,7 @@ export default async function LandingHome() {
 
             <div className="landing-cta-group landing-hero-actions">
               <AppEntryLink
+                href="/app?upgrade=1"
                 className="landing-btn-primary"
                 style={{
                   textDecoration: 'none',
@@ -735,7 +736,7 @@ export default async function LandingHome() {
                 </div>
                 <ul className="price-features-list">
                   <li className="price-feature-item checked">
-                    <strong>Desdobramentos otimizados para bolões</strong>
+                    <strong>Desdobramentos com cobertura condicional</strong>
                   </li>
                   <li className="price-feature-item checked">
                     Gerador por temas, scanner OCR e QR Code para compartilhar

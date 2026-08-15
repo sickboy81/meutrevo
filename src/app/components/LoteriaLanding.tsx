@@ -404,6 +404,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
               'Acesse ferramentas avançadas, histórico de concursos e recursos de organização no painel PRO.'}
           </p>
           <AppEntryLink
+            href="/app?upgrade=1"
             className="landing-btn-primary"
             style={{
               textDecoration: 'none',
@@ -498,9 +499,8 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                 lineHeight: 1.6,
               }}
             >
-              Inteligência estatística, combinatória matemática avançada e
-              análise histórica em tempo real para otimizar seus jogos de
-              loteria de forma inteligente.
+              Dados históricos, combinações transparentes e controle de custo
+              para organizar seus jogos de loteria com clareza.
             </p>
           </div>
           <div style={{ display: 'flex', gap: '4rem', flexWrap: 'wrap' }}>

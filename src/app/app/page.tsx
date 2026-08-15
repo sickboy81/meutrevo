@@ -711,6 +711,14 @@ export default function Home() {
     const upgrade = params.get('upgrade');
     const provider = params.get('provider');
 
+    if (upgrade === '1') {
+      const frame = window.requestAnimationFrame(() => {
+        setShowUpgradeModal(true);
+        window.history.replaceState({}, '', window.location.pathname);
+      });
+      return () => window.cancelAnimationFrame(frame);
+    }
+
     if (provider !== 'stripe' || !upgrade) return;
 
     const clearStripeParams = () => {
@@ -3507,7 +3515,7 @@ export default function Home() {
           {/* Bottom Nav Bar */}
           <nav
             className="bottom-nav"
-            style={{ gridTemplateColumns: 'repeat(6, 1fr)' }}
+            style={{ gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' }}
           >
             <button
               className={`nav-item ${activeTab === 'results' ? 'active' : ''}`}
