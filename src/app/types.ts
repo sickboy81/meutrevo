@@ -1,3 +1,13 @@
+export type {
+  BacktestResult,
+  ClosureGuarantee,
+  CostQuote,
+  GameScore,
+  GeneratedGameRecord,
+  NumberTemperature,
+  ScoreBreakdown,
+} from '@/schemas/game-intelligence';
+
 export interface LotteryResult {
   numero: number;
   numeroConcursoProximo?: number;
