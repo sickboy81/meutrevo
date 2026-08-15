@@ -170,13 +170,14 @@ describe('game intelligence schemas', () => {
       'utf8'
     );
     const legacyFunctionDrop =
-      'drop function if exists public.get_public_bolao(text);';
+      /^\s*drop function if exists public\.get_public_bolao\(text\);/im;
     const publicBolaoDefinition =
-      'create or replace function public.get_public_bolao(p_share_code text)';
+      /^\s*create or replace function public\.get_public_bolao\b/im;
+    const dropMatch = migration.match(legacyFunctionDrop);
+    const definitionMatch = migration.match(publicBolaoDefinition);
 
-    expect(migration.indexOf(legacyFunctionDrop)).toBeGreaterThanOrEqual(0);
-    expect(migration.indexOf(legacyFunctionDrop)).toBeLessThan(
-      migration.indexOf(publicBolaoDefinition)
-    );
+    expect(dropMatch).not.toBeNull();
+    expect(definitionMatch).not.toBeNull();
+    expect(dropMatch?.index).toBeLessThan(definitionMatch?.index ?? -1);
   });
 });
