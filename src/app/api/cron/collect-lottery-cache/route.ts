@@ -3,7 +3,7 @@ import { fetchOfficialLotteryResult } from '@/lib/caixa';
 import { saveToCache } from '@/lib/lottery-cache';
 import { LOTTERY_CONFIGS } from '@/lib/lottery-math';
 import { checkScheduledGames } from '@/lib/game-schedule-service';
-import { reportServerError } from '@/lib/monitoring';
+import { reportServerDuration, reportServerError } from '@/lib/monitoring';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -22,6 +22,7 @@ export async function GET(request: Request) {
 
   const reports = await Promise.all(
     Object.keys(LOTTERY_CONFIGS).map(async (lottery) => {
+      const startedAt = Date.now();
       try {
         const result = await fetchOfficialLotteryResult(lottery);
         if (!result?.numero) {
@@ -59,6 +60,10 @@ export async function GET(request: Request) {
           status: 'error',
           reason: error instanceof Error ? error.message : String(error),
         };
+      } finally {
+        reportServerDuration('collect_lottery', Date.now() - startedAt, {
+          lottery,
+        });
       }
     })
   );

@@ -7,7 +7,7 @@ const cspHeader = [
   `style-src 'self' 'unsafe-inline'`,
   `img-src 'self' blob: data: https://em-content.zobj.net https://cdn-icons-png.flaticon.com https://pixgo.org https://*.pixgo.com.br`,
   `font-src 'self' data:`,
-  `connect-src 'self' https://*.turso.io wss://*.turso.io https://api.resend.com https://api.pixgo.com.br http://localhost:*`,
+  `connect-src 'self' https://*.turso.io wss://*.turso.io https://api.resend.com https://api.pixgo.com.br https://*.ingest.us.sentry.io https://*.sentry.io http://localhost:*`,
   `frame-src 'none'`,
   `base-uri 'self'`,
   `form-action 'self'`,
@@ -39,10 +39,11 @@ function getConfig(): NextConfig {
               key: 'Referrer-Policy',
               value: 'strict-origin-when-cross-origin',
             },
+            { key: 'Document-Policy', value: 'js-profiling' },
             {
               key: 'Permissions-Policy',
               value:
-                'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+                'camera=(self), microphone=(), geolocation=(), interest-cohort=()',
             },
           ],
         },

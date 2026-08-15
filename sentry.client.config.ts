@@ -5,11 +5,17 @@ Sentry.init({
   environment: process.env.NODE_ENV,
   enableLogs: true,
   tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+  profileSessionSampleRate: process.env.NODE_ENV === 'production' ? 0.05 : 0,
   replaysSessionSampleRate: 0.0,
   replaysOnErrorSampleRate: process.env.NODE_ENV === 'production' ? 0.5 : 1.0,
   integrations: [
     Sentry.browserTracingIntegration(),
+    Sentry.browserProfilingIntegration(),
     Sentry.consoleLoggingIntegration({ levels: ['log', 'warn', 'error'] }),
+  ],
+  tracePropagationTargets: [
+    'localhost',
+    /^https:\/\/(www\.)?meutrevo\.com\/api/,
   ],
   beforeSend(event) {
     // Não enviar erros em desenvolvimento sem DSN

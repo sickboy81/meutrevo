@@ -4,9 +4,10 @@ import {
   internalServerError,
   requireAuthenticatedUser,
 } from '../../../../lib/api-auth';
-import { reportServerError } from '@/lib/monitoring';
+import { reportServerDuration, reportServerError } from '@/lib/monitoring';
 
 export async function GET(request: Request) {
+  const startedAt = Date.now();
   try {
     const { searchParams } = new URL(request.url);
     const paymentId = searchParams.get('id');
@@ -121,5 +122,7 @@ export async function GET(request: Request) {
   } catch (err: unknown) {
     reportServerError(err, { operation: 'status' });
     return internalServerError('Status check error:', err);
+  } finally {
+    reportServerDuration('status', Date.now() - startedAt);
   }
 }

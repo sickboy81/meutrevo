@@ -12,9 +12,10 @@ import {
   normalizeAnnualPrice,
   normalizeMonthlyPrice,
 } from '@/lib/pricing-config';
-import { reportServerError } from '@/lib/monitoring';
+import { reportServerDuration, reportServerError } from '@/lib/monitoring';
 
 export async function POST(request: Request) {
+  const startedAt = Date.now();
   try {
     const { user, response } = await requireAuthenticatedUser();
     if (response || !user) return response;
@@ -207,5 +208,7 @@ export async function POST(request: Request) {
   } catch (err: unknown) {
     reportServerError(err, { operation: 'checkout' });
     return internalServerError('Checkout error:', err);
+  } finally {
+    reportServerDuration('checkout', Date.now() - startedAt);
   }
 }
