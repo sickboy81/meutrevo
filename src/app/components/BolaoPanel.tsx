@@ -1015,6 +1015,19 @@ export default function BolaoPanel({
                   {createdBolao.shareCode}
                 </strong>
               </div>
+              <div
+                style={{
+                  fontSize: '0.68rem',
+                  color: 'var(--text-muted)',
+                  marginBottom: '0.75rem',
+                  wordBreak: 'break-all',
+                }}
+              >
+                Link público:{' '}
+                {typeof window !== 'undefined'
+                  ? `${window.location.origin}/bolao/${createdBolao.shareCode}`
+                  : `/bolao/${createdBolao.shareCode}`}
+              </div>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button
                   onClick={() => {
@@ -1034,6 +1047,26 @@ export default function BolaoPanel({
                   }}
                 >
                   📋 Copiar Código
+                </button>
+                <button
+                  onClick={() => {
+                    const url = `${window.location.origin}/bolao/${createdBolao.shareCode}`;
+                    navigator.clipboard.writeText(url);
+                    setFeedback('✓ Link público copiado!');
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '0.5rem',
+                    background: 'rgba(0,240,255,0.12)',
+                    border: '1px solid rgba(0,240,255,0.35)',
+                    borderRadius: '8px',
+                    color: 'white',
+                    fontSize: '0.7rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  🔗 Copiar Link
                 </button>
                 <button
                   onClick={() => {
