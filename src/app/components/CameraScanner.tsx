@@ -1,456 +1,655 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { extractLotteryNumbers } from '@/lib/scanner-utils';
+import {
+  preprocessImage,
+  extractCandidateNumbers,
+  normalizeDetectedNumbers,
+  validateDetectedNumbers,
+  type OCRProgress,
+} from '@/lib/ocr';
+import { LOTTERY_CONFIGS } from '@/lib/lottery-math';
+import Tesseract from 'tesseract.js';
 
-interface Props {
-  onNumbersDetected: (numbers: string[]) => void;
+type InputMode = 'camera' | 'gallery' | 'manual';
+
+interface CameraScannerProps {
+  isOpen?: boolean;
   onClose: () => void;
+  onNumbersDetected?: (numbers: string[]) => void;
+  onDetected?: (numbers: number[], lotteryId: string) => void;
+  activeLottery?: string;
 }
 
-interface BarcodeDetectionResultLike {
-  rawValue?: string;
-}
+const LOTTERY_OPTS = Object.entries(LOTTERY_CONFIGS).map(([id, c]) => ({
+  id,
+  name: c.name,
+}));
+const PROGRESS_PCT: Record<OCRProgress, number> = {
+  preparing: 15,
+  reading: 55,
+  verifying: 85,
+  done: 100,
+  error: 0,
+};
+const PROGRESS_MSG: Record<OCRProgress, string> = {
+  preparing: 'Preparando imagem…',
+  reading: 'Lendo números…',
+  verifying: 'Verificando…',
+  done: 'Concluído!',
+  error: 'Erro na leitura',
+};
 
-interface BarcodeDetectorLike {
-  detect: (source: ImageBitmapSource) => Promise<BarcodeDetectionResultLike[]>;
-}
+const pillColor = (lotteryId: string) =>
+  LOTTERY_CONFIGS[lotteryId]?.accentColor ?? 'var(--accent-color)';
 
-interface WindowWithBarcodeDetector extends Window {
-  BarcodeDetector?: new (options?: {
-    formats?: string[];
-  }) => BarcodeDetectorLike;
-}
-
-export default function CameraScanner({ onNumbersDetected, onClose }: Props) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isActive, setIsActive] = useState(false);
-  const [error, setError] = useState('');
-  const [detectedNumbers, setDetectedNumbers] = useState<string[]>([]);
+export default function CameraScanner({
+  isOpen = true,
+  onClose,
+  onNumbersDetected,
+  onDetected,
+  activeLottery = 'megasena',
+}: CameraScannerProps) {
+  const [mode, setMode] = useState<InputMode>('manual');
+  const [preview, setPreview] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [progress, setProgress] = useState<OCRProgress | null>(null);
+  const [numbers, setNumbers] = useState<number[]>([]);
+  const [lottery, setLottery] = useState(activeLottery);
   const [manualInput, setManualInput] = useState('');
-  const [ocrBusy, setOcrBusy] = useState(false);
+  const [error, setError] = useState('');
+  const fileRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const startCamera = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-        setIsActive(true);
-      }
-    } catch (err) {
-      setError('Câmera não disponível. Use a entrada manual abaixo.');
-      console.warn('[Camera]', err);
-    }
-  }, []);
-
   const stopCamera = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
-    }
-    setIsActive(false);
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
   }, []);
 
-  useEffect(() => {
-    return () => stopCamera();
-  }, [stopCamera]);
+  const resetState = useCallback(() => {
+    setPreview(null);
+    setFile(null);
+    setNumbers([]);
+    setProgress(null);
+    setError('');
+    setManualInput('');
+    setMode('manual');
+  }, []);
 
-  // Try BarcodeDetector API (Chrome/Edge)
-  const scanFrame = useCallback(async () => {
-    if (!videoRef.current || !isActive) return;
+  const handleClose = useCallback(() => {
+    stopCamera();
+    resetState();
+    onClose();
+  }, [stopCamera, resetState, onClose]);
 
-    // Check if BarcodeDetector is available
-    const browserWindow = window as WindowWithBarcodeDetector;
-    if (browserWindow.BarcodeDetector) {
-      try {
-        const detector = new browserWindow.BarcodeDetector({
-          formats: ['qr_code', 'ean_13', 'ean_8', 'code_128'],
-        });
-        const barcodes = await detector.detect(videoRef.current);
-        if (barcodes.length > 0) {
-          const value = barcodes[0].rawValue ?? '';
-          const nums = extractLotteryNumbers(value);
-          if (nums.length > 0) {
-            setDetectedNumbers(nums);
-          }
-        }
-      } catch {
-        /* detection failed, try again */
-      }
-    }
-  }, [isActive]);
+  useEffect(() => () => stopCamera(), [stopCamera]);
 
-  useEffect(() => {
-    if (!isActive) return;
+  const handleFile = useCallback((f: File) => {
+    setFile(f);
+    setPreview(URL.createObjectURL(f));
+    setNumbers([]);
+    setError('');
+  }, []);
+  const onFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const f = e.target.files?.[0];
+      if (f) handleFile(f);
+      e.target.value = '';
+    },
+    [handleFile]
+  );
 
-    let cancelled = false;
-    const loop = () => {
-      if (cancelled) return;
-      void scanFrame().finally(() => {
-        if (!cancelled) requestAnimationFrame(loop);
-      });
-    };
-
-    loop();
-    return () => {
-      cancelled = true;
-    };
-  }, [isActive, scanFrame]);
-
-  const handleManualSubmit = () => {
-    const nums = extractLotteryNumbers(manualInput);
-    if (nums.length > 0) {
-      onNumbersDetected(nums);
-      stopCamera();
-    }
-  };
-
-  const handleOcr = async () => {
-    const video = videoRef.current;
-    if (!video || !video.videoWidth || ocrBusy) return;
-
-    setOcrBusy(true);
-    setError('Lendo os números da imagem...');
-
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx) {
-      setOcrBusy(false);
-      setError('Não foi possível preparar a imagem para leitura.');
-      return;
-    }
-
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
+  const runOCR = useCallback(async () => {
+    if (!file) return;
+    setProgress('preparing');
+    setError('');
     try {
-      const { createWorker, PSM } = await import('tesseract.js');
-      const worker = await createWorker('eng');
-      try {
-        await worker.setParameters({
-          tessedit_char_whitelist: '0123456789',
-          tessedit_pageseg_mode: PSM.SINGLE_BLOCK,
-        });
-        const result = await worker.recognize(canvas);
-        const numbers = extractLotteryNumbers(result.data.text);
-
-        if (numbers.length === 0) {
-          setDetectedNumbers([]);
-          setError(
-            'Nenhum número foi identificado. Aproxime e tente novamente.'
-          );
-        } else {
-          setDetectedNumbers(numbers);
-          setError(
-            `${numbers.length} número(s) identificado(s). Confira antes de usar.`
-          );
-        }
-      } finally {
-        await worker.terminate();
+      const dataUrl = await preprocessImage(file);
+      setProgress('reading');
+      const result = await Tesseract.recognize(dataUrl, 'eng');
+      setProgress('verifying');
+      const candidates = extractCandidateNumbers(result.data.text ?? '');
+      const normalized = normalizeDetectedNumbers(candidates);
+      const validation = validateDetectedNumbers(normalized, lottery);
+      setNumbers(normalized);
+      if (normalized.length === 0) {
+        setError(
+          'Nenhum número encontrado. Verifique a imagem ou use a aba Manual.'
+        );
+      } else if (!validation.valid) {
+        setError(validation.errors.join(' '));
       }
-    } catch (ocrError) {
-      console.error('[Camera OCR]', ocrError);
-      setError(
-        'Não foi possível ler a imagem. Tente com mais luz ou digite os números.'
-      );
-    } finally {
-      setOcrBusy(false);
+      setProgress('done');
+    } catch {
+      setError('Erro ao processar imagem.');
+      setProgress('error');
     }
-  };
+  }, [file, lottery]);
+
+  const removeNum = useCallback(
+    (n: number) => setNumbers((p) => p.filter((x) => x !== n)),
+    []
+  );
+  const addManual = useCallback(() => {
+    const n = parseInt(manualInput, 10);
+    if (isNaN(n)) return;
+    setNumbers((p) => (p.includes(n) ? p : [...p, n].sort((a, b) => a - b)));
+    setManualInput('');
+  }, [manualInput]);
+
+  const confirm = useCallback(() => {
+    if (numbers.length === 0) return;
+    const numStrs = numbers.map((n) => String(n).padStart(2, '0'));
+    onNumbersDetected?.(numStrs);
+    onDetected?.(numbers, lottery);
+    onClose();
+  }, [numbers, lottery, onNumbersDetected, onDetected, onClose]);
+
+  if (!isOpen) return null;
+  const maxNum = LOTTERY_CONFIGS[lottery]?.maxNum ?? 99;
 
   return (
     <div
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,0.9)',
+        background: 'rgba(0,0,0,0.85)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
         display: 'flex',
-        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
         zIndex: 10001,
+        padding: '1rem',
       }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Scanner de bilhetes"
     >
-      {/* Header */}
       <div
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '1rem',
-          borderBottom: '1px solid rgba(255,255,255,0.1)',
+          width: '100%',
+          maxWidth: 480,
+          maxHeight: '90vh',
+          overflowY: 'auto',
+          background: 'var(--glass-bg)',
+          border: '1px solid var(--glass-border)',
+          borderRadius: 16,
+          boxShadow: '0 0 40px rgba(0,0,0,0.6)',
         }}
       >
-        <h3
+        <div
           style={{
-            color: 'white',
-            fontSize: '1rem',
-            fontWeight: 700,
-            margin: 0,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '1rem 1.25rem',
+            borderBottom: '1px solid var(--glass-border)',
           }}
         >
-          📷 Conferir / Escanear
-        </h3>
-        <button
-          onClick={() => {
-            stopCamera();
-            onClose();
-          }}
-          style={{
-            background: 'rgba(255,255,255,0.1)',
-            border: 'none',
-            color: 'white',
-            borderRadius: '50%',
-            width: '32px',
-            height: '32px',
-            cursor: 'pointer',
-            fontSize: '1.2rem',
-          }}
-        >
-          ✕
-        </button>
-      </div>
-
-      {/* Camera view */}
-      <div
-        style={{
-          flex: 1,
-          position: 'relative',
-          background: '#000',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <video
-          ref={videoRef}
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          playsInline
-          muted
-        />
-
-        {!isActive && !error && (
-          <div
+          <h3
             style={{
-              position: 'absolute',
+              color: 'var(--text-main)',
+              fontSize: '1rem',
+              fontWeight: 700,
+              margin: 0,
+              fontFamily: 'var(--font-display)',
+            }}
+          >
+            📷 Scanner
+          </h3>
+          <button
+            style={{
+              background: 'rgba(255,255,255,0.08)',
+              border: 'none',
+              color: 'var(--text-main)',
+              borderRadius: '50%',
+              width: 36,
+              height: 36,
+              cursor: 'pointer',
+              fontSize: '1.1rem',
               display: 'flex',
-              flexDirection: 'column',
               alignItems: 'center',
-              gap: '1rem',
-            }}
-          >
-            <button
-              onClick={startCamera}
-              style={{
-                padding: '1rem 2rem',
-                background: 'rgba(0,240,255,0.15)',
-                border: '1px solid rgba(0,240,255,0.3)',
-                color: 'var(--accent-color)',
-                borderRadius: '12px',
-                fontSize: '1rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              📸 Abrir Câmera
-            </button>
-          </div>
-        )}
-
-        {/* Scan overlay */}
-        {isActive && (
-          <div
-            style={{
-              position: 'absolute',
-              inset: '20%',
-              border: '2px solid rgba(0,240,255,0.5)',
-              borderRadius: '12px',
-              boxShadow: '0 0 30px rgba(0,240,255,0.1)',
-            }}
-          >
-            <div
-              style={{
-                position: 'absolute',
-                top: '-2px',
-                left: '-2px',
-                right: '-2px',
-                height: '2px',
-                background: 'var(--accent-color)',
-                animation: 'scan-line 2s ease-in-out infinite',
-              }}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Bottom panel */}
-      <div
-        style={{
-          padding: '1rem',
-          background: 'var(--bg-primary)',
-          borderTop: '1px solid rgba(255,255,255,0.1)',
-        }}
-      >
-        {error && (
-          <p
-            style={{
-              fontSize: '0.75rem',
-              color: '#ffd600',
-              marginBottom: '0.5rem',
-              textAlign: 'center',
-            }}
-          >
-            {error}
-          </p>
-        )}
-
-        {/* Detected numbers */}
-        {detectedNumbers.length > 0 && (
-          <div
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '0.25rem',
-              marginBottom: '0.75rem',
               justifyContent: 'center',
             }}
+            onClick={handleClose}
+            aria-label="Fechar scanner"
           >
-            {detectedNumbers.map((n, i) => (
-              <span
-                key={i}
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  background: 'rgba(0,230,118,0.15)',
-                  border: '1px solid rgba(0,230,118,0.3)',
-                  color: '#00e676',
-                  fontSize: '0.75rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 700,
-                }}
-              >
-                {n}
-              </span>
-            ))}
-            <button
-              onClick={() => onNumbersDetected(detectedNumbers)}
-              style={{
-                marginLeft: '0.5rem',
-                padding: '0 0.75rem',
-                background: 'rgba(0,230,118,0.15)',
-                border: '1px solid rgba(0,230,118,0.3)',
-                color: '#00e676',
-                borderRadius: '6px',
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              ✓ Usar
-            </button>
-          </div>
-        )}
-
-        {/* Camera controls */}
-        {isActive && (
-          <div
-            style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}
-          >
-            <button
-              onClick={handleOcr}
-              disabled={ocrBusy}
-              style={{
-                flex: 1,
-                padding: '0.6rem',
-                background: 'rgba(0,240,255,0.1)',
-                border: '1px solid rgba(0,240,255,0.2)',
-                color: 'var(--accent-color)',
-                borderRadius: '8px',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              {ocrBusy ? 'Lendo...' : 'Ler números (OCR)'}
-            </button>
-            <button
-              onClick={stopCamera}
-              style={{
-                padding: '0.6rem 1rem',
-                background: 'rgba(255,68,102,0.1)',
-                border: '1px solid rgba(255,68,102,0.2)',
-                color: '#ff4466',
-                borderRadius: '8px',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              ⏹ Parar
-            </button>
-          </div>
-        )}
-
-        {/* Manual input */}
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <input
-            type="text"
-            value={manualInput}
-            onChange={(e) => setManualInput(e.target.value)}
-            placeholder="Digite: 05 12 23 34 41 57 (espaços ou vírgulas)"
-            style={{
-              flex: 1,
-              background: 'rgba(0,0,0,0.3)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '8px',
-              padding: '0.6rem',
-              color: 'white',
-              fontSize: '0.8rem',
-              outline: 'none',
-            }}
-            onKeyDown={(e) => e.key === 'Enter' && handleManualSubmit()}
-          />
-          <button
-            onClick={handleManualSubmit}
-            disabled={!manualInput.trim()}
-            style={{
-              padding: '0.6rem 1rem',
-              background: manualInput.trim()
-                ? 'rgba(0,230,118,0.15)'
-                : 'rgba(255,255,255,0.03)',
-              border: '1px solid',
-              borderColor: manualInput.trim()
-                ? 'rgba(0,230,118,0.3)'
-                : 'rgba(255,255,255,0.1)',
-              color: manualInput.trim() ? '#00e676' : 'var(--text-muted)',
-              borderRadius: '8px',
-              fontSize: '0.8rem',
-              fontWeight: 600,
-              cursor: manualInput.trim() ? 'pointer' : 'not-allowed',
-            }}
-          >
-            ✓
+            ✕
           </button>
         </div>
 
-        <style>{`
-          @keyframes scan-line {
-            0%, 100% { top: -2px; }
-            50% { top: calc(100% - 2px); }
-          }
-        `}</style>
+        <div style={{ padding: '1rem 1.25rem' }}>
+          <div
+            style={{ display: 'flex', gap: 6, marginBottom: '1rem' }}
+            role="tablist"
+            aria-label="Modo de entrada"
+          >
+            {(
+              [
+                ['camera', '📸 Câmera'],
+                ['gallery', '🖼 Galeria'],
+                ['manual', '⌨ Manual'],
+              ] as const
+            ).map(([m, label]) => (
+              <button
+                key={m}
+                role="tab"
+                aria-selected={mode === m}
+                style={{
+                  flex: 1,
+                  padding: '10px 0',
+                  minHeight: 44,
+                  borderRadius: 10,
+                  border: `1px solid ${mode === m ? 'var(--accent-color)' : 'var(--glass-border)'}`,
+                  background:
+                    mode === m
+                      ? 'rgba(0,240,255,0.1)'
+                      : 'rgba(255,255,255,0.03)',
+                  color:
+                    mode === m ? 'var(--accent-color)' : 'var(--text-muted)',
+                  fontWeight: 600,
+                  fontSize: '0.8rem',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-body)',
+                }}
+                onClick={() => {
+                  setMode(m);
+                  setProgress(null);
+                  setError('');
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {(mode === 'camera' || mode === 'gallery') && (
+            <>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                capture={mode === 'camera' ? 'environment' : undefined}
+                style={{ display: 'none' }}
+                onChange={onFileChange}
+                aria-label={
+                  mode === 'camera' ? 'Capturar foto' : 'Selecionar da galeria'
+                }
+              />
+
+              {!preview ? (
+                <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
+                  <button
+                    style={{
+                      width: '100%',
+                      padding: 14,
+                      minHeight: 52,
+                      borderRadius: 12,
+                      border: '1px solid var(--accent-color)',
+                      background: 'rgba(0,240,255,0.1)',
+                      color: 'var(--accent-color)',
+                      fontWeight: 700,
+                      fontSize: '0.95rem',
+                      cursor: 'pointer',
+                      fontFamily: 'var(--font-display)',
+                      marginBottom: 8,
+                    }}
+                    onClick={() => fileRef.current?.click()}
+                    aria-label={
+                      mode === 'camera' ? 'Abrir câmera' : 'Abrir galeria'
+                    }
+                  >
+                    {mode === 'camera' ? '📸 Tirar Foto' : '🖼 Escolher Imagem'}
+                  </button>
+                  <p
+                    style={{
+                      marginTop: 8,
+                      fontSize: '0.75rem',
+                      color: 'var(--text-muted)',
+                    }}
+                  >
+                    {mode === 'camera'
+                      ? 'Posicione o bilhete na área visível'
+                      : 'Selecione uma foto do bilhete'}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div
+                    style={{
+                      width: '100%',
+                      borderRadius: 12,
+                      overflow: 'hidden',
+                      marginBottom: '1rem',
+                      border: '1px solid var(--glass-border)',
+                      background: '#000',
+                    }}
+                  >
+                    <img
+                      src={preview}
+                      alt="Prévia do bilhete"
+                      style={{
+                        width: '100%',
+                        maxHeight: 200,
+                        objectFit: 'contain',
+                        display: 'block',
+                      }}
+                    />
+                  </div>
+
+                  {progress && (
+                    <div style={{ marginBottom: '1rem' }} aria-live="polite">
+                      <div
+                        style={{
+                          width: '100%',
+                          height: 6,
+                          borderRadius: 3,
+                          background: 'rgba(255,255,255,0.08)',
+                          overflow: 'hidden',
+                          marginBottom: 6,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: `${PROGRESS_PCT[progress]}%`,
+                            height: '100%',
+                            background:
+                              progress === 'error'
+                                ? '#ff4466'
+                                : 'var(--accent-color)',
+                            borderRadius: 3,
+                            transition: 'width 0.3s',
+                          }}
+                        />
+                      </div>
+                      <p
+                        style={{
+                          fontSize: '0.75rem',
+                          color: 'var(--text-muted)',
+                          textAlign: 'center',
+                        }}
+                      >
+                        {PROGRESS_MSG[progress]}
+                      </p>
+                    </div>
+                  )}
+
+                  {(progress === null ||
+                    progress === 'done' ||
+                    progress === 'error') && (
+                    <button
+                      style={{
+                        width: '100%',
+                        padding: 14,
+                        minHeight: 52,
+                        borderRadius: 12,
+                        border: '1px solid var(--accent-color)',
+                        background: 'rgba(0,240,255,0.1)',
+                        color: 'var(--accent-color)',
+                        fontWeight: 700,
+                        fontSize: '0.95rem',
+                        cursor: 'pointer',
+                        fontFamily: 'var(--font-display)',
+                        marginBottom: 8,
+                      }}
+                      onClick={runOCR}
+                      aria-label="Iniciar leitura OCR"
+                    >
+                      {progress === 'done' || progress === 'error'
+                        ? '🔄 Reler Números'
+                        : '🔍 Ler Números (OCR)'}
+                    </button>
+                  )}
+
+                  <button
+                    style={{
+                      width: '100%',
+                      padding: 14,
+                      minHeight: 52,
+                      borderRadius: 12,
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      background: 'rgba(255,255,255,0.03)',
+                      color: 'var(--text-muted)',
+                      fontWeight: 600,
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      marginBottom: 8,
+                    }}
+                    onClick={() => {
+                      setPreview(null);
+                      setFile(null);
+                      setProgress(null);
+                      setNumbers([]);
+                      setError('');
+                    }}
+                    aria-label="Escolher outra imagem"
+                  >
+                    ✕ Trocar Imagem
+                  </button>
+                </>
+              )}
+
+              {error && (
+                <div
+                  style={{
+                    marginTop: 8,
+                    padding: '0.75rem',
+                    borderRadius: 10,
+                    background: 'rgba(255,68,102,0.08)',
+                    border: '1px solid rgba(255,68,102,0.2)',
+                  }}
+                  role="alert"
+                  aria-live="assertive"
+                >
+                  <p
+                    style={{
+                      color: '#ff4466',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      marginBottom: 4,
+                    }}
+                  >
+                    Dicas para melhor leitura:
+                  </p>
+                  <p
+                    style={{
+                      color: 'var(--text-muted)',
+                      fontSize: '0.7rem',
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {error}
+                    <br />• Boa iluminação, sem sombras
+                    <br />• Aproxime o bilhete (preencha a tela)
+                    <br />• Mantenha reto e sem reflexos
+                    <br />• Se não funcionar, use a aba Manual
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+
+          {mode === 'manual' && (
+            <p
+              style={{
+                color: 'var(--text-muted)',
+                fontSize: '0.8rem',
+                marginBottom: '0.75rem',
+              }}
+            >
+              Digite os números separados por espaço ou vírgula:
+            </p>
+          )}
+
+          <label style={{ display: 'block', marginBottom: 8 }}>
+            <span
+              style={{
+                color: 'var(--text-muted)',
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: 1,
+              }}
+            >
+              Loteria
+            </span>
+            <select
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                borderRadius: 10,
+                border: '1px solid var(--glass-border)',
+                background: 'rgba(0,0,0,0.3)',
+                color: 'var(--text-main)',
+                fontSize: '0.85rem',
+                outline: 'none',
+                marginTop: 4,
+                minHeight: 44,
+                fontFamily: 'var(--font-body)',
+              }}
+              value={lottery}
+              onChange={(e) => setLottery(e.target.value)}
+              aria-label="Selecionar loteria"
+            >
+              {LOTTERY_OPTS.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          {numbers.length > 0 && (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 8,
+                justifyContent: 'center',
+                marginBottom: '1rem',
+              }}
+              aria-label="Números detectados"
+              aria-live="polite"
+            >
+              {numbers.map((n) => {
+                const c = pillColor(lottery);
+                return (
+                  <div
+                    key={n}
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: '50%',
+                      background: `${c}22`,
+                      border: `2px solid ${c}55`,
+                      color: c,
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      fontFamily: 'var(--font-numbers)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      position: 'relative',
+                    }}
+                  >
+                    <span>{String(n).padStart(2, '0')}</span>
+                    <button
+                      style={{
+                        position: 'absolute',
+                        top: -4,
+                        right: -4,
+                        width: 18,
+                        height: 18,
+                        borderRadius: '50%',
+                        background: '#ff4466',
+                        border: 'none',
+                        color: '#fff',
+                        fontSize: '0.6rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        lineHeight: 1,
+                      }}
+                      onClick={() => removeNum(n)}
+                      aria-label={`Remover número ${n}`}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: 8, marginBottom: '1rem' }}>
+            <input
+              type="number"
+              min={0}
+              max={maxNum}
+              value={manualInput}
+              onChange={(e) => setManualInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addManual()}
+              placeholder={`0–${String(maxNum).padStart(2, '0')}`}
+              style={{
+                flex: 1,
+                padding: '10px 12px',
+                borderRadius: 10,
+                border: '1px solid var(--glass-border)',
+                background: 'rgba(0,0,0,0.3)',
+                color: 'var(--text-main)',
+                fontSize: '0.85rem',
+                outline: 'none',
+                minHeight: 44,
+                fontFamily: 'var(--font-body)',
+              }}
+              aria-label={`Adicionar número (0 a ${maxNum})`}
+            />
+            <button
+              style={{
+                padding: '10px 16px',
+                borderRadius: 10,
+                border: '1px solid var(--accent-color)',
+                background: 'rgba(0,240,255,0.08)',
+                color: 'var(--accent-color)',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                minHeight: 44,
+              }}
+              onClick={addManual}
+              aria-label="Adicionar número"
+            >
+              + Adicionar
+            </button>
+          </div>
+
+          <button
+            style={{
+              width: '100%',
+              padding: 14,
+              minHeight: 52,
+              borderRadius: 12,
+              border: 'none',
+              background:
+                numbers.length === 0
+                  ? 'rgba(255,255,255,0.05)'
+                  : 'var(--accent-color)',
+              color: numbers.length === 0 ? 'var(--text-muted)' : '#000',
+              fontWeight: 700,
+              fontSize: '0.95rem',
+              cursor: numbers.length === 0 ? 'not-allowed' : 'pointer',
+              fontFamily: 'var(--font-display)',
+            }}
+            disabled={numbers.length === 0}
+            onClick={confirm}
+            aria-label="Confirmar e usar números detectados"
+          >
+            ✓ Confirmar ({numbers.length} números)
+          </button>
+        </div>
       </div>
     </div>
   );

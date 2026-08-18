@@ -26,6 +26,7 @@
     "@sentry/profiling-node": "^10.70.0",
     "@supabase/supabase-js": "^2.57.4",
     "dotenv": "^17.4.2",
+    "html5-qrcode": "^2.3.8",
     "next": "16.2.12",
     "postgres": "^3.4.7",
     "qrcode": "^1.5.4",
