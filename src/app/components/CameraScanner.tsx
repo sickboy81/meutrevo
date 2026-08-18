@@ -106,7 +106,7 @@ export default function CameraScanner({
     try {
       const dataUrl = await preprocessImage(file);
       setProgress('reading');
-      const result = await Tesseract.recognize(dataUrl, 'eng');
+      const result = await Tesseract.recognize(dataUrl, 'por');
       setProgress('verifying');
       const candidates = extractCandidateNumbers(result.data.text ?? '');
       const normalized = normalizeDetectedNumbers(candidates);

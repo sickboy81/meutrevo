@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getAuthenticatedUser } from '@/lib/api-auth';
 import { generateShareCode, getShareUrl } from '@/lib/qr-share';
+import { LOTTERY_CONFIGS } from '@/lib/lottery-math';
 import {
   consumeRateLimit,
   createRateLimitExceededResponse,
@@ -67,8 +68,8 @@ export async function POST(request: Request) {
       args: [
         shareCode,
         user.id,
-        lotteryId,
-        lotteryId, // lottery_name - pode ser melhorado depois
+        lotteryId, // lottery_id
+        LOTTERY_CONFIGS[lotteryId]?.name || lotteryId, // lottery_name
         contestNum || null,
         JSON.stringify(games),
         cotas || 1,

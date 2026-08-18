@@ -203,15 +203,6 @@ export default function QRCodeScanner({
     [handleUrl]
   );
 
-  const handleClose = useCallback(async () => {
-    await cleanup();
-    setPendingUrl(null);
-    setDisplayUrl('');
-    setError('');
-    setMode('camera');
-    onClose();
-  }, [cleanup, onClose]);
-
   // Inicia câmera ao abrir
   useEffect(() => {
     if (isOpen && mode === 'camera') {

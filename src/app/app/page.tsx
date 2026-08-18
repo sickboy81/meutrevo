@@ -82,6 +82,8 @@ const NumericStrategyPanel = lazy(
 const MysticGenerator = lazy(() => import('../components/MysticGenerator'));
 const ExportImportModal = lazy(() => import('../components/ExportImportModal'));
 const CameraScanner = lazy(() => import('../components/CameraScanner'));
+const QRCodeScanner = lazy(() => import('../components/QRCodeScanner'));
+const ShareQRCode = lazy(() => import('../components/ShareQRCode'));
 const QuickSimulator = lazy(() => import('../components/QuickSimulator'));
 const SavedGamesPanel = lazy(() => import('../components/SavedGamesPanel'));
 const GamePlansPanel = lazy(() => import('../components/GamePlansPanel'));
@@ -315,49 +317,57 @@ export default function Home() {
       redirectToLogin();
       return;
     }
+    if (generatingSmart) return;
+    setGeneratingSmart(true);
     playSound('click');
-    const math = await loadMath();
-    const fixed = Object.entries(filtersMap)
-      .filter(([, v]) => v === 'fixed')
-      .map(([k]) => Number(k));
-    const excluded = Object.entries(filtersMap)
-      .filter(([, v]) => v === 'excluded')
-      .map(([k]) => Number(k));
-    const hotNums = (statsData?.hotNumbers || []).map((h) => h.num);
-    const coldNums = (statsData?.coldNumbers || []).map((c) => c.num);
-    const lastDraw = (
-      result?.listaDezenas ||
-      result?.dezenasSorteadasOrdemSorteio ||
-      []
-    ).map(Number);
-    const delayData =
-      (statsData as { delays?: Record<number, number> })?.delays || {};
-    const advFilters = {
-      avoidConsecutive: avoidConsecutive || undefined,
-      customSumMin: customSumMin ? parseInt(customSumMin) : undefined,
-      customSumMax: customSumMax ? parseInt(customSumMax) : undefined,
-      maxRepeats: maxRepeats ? parseInt(maxRepeats) : undefined,
-    };
-    const games: { numbers: number[]; metrics: GameMetrics }[] = [];
-    for (let i = 0; i < gameQuantity; i++) {
-      const game = math.generateSmartGame(
-        config,
-        hotNums,
-        coldNums,
-        intensity,
-        lastDraw,
-        fixed,
-        excluded,
-        delayData,
-        advFilters
+    try {
+      const math = await loadMath();
+      const fixed = Object.entries(filtersMap)
+        .filter(([, v]) => v === 'fixed')
+        .map(([k]) => Number(k));
+      const excluded = Object.entries(filtersMap)
+        .filter(([, v]) => v === 'excluded')
+        .map(([k]) => Number(k));
+      const hotNums = (statsData?.hotNumbers || []).map((h) => h.num);
+      const coldNums = (statsData?.coldNumbers || []).map((c) => c.num);
+      const lastDraw = (
+        result?.listaDezenas ||
+        result?.dezenasSorteadasOrdemSorteio ||
+        []
+      ).map(Number);
+      const delayData =
+        (statsData as { delays?: Record<number, number> })?.delays || {};
+      const advFilters = {
+        avoidConsecutive: avoidConsecutive || undefined,
+        customSumMin: customSumMin ? parseInt(customSumMin) : undefined,
+        customSumMax: customSumMax ? parseInt(customSumMax) : undefined,
+        maxRepeats: maxRepeats ? parseInt(maxRepeats) : undefined,
+      };
+      const games: { numbers: number[]; metrics: GameMetrics }[] = [];
+      for (let i = 0; i < gameQuantity; i++) {
+        const game = math.generateSmartGame(
+          config,
+          hotNums,
+          coldNums,
+          intensity,
+          lastDraw,
+          fixed,
+          excluded,
+          delayData,
+          advFilters
+        );
+        games.push({ numbers: game.numbers, metrics: game.metrics });
+      }
+      setGeneratedGames(games);
+      void persistGeneratedHistory(
+        games.map((game) => game.numbers),
+        'smart_generator'
       );
-      games.push({ numbers: game.numbers, metrics: game.metrics });
+    } catch {
+      setSaveFeedback('Não foi possível gerar os jogos. Tente novamente.');
+    } finally {
+      setGeneratingSmart(false);
     }
-    setGeneratedGames(games);
-    void persistGeneratedHistory(
-      games.map((game) => game.numbers),
-      'smart_generator'
-    );
   };
 
   const handleGenerateWheel = async () => {
@@ -366,7 +376,12 @@ export default function Home() {
       return;
     }
     playSound('click');
-    if (wheelSelectedNums.length < config.drawCount) return;
+    if (wheelSelectedNums.length < config.drawCount + 1) {
+      setSaveFeedback(
+        `Selecione pelo menos ${config.drawCount + 1} números para gerar o fechamento.`
+      );
+      return;
+    }
     const math = await loadMath();
     const games = math.generateWheelingGames(
       config,
@@ -515,6 +530,7 @@ export default function Home() {
     'balanced' | 'aggressive' | 'surpresa' | 'delayed'
   >('balanced');
   const [gameQuantity, setGameQuantity] = useState<number>(1);
+  const [generatingSmart, setGeneratingSmart] = useState(false);
   const [planDraft, setPlanDraft] = useState<{
     title: string;
     budget: string;
@@ -558,6 +574,10 @@ export default function Home() {
   // New features: export/import, camera, push notifications
   const [showExportImport, setShowExportImport] = useState<boolean>(false);
   const [showCamera, setShowCamera] = useState<boolean>(false);
+  const [showQRScanner, setShowQRScanner] = useState<boolean>(false);
+  const [showShareQR, setShowShareQR] = useState<boolean>(false);
+  const [shareCode, setShareCode] = useState<string | null>(null);
+  const [shareUrl, setShareUrl] = useState<string>('');
 
   const config = LOTTERY_CONFIGS[activeLottery];
   const isPro = user?.role === 'pro' || user?.role === 'admin';
@@ -2449,6 +2469,7 @@ export default function Home() {
                         {/* GENERATE BUTTON */}
                         <button
                           onClick={handleGenerateSmart}
+                          disabled={generatingSmart}
                           className="btn-action"
                           style={{
                             width: '100%',
@@ -2459,9 +2480,9 @@ export default function Home() {
                             borderRadius: '8px',
                           }}
                         >
-                          Gerar{' '}
-                          {gameQuantity > 1 ? `${gameQuantity} Jogos` : 'Jogo'}{' '}
-                          com critérios históricos
+                          {generatingSmart
+                            ? 'Gerando jogos...'
+                            : `Gerar ${gameQuantity > 1 ? `${gameQuantity} Jogos` : 'Jogo'} com critérios históricos`}
                         </button>
 
                         {/* Generated Games Display */}
@@ -3507,6 +3528,36 @@ export default function Home() {
                     setShowCamera(false);
                   }}
                   onClose={() => setShowCamera(false)}
+                />
+              </Suspense>
+            )}
+
+            {/* QR CODE SCANNER */}
+            {showQRScanner && (
+              <Suspense fallback={<TabFallback />}>
+                <QRCodeScanner
+                  isOpen={showQRScanner}
+                  onClose={() => setShowQRScanner(false)}
+                  onScan={(url) => {
+                    setShowQRScanner(false);
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                  }}
+                />
+              </Suspense>
+            )}
+
+            {/* SHARE QR CODE */}
+            {showShareQR && (
+              <Suspense fallback={<TabFallback />}>
+                <ShareQRCode
+                  isOpen={showShareQR}
+                  onClose={() => setShowShareQR(false)}
+                  shareCode={shareCode}
+                  shareUrl={shareUrl}
+                  gamesCount={0}
+                  lotteryName={config?.name || activeLottery}
+                  cotas={1}
+                  taxa={0}
                 />
               </Suspense>
             )}
