@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import Image from 'next/image';
 import {
   preprocessImage,
   extractCandidateNumbers,
@@ -326,9 +327,12 @@ export default function CameraScanner({
                       background: '#000',
                     }}
                   >
-                    <img
+                    <Image
                       src={preview}
                       alt="Prévia do bilhete"
+                      width={1200}
+                      height={800}
+                      unoptimized
                       style={{
                         width: '100%',
                         maxHeight: 200,

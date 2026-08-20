@@ -200,7 +200,7 @@ export default function LandingPage({
             boxShadow: '0 0 10px var(--accent-glow)',
           }}
         >
-          Começar grátis ➜
+          Planejar meu jogo ➜
         </button>
       </header>
 
@@ -213,8 +213,8 @@ export default function LandingPage({
             desdobramentos em um painel simples de usar.
           </p>
           <p className="landing-subtitle">
-            Consulte concursos da Caixa, teste suas dezenas antes de apostar e
-            gere combinações com filtros de soma, atraso, par/ímpar e custo.
+            Escolha a modalidade, defina seu objetivo e orçamento, revise os
+            critérios históricos e só então gere suas combinações.
           </p>
 
           <div
@@ -228,7 +228,7 @@ export default function LandingPage({
               <strong>Simulação</strong> histórico recente
             </span>
             <span>
-              <strong>Pix</strong> Pro imediato
+              <strong>Pix ou Stripe</strong> Pro automatizado
             </span>
           </div>
 
@@ -240,7 +240,7 @@ export default function LandingPage({
                 setViewMode('app');
               }}
             >
-              Começar grátis
+              Planejar meu jogo
             </button>
             <button
               className="landing-btn-secondary"
@@ -296,7 +296,7 @@ export default function LandingPage({
             </div>
             <div>
               <span>Filtro ativo</span>
-              <strong>Par/ímpar</strong>
+              <strong>Critérios históricos</strong>
             </div>
             <div>
               <span>Exportação</span>

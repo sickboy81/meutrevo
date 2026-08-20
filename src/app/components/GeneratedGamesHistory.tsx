@@ -73,6 +73,20 @@ export default function GeneratedGamesHistory({
     () => items.filter((item) => selected.includes(item.id)),
     [items, selected]
   );
+  const comparison = useMemo(() => {
+    if (selectedItems.length < 2) return null;
+    const first = selectedItems[0].selectedNumbers;
+    const common = first.filter((number) =>
+      selectedItems.every((item) => item.selectedNumbers.includes(number))
+    );
+    const union = new Set(
+      selectedItems.flatMap((item) => item.selectedNumbers)
+    );
+    return {
+      common,
+      unique: union.size,
+    };
+  }, [selectedItems]);
   const toggleSelected = (id: string) =>
     setSelected((current) =>
       current.includes(id)
@@ -165,7 +179,7 @@ export default function GeneratedGamesHistory({
             ))}
           </select>
         </label>
-        {selectedItems.length > 1 && (
+        {comparison && (
           <span
             style={{
               fontSize: '0.7rem',
@@ -173,15 +187,38 @@ export default function GeneratedGamesHistory({
               alignSelf: 'end',
             }}
           >
-            Comparação: {selectedItems.length} jogos ·{' '}
-            {selectedItems.reduce(
-              (sum, item) => sum + item.selectedNumbers.length,
-              0
-            )}{' '}
-            dezenas selecionadas
+            {selectedItems.length} jogos · {comparison.unique} dezenas
+            diferentes · {comparison.common.length} em comum
           </span>
         )}
       </div>
+      {comparison && (
+        <div
+          role="status"
+          style={{
+            marginBottom: '0.75rem',
+            padding: '0.65rem',
+            borderRadius: 8,
+            background: 'rgba(0, 229, 255, 0.06)',
+            border: '1px solid rgba(0, 229, 255, 0.18)',
+            color: 'var(--text-muted)',
+            fontSize: '0.72rem',
+          }}
+        >
+          <strong style={{ color: 'white' }}>
+            Comparação dos jogos selecionados
+          </strong>
+          <br />
+          Dezenas presentes em todos:{' '}
+          {comparison.common.length > 0
+            ? comparison.common
+                .map((number) => String(number).padStart(2, '0'))
+                .join(', ')
+            : 'nenhuma'}
+          . Isso mostra repetição entre combinações, não aumento de
+          probabilidade.
+        </div>
+      )}
       {message && (
         <p role="status" style={{ color: '#00e676', fontSize: '0.72rem' }}>
           {message}
@@ -222,6 +259,7 @@ export default function GeneratedGamesHistory({
                   type="checkbox"
                   checked={selected.includes(item.id)}
                   onChange={() => toggleSelected(item.id)}
+                  aria-label={`Comparar jogo ${item.selectedNumbers.join(', ')}`}
                 />{' '}
                 Comparar
               </label>

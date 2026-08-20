@@ -37,6 +37,12 @@ interface Props {
   user: { id: string; name: string; role?: string } | null;
   onUpgrade: () => void;
   playSound: (type: 'click' | 'success' | 'delete') => void;
+  onShowShareQR: (bolao: {
+    shareCode: string;
+    gamesCount: number;
+    cotas: number;
+    taxa: number;
+  }) => void;
 }
 
 export default function BolaoPanel({
@@ -46,6 +52,7 @@ export default function BolaoPanel({
   user,
   onUpgrade,
   playSound,
+  onShowShareQR,
 }: Props) {
   const [subView, setSubView] = useState<'create' | 'my' | 'join'>('create');
   const [selectedGames, setSelectedGames] = useState<string[]>([]);
@@ -1088,6 +1095,33 @@ export default function BolaoPanel({
                   }}
                 >
                   📱 WhatsApp
+                </button>
+              </div>
+              <div
+                style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}
+              >
+                <button
+                  onClick={() => {
+                    onShowShareQR({
+                      shareCode: createdBolao.shareCode,
+                      gamesCount: selectedGames.length,
+                      cotas: parseInt(cotasTotal) || 5,
+                      taxa: isPro ? parseFloat(taxaPct) || 0 : 0,
+                    });
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '0.5rem',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(0,230,118,0.3)',
+                    borderRadius: '8px',
+                    color: 'white',
+                    fontSize: '0.7rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  📲 Gerar QR Code
                 </button>
               </div>
             </div>

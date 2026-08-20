@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import QRCode from 'qrcode';
 
 interface Props {
@@ -239,9 +240,12 @@ export default function ShareQRCode({
 
         <div style={S.qrWrap}>
           {dataUrl ? (
-            <img
+            <Image
               src={dataUrl}
               alt="QR Code para compartilhar bolão"
+              width={200}
+              height={200}
+              unoptimized
               style={{ width: 200, height: 200, borderRadius: 8 }}
             />
           ) : (

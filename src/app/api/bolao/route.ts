@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getAuthenticatedUser } from '@/lib/api-auth';
 import { getSimpleBetPrice } from '@/lib/lottery-prices';
+import { LOTTERY_CONFIGS } from '@/lib/lottery-math';
 
 // GET: List user's bolões
 export async function GET(req: Request) {
@@ -79,7 +80,7 @@ export async function POST(req: Request) {
     const id = `bol_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const shareCode = Math.random().toString(36).slice(2, 10);
 
-    // Keep the bolão, its public link and the creator's cota atomic.
+    // Keep the bolão, its share record and the creator's cota atomic.
     await db.batch([
       {
         sql: `INSERT INTO boloes (id, creator_id, lottery, title, games_json, total_cost, cotas_total, cotas_taken, taxa_pct, share_code)
@@ -98,10 +99,19 @@ export async function POST(req: Request) {
         ],
       },
       {
-        sql: `INSERT INTO bolao_public_access (bolao_id, share_code)
-              VALUES (?, ?)
-              ON CONFLICT (bolao_id) DO NOTHING`,
-        args: [id, shareCode],
+        sql: `INSERT INTO bolao_shares (share_code, user_id, lottery_id, lottery_name, games_snapshot, cotas, taxa, summary_text, is_active)
+              VALUES (?, ?, ?, ?, ?, ?, ?, '', true)
+              ON CONFLICT (share_code) DO NOTHING`,
+        args: [
+          shareCode,
+          user.id,
+          lottery,
+          LOTTERY_CONFIGS[lottery as keyof typeof LOTTERY_CONFIGS]?.name ||
+            lottery,
+          JSON.stringify(games.map((g: string[]) => g.map(String))),
+          cotas_total || 1,
+          taxa_pct || 0,
+        ],
       },
       {
         sql: `INSERT INTO bolao_participants (id, bolao_id, user_id, cota_num, name, amount_due)
@@ -157,6 +167,10 @@ export async function DELETE(req: Request) {
     await db.execute({
       sql: `DELETE FROM bolao_participants WHERE bolao_id = ?`,
       args: [id],
+    });
+    await db.execute({
+      sql: `DELETE FROM bolao_shares WHERE share_code IN (SELECT share_code FROM boloes WHERE id = ? AND creator_id = ?)`,
+      args: [id, user.id],
     });
     await db.execute({
       sql: `DELETE FROM boloes WHERE id = ? AND creator_id = ?`,

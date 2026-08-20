@@ -27,6 +27,7 @@ export interface AppState {
   result: LotteryResult | null;
   history: LotteryResult[];
   loading: boolean;
+  resultError: string | null;
   setLoading: (v: boolean) => void;
   customConcurso: string;
   setCustomConcurso: (v: string) => void;
@@ -70,6 +71,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [result, setResult] = useState<LotteryResult | null>(null);
   const [history, setHistory] = useState<LotteryResult[]>([]);
   const [loading, setLoading] = useState(true);
+  const [resultError, setResultError] = useState<string | null>(null);
   const [customConcurso, setCustomConcurso] = useState('');
   const [theme, setTheme] = useState<ThemeType>('meganeon');
   const [historyLimit, setHistoryLimit] = useState(30);
@@ -117,21 +119,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const fetchResult = useCallback(
     async (lotteryId: string, contestNum?: string) => {
       setLoading(true);
+      setResultError(null);
+      setResult(null);
+      setHistory([]);
       try {
         const url = contestNum
           ? `/api/loteria/${lotteryId}?contest=${contestNum}`
           : `/api/loteria/${lotteryId}?limit=50`;
         const res = await fetch(url);
-        if (!res.ok) return null;
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setResultError(
+            data.error || 'Não foi possível carregar os resultados agora.'
+          );
+          return null;
+        }
         const data = await res.json();
         if (data.lottery) {
           setResult(data.lottery);
           setHistory(data.history || []);
           return data.lottery;
         }
+        setResultError('A resposta não trouxe um resultado válido.');
         return null;
       } catch (e) {
         console.error(e);
+        setResultError('Erro de conexão ao carregar os resultados.');
         return null;
       } finally {
         setLoading(false);
@@ -163,6 +176,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     result,
     history,
     loading,
+    resultError,
     setLoading,
     customConcurso,
     setCustomConcurso,

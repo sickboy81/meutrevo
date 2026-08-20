@@ -12,6 +12,7 @@ import {
 } from 'react';
 import Link from 'next/link';
 import { fetchWithCsrf } from '@/lib/fetch';
+import { getShareUrl, validateShareUrl } from '@/lib/qr-share';
 import {
   normalizeAnnualPrice,
   normalizeMonthlyPrice,
@@ -23,6 +24,7 @@ import {
   getCleanDezenas as getCleanDezenasHelper,
   toggleFilterStatus,
 } from '@/lib/lottery-helpers';
+import { applyDetectedNumbersToFiltersMap } from '@/lib/scanner-utils';
 import {
   downloadTXT as downloadTXTFn,
   downloadPDF as downloadPDFFn,
@@ -578,6 +580,9 @@ export default function Home() {
   const [showShareQR, setShowShareQR] = useState<boolean>(false);
   const [shareCode, setShareCode] = useState<string | null>(null);
   const [shareUrl, setShareUrl] = useState<string>('');
+  const [shareGamesCount, setShareGamesCount] = useState<number>(0);
+  const [shareCotas, setShareCotas] = useState<number>(1);
+  const [shareTaxa, setShareTaxa] = useState<number>(0);
 
   const config = LOTTERY_CONFIGS[activeLottery];
   const isPro = user?.role === 'pro' || user?.role === 'admin';
@@ -2237,14 +2242,47 @@ export default function Home() {
                               dezena do sorteio.
                             </span>
 
-                            <VolanteGrid
-                              mode="filter"
-                              minNum={config.minNum}
-                              maxNum={config.maxNum}
-                              selectedList={[]}
-                              filtersMap={filtersMap}
-                              onSelect={toggleFilterNumber}
-                            />
+                            <div
+                              style={{
+                                display: 'flex',
+                                gap: '0.5rem',
+                                alignItems: 'center',
+                                flexWrap: 'wrap',
+                                marginBottom: '0.5rem',
+                              }}
+                            >
+                              <VolanteGrid
+                                mode="filter"
+                                minNum={config.minNum}
+                                maxNum={config.maxNum}
+                                selectedList={[]}
+                                filtersMap={filtersMap}
+                                onSelect={toggleFilterNumber}
+                              />
+                              <button
+                                className="theme-pill-btn"
+                                onClick={() => {
+                                  if (
+                                    activeLottery === 'loteca' ||
+                                    activeLottery === 'loteriafederal'
+                                  ) {
+                                    window.alert(
+                                      'Leitura de volante não suportada para Loteca e Loteria Federal.'
+                                    );
+                                    return;
+                                  }
+                                  setShowCamera(true);
+                                }}
+                                style={{
+                                  fontSize: '0.7rem',
+                                  padding: '0.25rem 0.5rem',
+                                  height: 'fit-content',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                📷 Ler volante
+                              </button>
+                            </div>
 
                             {/* CO-OCCURRENCE DEZENAS PARCEIRAS */}
                             {partnerNumbers.length > 0 && (
@@ -2706,6 +2744,7 @@ export default function Home() {
                             handleCopyText={handleCopyText}
                             copyFeedback={copyFeedback}
                             bolaoShareUrl={bolaoShareUrl}
+                            onScanQR={() => setShowQRScanner(true)}
                           />
                         </Suspense>
                       </div>
@@ -3295,6 +3334,17 @@ export default function Home() {
                       user={user}
                       onUpgrade={() => setShowUpgradeModal(true)}
                       playSound={playSound}
+                      onShowShareQR={(bolao) => {
+                        const code = String(bolao.shareCode || '')
+                          .trim()
+                          .toLowerCase();
+                        setShareCode(code);
+                        setShareUrl(getShareUrl(code));
+                        setShareGamesCount(bolao.gamesCount);
+                        setShareCotas(bolao.cotas);
+                        setShareTaxa(bolao.taxa);
+                        setShowShareQR(true);
+                      }}
                     />
                   </Suspense>
                 )}
@@ -3350,6 +3400,7 @@ export default function Home() {
                         handleCopyText={handleCopyText}
                         copyFeedback={copyFeedback}
                         bolaoShareUrl={bolaoShareUrl}
+                        onScanQR={() => setShowQRScanner(true)}
                       />
                     </Suspense>
                     {user && (
@@ -3524,7 +3575,15 @@ export default function Home() {
             {showCamera && (
               <Suspense fallback={<TabFallback />}>
                 <CameraScanner
-                  onNumbersDetected={() => {
+                  activeLottery={activeLottery}
+                  onNumbersDetected={(numbers) => {
+                    const next = applyDetectedNumbersToFiltersMap(
+                      numbers,
+                      filtersMap,
+                      config.minNum,
+                      config.maxNum
+                    );
+                    setFiltersMap(next);
                     setShowCamera(false);
                   }}
                   onClose={() => setShowCamera(false)}
@@ -3540,7 +3599,30 @@ export default function Home() {
                   onClose={() => setShowQRScanner(false)}
                   onScan={(url) => {
                     setShowQRScanner(false);
-                    window.open(url, '_blank', 'noopener,noreferrer');
+                    const v = validateShareUrl(url);
+                    if (!v.safe) return;
+
+                    if (v.isMeuTrevo) {
+                      try {
+                        const parsed = new URL(v.displayUrl);
+                        const match =
+                          parsed.pathname.match(/^\/bolao\/([^/?#]+)/);
+                        if (match) {
+                          window.location.href = `/bolao/${match[1]}`;
+                          return;
+                        }
+                      } catch {}
+                    }
+
+                    if (
+                      window.confirm(`Abrir link externo?\n\n${v.displayUrl}`)
+                    ) {
+                      window.open(
+                        v.displayUrl,
+                        '_blank',
+                        'noopener,noreferrer'
+                      );
+                    }
                   }}
                 />
               </Suspense>
@@ -3554,10 +3636,32 @@ export default function Home() {
                   onClose={() => setShowShareQR(false)}
                   shareCode={shareCode}
                   shareUrl={shareUrl}
-                  gamesCount={0}
+                  gamesCount={shareGamesCount}
                   lotteryName={config?.name || activeLottery}
-                  cotas={1}
-                  taxa={0}
+                  cotas={shareCotas}
+                  taxa={shareTaxa}
+                  onRevoke={
+                    shareCode
+                      ? async () => {
+                          try {
+                            const res = await fetchWithCsrf(
+                              '/api/bolao/share/revoke',
+                              {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ shareCode }),
+                              }
+                            );
+                            if (res.ok) {
+                              setShowShareQR(false);
+                              setShareCode(null);
+                            }
+                          } catch {
+                            /* ignore */
+                          }
+                        }
+                      : undefined
+                  }
                 />
               </Suspense>
             )}

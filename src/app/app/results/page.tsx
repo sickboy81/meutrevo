@@ -25,6 +25,35 @@ export default function ResultsPage() {
           setShowRateio={setShowRateio}
           history={app.history}
         />
+      ) : app.resultError ? (
+        <div
+          role="alert"
+          style={{
+            minHeight: '60vh',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '1.5rem',
+            textAlign: 'center',
+          }}
+        >
+          <strong style={{ color: '#ffd600' }}>
+            Não foi possível carregar os resultados
+          </strong>
+          <p style={{ color: 'var(--text-muted)', margin: 0 }}>
+            {app.resultError}
+          </p>
+          <button
+            type="button"
+            className="theme-pill-btn active"
+            onClick={() => void app.fetchResult(app.activeLottery)}
+            disabled={app.loading}
+          >
+            {app.loading ? 'Tentando novamente...' : 'Tentar novamente'}
+          </button>
+        </div>
       ) : (
         <Loading />
       )}

@@ -63,7 +63,7 @@ export default function SavedPage() {
         selectedForPool={selectedForPool}
         setSelectedForPool={setSelectedForPool}
         setBolaoText={setBolaoText}
-        latestResultsMap={{}}
+        latestResultsMap={app.result ? { [app.activeLottery]: app.result } : {}}
         getCleanDezenas={getCleanDezenas}
         handleDeleteGame={handleDeleteGame}
         downloadTXT={(games, suffix) =>

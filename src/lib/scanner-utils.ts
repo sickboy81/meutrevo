@@ -20,3 +20,30 @@ export function extractLotteryNumbers(text: string): string[] {
 
   return [...numbers].slice(0, 15);
 }
+
+export function applyDetectedNumbersToFiltersMap(
+  detected: string[],
+  currentFilters: Record<number, 'fixed' | 'excluded' | 'none'>,
+  minNum: number,
+  maxNum: number
+): Record<number, 'fixed' | 'excluded' | 'none'> {
+  const next: Record<number, 'fixed' | 'excluded' | 'none'> = {
+    ...currentFilters,
+  };
+
+  Object.keys(next).forEach((k) => {
+    const key = Number(k);
+    if (next[key] === 'fixed') {
+      delete next[key];
+    }
+  });
+
+  detected.forEach((n) => {
+    const num = Number.parseInt(n, 10);
+    if (!Number.isNaN(num) && num >= minNum && num <= maxNum) {
+      next[num] = 'fixed';
+    }
+  });
+
+  return next;
+}

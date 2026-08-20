@@ -34,6 +34,7 @@ type Props = {
   handleCopyText: (text: string, type: string) => void;
   copyFeedback: string;
   bolaoShareUrl: string;
+  onScanQR?: () => void;
 };
 
 type EnrichedGame = {
@@ -68,6 +69,7 @@ export default function SavedGamesPanel({
   handleCopyText,
   copyFeedback,
   bolaoShareUrl,
+  onScanQR,
 }: Props) {
   const [lotteryFilter, setLotteryFilter] = useState<string>('all');
   const [numberSearch, setNumberSearch] = useState('');
@@ -382,6 +384,19 @@ export default function SavedGamesPanel({
             >
               🖨️ IMPRIMIR
             </button>
+            {onScanQR && (
+              <button
+                onClick={onScanQR}
+                className="theme-pill-btn"
+                style={{
+                  fontSize: '0.65rem',
+                  padding: '0.35rem 0.55rem',
+                  textAlign: 'center',
+                }}
+              >
+                📱 Escanear QR Code
+              </button>
+            )}
           </div>
         )}
       </div>

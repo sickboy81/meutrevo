@@ -263,10 +263,10 @@ export default async function LandingHome() {
               desdobramentos em um painel simples de usar.
             </p>
             <p className="landing-subtitle">
-              Consulte concursos da Caixa, teste suas dezenas antes de apostar e
-              gere combinações com filtros de soma, atraso, par/ímpar e custo.
-              Organize seus jogos, use temas e confira apostas por câmera ou QR
-              Code dentro do app.
+              Escolha a modalidade, defina seu objetivo e orçamento, revise os
+              critérios históricos e só então gere suas combinações. Consulte
+              concursos da Caixa, organize seus jogos e confira o desempenho sem
+              promessas de previsão.
             </p>
 
             <div
@@ -286,7 +286,7 @@ export default async function LandingHome() {
 
             <div className="landing-cta-group landing-hero-actions">
               <AppEntryLink
-                href="/app?upgrade=1"
+                href="/app"
                 className="landing-btn-primary"
                 style={{
                   textDecoration: 'none',
@@ -295,7 +295,7 @@ export default async function LandingHome() {
                   alignItems: 'center',
                 }}
               >
-                Começar grátis
+                Planejar meu jogo
               </AppEntryLink>
               <a
                 href="#testador-anchor"
@@ -348,7 +348,7 @@ export default async function LandingHome() {
               </div>
               <div>
                 <span>Filtro ativo</span>
-                <strong>Par/ímpar</strong>
+                <strong>Critérios históricos</strong>
               </div>
               <div>
                 <span>Exportação</span>
@@ -734,12 +734,21 @@ export default async function LandingHome() {
                   </span>
                   <span className="price-period">/mês</span>
                 </div>
+                <p
+                  style={{
+                    color: '#00e676',
+                    fontSize: '0.7rem',
+                    margin: '-0.5rem 0 0.75rem',
+                  }}
+                >
+                  ou R$ 129,90/ano
+                </p>
                 <ul className="price-features-list">
                   <li className="price-feature-item checked">
                     <strong>Desdobramentos com cobertura condicional</strong>
                   </li>
                   <li className="price-feature-item checked">
-                    Gerador por temas, scanner OCR e QR Code para compartilhar
+                    Gerador por temas e compartilhamento de combinações
                   </li>
                   <li className="price-feature-item checked">
                     Gerador avançado com filtros de soma, repetição e atraso
@@ -762,6 +771,7 @@ export default async function LandingHome() {
                 </ul>
               </div>
               <AppEntryLink
+                href="/app?upgrade=1"
                 className="landing-btn-primary"
                 style={{
                   textDecoration: 'none',
