@@ -17,9 +17,9 @@ export const LOTTERY_SEO_CONFIGS = {
     id: 'megasena',
     path: '/megasena',
     name: 'Mega-Sena',
-    title: 'Resultado da Mega-Sena e Gerador Estatístico',
+    title: 'Resultado da Mega-Sena e organização de jogos',
     description:
-      'Confira o resultado da Mega-Sena, dezenas sorteadas, prêmio e concursos recentes. Teste jogos e analise estatísticas antes de apostar.',
+      'Confira o resultado da Mega-Sena, dezenas sorteadas, prêmio e concursos recentes. Organize jogos e consulte critérios históricos sem promessas de previsão.',
     keywords: [
       'resultado mega sena',
       'mega sena hoje',
@@ -55,9 +55,9 @@ export const LOTTERY_SEO_CONFIGS = {
     id: 'quina',
     path: '/quina',
     name: 'Quina',
-    title: 'Resultado da Quina e Gerador Estatístico',
+    title: 'Resultado da Quina e organização de jogos',
     description:
-      'Acompanhe o resultado da Quina, números sorteados, prêmio, rateio e concursos recentes. Analise dezenas e teste jogos no Meu Trevo.',
+      'Acompanhe o resultado da Quina, números sorteados, prêmio, rateio e concursos recentes. Organize jogos e consulte critérios históricos no Meu Trevo.',
     keywords: [
       'resultado quina',
       'quina hoje',
