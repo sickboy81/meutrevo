@@ -1054,6 +1054,37 @@ textarea:focus-visible {
   transition: all 0.2s;
 }
 
+.theme-pill-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.primary-btn {
+  border: 1px solid var(--accent-color);
+  border-radius: 8px;
+  padding: 0.65rem 0.9rem;
+  background: linear-gradient(135deg, #00e5ff, #00d084);
+  color: #031014;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 0 14px rgba(0, 229, 255, 0.18);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.primary-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+}
+
+.primary-btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
 .theme-pill-btn.active {
   background: var(--accent-color);
   color: #000;
