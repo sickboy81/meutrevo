@@ -1622,10 +1622,6 @@ export default function Home() {
             </button>
           ))}
         </div>
-        <div className="lottery-scroll-hint" aria-hidden="true">
-          Arraste para ver outras loterias →
-        </div>
-
         {saveFeedback && (
           <div
             role="status"
