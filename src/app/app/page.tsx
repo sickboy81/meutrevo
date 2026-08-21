@@ -1406,7 +1406,7 @@ export default function Home() {
                 setActiveTab('plans');
               }}
             >
-              Plano e orçamento
+              Planejamento
             </button>
             <button
               className={`nav-item-desktop ${activeTab === 'simulator' ? 'active' : ''}`}
@@ -1763,6 +1763,96 @@ export default function Home() {
                   </button>
                 ))}
               </div>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
+                  gap: '0.55rem',
+                  marginTop: '0.65rem',
+                }}
+              >
+                {(
+                  [
+                    [
+                      'Montar um jogo',
+                      'Defina objetivo e orçamento antes de gerar.',
+                      'Planejar',
+                      goToGenerator,
+                    ],
+                    [
+                      'Ver resultados',
+                      'Consulte o último concurso e o histórico oficial.',
+                      'Resultados',
+                      () => setActiveTab('results'),
+                    ],
+                    [
+                      'Conferir meus jogos',
+                      `${savedGames.length} jogo(s) salvo(s) para revisar.`,
+                      'Conferir',
+                      () => {
+                        trackProductEvent('conference_opened', {
+                          lottery: activeLottery,
+                        });
+                        setActiveTab('conference');
+                      },
+                    ],
+                    [
+                      'Organizar um bolão',
+                      'Divida cotas, custos e concurso-alvo.',
+                      'Bolão',
+                      () => {
+                        goToGenerator();
+                        setGenSubTab('bolao');
+                      },
+                    ],
+                  ] as const
+                ).map(([title, description, label, action]) => (
+                  <button
+                    key={title}
+                    type="button"
+                    onClick={action}
+                    style={{
+                      textAlign: 'left',
+                      border: '1px solid var(--glass-border)',
+                      background: 'rgba(8,8,15,0.34)',
+                      borderRadius: '11px',
+                      padding: '0.7rem',
+                      color: 'var(--text-main)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <strong
+                      style={{
+                        display: 'block',
+                        color: '#fff',
+                        fontSize: '0.75rem',
+                      }}
+                    >
+                      {title}
+                    </strong>
+                    <span
+                      style={{
+                        display: 'block',
+                        color: 'var(--text-muted)',
+                        fontSize: '0.66rem',
+                        lineHeight: 1.4,
+                        margin: '0.25rem 0 0.5rem',
+                      }}
+                    >
+                      {description}
+                    </span>
+                    <span
+                      style={{
+                        color: 'var(--accent-color)',
+                        fontSize: '0.65rem',
+                        fontWeight: 800,
+                      }}
+                    >
+                      {label} →
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
           </section>
         )}
@@ -1986,13 +2076,13 @@ export default function Home() {
                       className={`sub-tab-btn ${genSubTab === 'smart' ? 'active' : ''}`}
                       onClick={() => setGenSubTab('smart')}
                     >
-                      Gerador Smart
+                      Jogo rápido
                     </button>
                     <button
                       className={`sub-tab-btn ${genSubTab === 'wheeling' ? 'active' : ''}`}
                       onClick={() => setGenSubTab('wheeling')}
                     >
-                      Desdobramento
+                      Fechamento
                     </button>
                     {(activeLottery === 'lotofacil' ||
                       NUMERIC_STRATEGY_LOTTERIES.includes(
@@ -2009,7 +2099,7 @@ export default function Home() {
                           setGenSubTab('advanced');
                         }}
                       >
-                        Estratégia avançada
+                        Análise histórica
                       </button>
                     )}
                     <button
@@ -2022,7 +2112,7 @@ export default function Home() {
                         }
                       }}
                     >
-                      Gerador por Temas
+                      Jogos por tema
                     </button>
                     <button
                       className={`sub-tab-btn ${genSubTab === 'bolao' ? 'active' : ''}`}
@@ -2030,7 +2120,7 @@ export default function Home() {
                         setGenSubTab('bolao');
                       }}
                     >
-                      Gerador de Bolão
+                      Bolão
                     </button>
                   </div>
 
