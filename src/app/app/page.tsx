@@ -1412,16 +1412,6 @@ export default function Home() {
               Conferir
             </button>
             <button
-              className={`nav-item-desktop ${activeTab === 'plans' ? 'active' : ''}`}
-              aria-current={activeTab === 'plans' ? 'page' : undefined}
-              onClick={() => {
-                playSound('click');
-                setActiveTab('plans');
-              }}
-            >
-              Planejamento
-            </button>
-            <button
               className={`nav-item-desktop ${activeTab === 'simulator' ? 'active' : ''}`}
               aria-current={activeTab === 'simulator' ? 'page' : undefined}
               onClick={() => {
@@ -1690,7 +1680,7 @@ export default function Home() {
           </div>
         )}
 
-        {user && (
+        {user && activeTab !== 'results' && (
           <section
             aria-label="Próximas etapas"
             style={{
@@ -3824,7 +3814,7 @@ export default function Home() {
               setShowMobileMore(false);
             }}
           >
-            Meu Plano
+            Orçamento
           </button>
           <button
             className={`nav-item ${['simulator', 'ranking', 'finance'].includes(activeTab) ? 'active' : ''}`}
