@@ -100,7 +100,7 @@ export default async function LotomaniaLanding() {
                     name: 'Como o Meu Trevo ajuda a escolher 50 números na Lotomania?',
                     acceptedAnswer: {
                       '@type': 'Answer',
-                      text: 'Selecionar 50 dezenas manualmente é demorado e propenso a vícios cognitivos (como desenhar diagonais na cartela). O Meu Trevo utiliza algoritmos estatísticos que equilibram as dezenas por quadrante, paridade e somas matemáticas aproximadas da curva ideal (2200 a 2750), otimizando a aposta em segundos.',
+                      text: 'Selecionar 50 dezenas manualmente é demorado e pode favorecer padrões visuais. O Meu Trevo organiza as dezenas por quadrante, paridade e faixa de soma observada no histórico, para você revisar a combinação com mais clareza.',
                     },
                   },
                 ],
@@ -313,8 +313,10 @@ export default async function LotomaniaLanding() {
                 </strong>
               </div>
               <div>
-                <span>Status Atual</span>
-                <strong>{result?.acumulado ? 'Acumulado' : 'Premiado'}</strong>
+                <span>Status do concurso</span>
+                <strong>
+                  {result?.acumulado ? 'Concurso acumulado' : 'Houve premiação'}
+                </strong>
               </div>
               <div>
                 <span>Data do Concurso</span>
@@ -333,7 +335,7 @@ export default async function LotomaniaLanding() {
         {/* Content Section */}
         <section style={{ padding: '2rem 0' }}>
           <h2 className="landing-section-title">
-            <span>📊</span> COMO O MEU TREVO OTIMIZA SEUS JOGOS DA LOTOMANIA
+            <span>📊</span> COMO O MEU TREVO ORGANIZA SEUS JOGOS DA LOTOMANIA
           </h2>
           <p
             style={{
@@ -412,7 +414,7 @@ export default async function LotomaniaLanding() {
                 <p>
                   Gere facilmente jogos espelho (que contêm as outras 50 dezenas
                   que não foram selecionadas no seu jogo principal) para
-                  aumentar as chances nas faixas extremas.
+                  comparar a cobertura possível nas faixas extremas.
                 </p>
               </div>
             </div>
@@ -441,7 +443,7 @@ export default async function LotomaniaLanding() {
           <h2
             style={{ fontSize: '2rem', color: 'white', marginBottom: '1rem' }}
           >
-            Potencialize seus jogos da Lotomania
+            Organize seus jogos da Lotomania
           </h2>
           <p
             style={{
@@ -550,9 +552,8 @@ export default async function LotomaniaLanding() {
                 lineHeight: 1.6,
               }}
             >
-              Inteligência estatística, combinatória matemática avançada e
-              análise histórica em tempo real para otimizar seus jogos de
-              loteria de forma inteligente.
+              Dados históricos, combinatória matemática e análise histórica para
+              organizar seus jogos de loteria com critérios claros.
             </p>
           </div>
           <div style={{ display: 'flex', gap: '4rem', flexWrap: 'wrap' }}>
@@ -732,7 +733,7 @@ export default async function LotomaniaLanding() {
               reservados.
             </span>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Feito com ⚡ para apostadores estatísticos.
+              Dados históricos e organização para suas decisões.
             </span>
           </div>
         </footer>

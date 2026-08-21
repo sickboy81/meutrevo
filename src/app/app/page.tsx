@@ -572,6 +572,7 @@ export default function Home() {
   // --- ONBOARDING TUTORIAL STATES ---
   const [showTutorial, setShowTutorial] = useState<boolean>(false);
   const [tutorialStep, setTutorialStep] = useState<number>(0);
+  const [showMobileMore, setShowMobileMore] = useState<boolean>(false);
 
   // New features: export/import, camera, push notifications
   const [showExportImport, setShowExportImport] = useState<boolean>(false);
@@ -2745,6 +2746,7 @@ export default function Home() {
                             copyFeedback={copyFeedback}
                             bolaoShareUrl={bolaoShareUrl}
                             onScanQR={() => setShowQRScanner(true)}
+                            onGoToGenerator={() => setActiveTab('generator')}
                           />
                         </Suspense>
                       </div>
@@ -3401,6 +3403,7 @@ export default function Home() {
                         copyFeedback={copyFeedback}
                         bolaoShareUrl={bolaoShareUrl}
                         onScanQR={() => setShowQRScanner(true)}
+                        onGoToGenerator={() => setActiveTab('generator')}
                       />
                     </Suspense>
                     {user && (
@@ -3408,6 +3411,7 @@ export default function Home() {
                         <GeneratedGamesHistory
                           key={activeLottery}
                           lottery={activeLottery}
+                          onStartGenerating={() => setActiveTab('generator')}
                           onRegenerate={(item) => {
                             setActiveTab('generator');
                             setGenSubTab(
@@ -3668,58 +3672,76 @@ export default function Home() {
           </div>
 
           {/* Bottom Nav Bar */}
-          <nav
-            className="bottom-nav"
-            style={{ gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' }}
-          >
+          {showMobileMore && (
+            <div className="mobile-more-menu" role="menu">
+              {[
+                ['simulator', 'Simulador'],
+                ['ranking', 'Ranking'],
+                ['finance', 'Financeiro'],
+              ].map(([tab, label]) => (
+                <button
+                  key={tab}
+                  type="button"
+                  role="menuitem"
+                  className={activeTab === tab ? 'active' : ''}
+                  onClick={() => {
+                    setActiveTab(tab as ActiveTab);
+                    setShowMobileMore(false);
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+          <nav className="bottom-nav">
             <button
               className={`nav-item ${activeTab === 'results' ? 'active' : ''}`}
               aria-current={activeTab === 'results' ? 'page' : undefined}
-              onClick={() => setActiveTab('results')}
+              onClick={() => {
+                setActiveTab('results');
+                setShowMobileMore(false);
+              }}
             >
               Resultados
             </button>
             <button
               className={`nav-item ${activeTab === 'generator' ? 'active' : ''}`}
               aria-current={activeTab === 'generator' ? 'page' : undefined}
-              onClick={() => setActiveTab('generator')}
+              onClick={() => {
+                setActiveTab('generator');
+                setShowMobileMore(false);
+              }}
             >
               Gerador
             </button>
             <button
               className={`nav-item ${activeTab === 'games' ? 'active' : ''}`}
               aria-current={activeTab === 'games' ? 'page' : undefined}
-              onClick={() => setActiveTab('games')}
+              onClick={() => {
+                setActiveTab('games');
+                setShowMobileMore(false);
+              }}
             >
               Meus Jogos
             </button>
             <button
               className={`nav-item ${activeTab === 'plans' ? 'active' : ''}`}
               aria-current={activeTab === 'plans' ? 'page' : undefined}
-              onClick={() => setActiveTab('plans')}
+              onClick={() => {
+                setActiveTab('plans');
+                setShowMobileMore(false);
+              }}
             >
               Meu Plano
             </button>
             <button
-              className={`nav-item ${activeTab === 'simulator' ? 'active' : ''}`}
-              aria-current={activeTab === 'simulator' ? 'page' : undefined}
-              onClick={() => setActiveTab('simulator')}
+              className={`nav-item ${['simulator', 'ranking', 'finance'].includes(activeTab) ? 'active' : ''}`}
+              aria-expanded={showMobileMore}
+              aria-haspopup="menu"
+              onClick={() => setShowMobileMore((current) => !current)}
             >
-              Simulador
-            </button>
-            <button
-              className={`nav-item ${activeTab === 'ranking' ? 'active' : ''}`}
-              aria-current={activeTab === 'ranking' ? 'page' : undefined}
-              onClick={() => setActiveTab('ranking')}
-            >
-              Ranking
-            </button>
-            <button
-              className={`nav-item ${activeTab === 'finance' ? 'active' : ''}`}
-              aria-current={activeTab === 'finance' ? 'page' : undefined}
-              onClick={() => setActiveTab('finance')}
-            >
-              Financeiro
+              Mais
             </button>
           </nav>
         </>

@@ -230,7 +230,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                   border: 'none',
                 }}
               >
-                Começar no App {props.name}
+                Abrir no App
               </AppEntryLink>
               <AppEntryLink
                 href="/"
@@ -308,15 +308,17 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                 </strong>
               </div>
               <div>
-                <span>Status Atual</span>
-                <strong>{result?.acumulado ? 'Acumulado' : 'Premiado'}</strong>
+                <span>Status do concurso</span>
+                <strong>
+                  {result?.acumulado ? 'Concurso acumulado' : 'Houve premiação'}
+                </strong>
               </div>
               <div>
-                <span>Data do Concurso</span>
+                <span>Data do sorteio</span>
                 <strong>{result?.dataApuracao || 'Recente'}</strong>
               </div>
               <div>
-                <span>Próximo Concurso</span>
+                <span>Próximo concurso</span>
                 <strong>{result?.dataProximoConcurso || 'Em breve'}</strong>
               </div>
             </div>
@@ -327,7 +329,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
 
         <section style={{ padding: '2rem 0' }}>
           <h2 className="landing-section-title">
-            <span>📊</span> ANÁLISE MATEMÁTICA E PROBABILIDADES
+            <span>📊</span> ANÁLISE HISTÓRICA E PROBABILIDADES
           </h2>
           <p
             style={{
@@ -391,7 +393,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
           <h2
             style={{ fontSize: '2rem', color: 'white', marginBottom: '1rem' }}
           >
-            {props.ctaTitle || `Potencialize seus jogos da ${props.name}`}
+            {props.ctaTitle || `Organize seus jogos da ${props.name}`}
           </h2>
           <p
             style={{
@@ -756,7 +758,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
               reservados.
             </span>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Feito com ⚡ para apostadores estatísticos.
+              Dados históricos e organização para suas decisões.
             </span>
           </div>
         </footer>

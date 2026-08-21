@@ -23,7 +23,7 @@ const props: LoteriaPageProps = {
   canonical: '/maismilionaria',
   fallbackNumbers: ['06', '14', '23', '31', '42', '49'],
   probabilityText:
-    'A +Milionária possui 50 dezenas disponíveis na cartela, onde são sorteadas 6 dezenas. Você também escolhe 2 trevos entre 6 disponíveis. A chance de acertar os 6 números + 2 trevos é de 1 em 238.000.000. Com o Meu Trevo, você analisa padrões e otimiza suas apostas.',
+    'A +Milionária possui 50 dezenas disponíveis na cartela, onde são sorteadas 6 dezenas. Você também escolhe 2 trevos entre 6 disponíveis. A chance de acertar os 6 números + 2 trevos é de 1 em 238.000.000. Com o Meu Trevo, você consulta padrões históricos e organiza suas combinações.',
   sumRange: '110 a 190',
   faq: [
     {
@@ -51,7 +51,7 @@ const props: LoteriaPageProps = {
     },
     {
       icon: '🔮',
-      title: 'Fechamentos Otimizados',
+      title: 'Fechamentos combinatórios',
       description:
         'Desdobramentos que consideram tanto as dezenas quanto os trevos.',
     },

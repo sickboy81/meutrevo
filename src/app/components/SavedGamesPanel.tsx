@@ -35,6 +35,7 @@ type Props = {
   copyFeedback: string;
   bolaoShareUrl: string;
   onScanQR?: () => void;
+  onGoToGenerator?: () => void;
 };
 
 type EnrichedGame = {
@@ -70,6 +71,7 @@ export default function SavedGamesPanel({
   copyFeedback,
   bolaoShareUrl,
   onScanQR,
+  onGoToGenerator,
 }: Props) {
   const [lotteryFilter, setLotteryFilter] = useState<string>('all');
   const [numberSearch, setNumberSearch] = useState('');
@@ -1207,17 +1209,63 @@ export default function SavedGamesPanel({
           </div>
         </>
       ) : (
-        <p
+        <div
+          role="status"
           style={{
-            fontSize: '0.75rem',
-            color: 'var(--text-muted)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '0.7rem',
+            padding: '2rem 1rem',
             textAlign: 'center',
-            marginTop: '1.5rem',
+            border: '1px dashed rgba(0,240,255,0.24)',
+            borderRadius: 12,
+            background: 'rgba(0,240,255,0.025)',
           }}
         >
-          Você ainda não salvou nenhum jogo. Gere cartões e salve-os para
-          visualizar aqui!
-        </p>
+          <strong style={{ color: 'white', fontSize: '0.95rem' }}>
+            Você ainda não salvou nenhum jogo
+          </strong>
+          <p
+            style={{
+              color: 'var(--text-muted)',
+              fontSize: '0.75rem',
+              lineHeight: 1.5,
+              maxWidth: 420,
+              margin: 0,
+            }}
+          >
+            Monte um jogo, revise os critérios históricos e salve-o aqui para
+            acompanhar resultados e organizar um bolão.
+          </p>
+          <div
+            style={{
+              display: 'flex',
+              gap: '0.5rem',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+            }}
+          >
+            {onGoToGenerator && (
+              <button
+                type="button"
+                className="primary-btn"
+                onClick={onGoToGenerator}
+              >
+                Montar meu primeiro jogo
+              </button>
+            )}
+            {onScanQR && (
+              <button
+                type="button"
+                className="theme-pill-btn"
+                onClick={onScanQR}
+              >
+                Ler volante
+              </button>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

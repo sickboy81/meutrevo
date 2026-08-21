@@ -338,7 +338,7 @@ export default function RankingPanel({ user, savedGames = [] }: Props) {
                 marginTop: '0.5rem',
               }}
             >
-              Registre seus jogos na aba Finanços para aparecer aqui!
+              Registre seus jogos na aba Finanças para aparecer aqui!
             </div>
           )}
         </div>

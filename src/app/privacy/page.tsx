@@ -243,9 +243,8 @@ export default function PrivacyPage() {
                 lineHeight: 1.6,
               }}
             >
-              Inteligência estatística, combinatória matemática avançada e
-              análise histórica em tempo real para otimizar seus jogos de
-              loteria de forma inteligente.
+              Dados históricos, combinatória matemática e análise histórica para
+              organizar seus jogos de loteria com critérios claros.
             </p>
           </div>
           <div style={{ display: 'flex', gap: '4rem', flexWrap: 'wrap' }}>

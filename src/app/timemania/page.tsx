@@ -12,7 +12,7 @@ const props: LoteriaPageProps = {
   glowColor: 'rgba(0, 91, 49, 0.4)',
   title: 'Gerador e Estatísticas da Timemania',
   description:
-    'Acompanhe resultados, simule dezenas históricas e use fechamentos combinatórios para potencializar seus jogos na loteria dos times do coração.',
+    'Acompanhe resultados, simule dezenas históricas e use fechamentos combinatórios para organizar seus jogos na loteria dos times do coração.',
   keywords: [
     'timemania',
     'resultado timemania',
@@ -23,7 +23,7 @@ const props: LoteriaPageProps = {
   canonical: '/timemania',
   fallbackNumbers: ['05', '14', '27', '33', '41', '52', '63', '71', '78', '80'],
   probabilityText:
-    "A Timemania possui 80 dezenas disponíveis na cartela, onde são sorteadas 10 dezenas. Você também escolhe um 'Time do Coração'. A chance de acertar os 7 números com uma aposta simples é de 1 em 9.234. Com o Meu Trevo, você potencializa suas análises.",
+    "A Timemania possui 80 dezenas disponíveis na cartela, onde são sorteadas 10 dezenas. Você também escolhe um 'Time do Coração'. A chance de acertar os 7 números com uma aposta simples é de 1 em 9.234. Com o Meu Trevo, você consulta dados históricos e organiza seus critérios.",
   sumRange: '320 a 480',
   faq: [
     {
@@ -48,12 +48,13 @@ const props: LoteriaPageProps = {
       icon: '⚡',
       title: '10 Dezenas por Sorteio',
       description:
-        'Com 10 números sorteados, as chances de acerto são maiores. Use nossos filtros para otimizar.',
+        'Com 10 números sorteados, consulte a composição dos concursos e use filtros para comparar seus critérios.',
     },
     {
       icon: '🔮',
       title: 'Fechamentos para Timemania',
-      description: 'Cubra mais números com nossos desdobramentos inteligentes.',
+      description:
+        'Distribua combinações com nossos desdobramentos e veja o custo de cada configuração.',
     },
   ],
 };

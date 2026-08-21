@@ -273,11 +273,24 @@ export async function getLatestLotteryResult(
     return decorateLotteryResult(lotteryId, result);
   };
 
+  const cachedResult = await getCachedResult(lotteryId);
   const officialResult = await fetchOfficialLotteryResult(lotteryId);
   if (officialResult) {
     const officialComplete = await completeResult(
       officialResult as LotteryResult
     );
+
+    // The official endpoint can briefly lag behind the collector cache. Never
+    // render an older highlight above a newer contest already listed below.
+    const cachedComplete = await completeResult(cachedResult);
+    if (
+      cachedComplete &&
+      officialComplete &&
+      cachedComplete.numero > officialComplete.numero
+    ) {
+      return cachedComplete;
+    }
+
     if (
       lotteryId !== 'loteca' ||
       (officialComplete?.listaDezenas &&
@@ -288,9 +301,6 @@ export async function getLatestLotteryResult(
 
     // Prefer a previously enriched cache entry if the upstream response only
     // contains Loteca metadata during a transient Caixa failure.
-    const cachedComplete = await completeResult(
-      await getCachedResult(lotteryId)
-    );
     if (
       cachedComplete?.listaDezenas &&
       cachedComplete.listaDezenas.length > 0
@@ -300,5 +310,5 @@ export async function getLatestLotteryResult(
     return officialComplete;
   }
 
-  return completeResult(await getCachedResult(lotteryId));
+  return completeResult(cachedResult);
 }

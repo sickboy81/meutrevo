@@ -280,7 +280,7 @@ export default async function LandingHome() {
                 <strong>Simulação</strong> histórico recente
               </span>
               <span>
-                <strong>Pix ou Stripe</strong> Pro automatizado
+                <strong>Plano Pro</strong> recursos de organização
               </span>
             </div>
 
@@ -344,7 +344,9 @@ export default async function LandingHome() {
               </div>
               <div>
                 <span>Status</span>
-                <strong>{result?.acumulado ? 'Acumulado' : 'Premiado'}</strong>
+                <strong>
+                  {result?.acumulado ? 'Concurso acumulado' : 'Houve premiação'}
+                </strong>
               </div>
               <div>
                 <span>Filtro ativo</span>
@@ -1198,7 +1200,7 @@ export default async function LandingHome() {
               reservados.
             </span>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Feito com ⚡ para apostadores estatísticos.
+              Dados históricos e organização para suas decisões.
             </span>
           </div>
         </footer>

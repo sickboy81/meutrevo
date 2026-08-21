@@ -28,9 +28,11 @@ const sourceLabels: Record<string, string> = {
 export default function GeneratedGamesHistory({
   lottery,
   onRegenerate,
+  onStartGenerating,
 }: {
   lottery: string;
   onRegenerate?: (item: GeneratedGameHistoryItem) => void;
+  onStartGenerating?: () => void;
 }) {
   const [items, setItems] = useState<GeneratedGameHistoryItem[]>([]);
   const [source, setSource] = useState('');
@@ -39,6 +41,7 @@ export default function GeneratedGamesHistory({
   const [busyId, setBusyId] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -67,7 +70,7 @@ export default function GeneratedGamesHistory({
         .finally(() => setLoading(false));
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [lottery, source]);
+  }, [lottery, source, reloadToken]);
 
   const selectedItems = useMemo(
     () => items.filter((item) => selected.includes(item.id)),
@@ -226,14 +229,51 @@ export default function GeneratedGamesHistory({
       )}
       {loading && <p>Carregando histórico...</p>}
       {error && (
-        <p role="alert" style={{ color: '#ff6b8a' }}>
-          {error}
-        </p>
+        <div
+          role="alert"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '0.6rem',
+            color: '#ff9db1',
+            fontSize: '0.75rem',
+          }}
+        >
+          <span>{error}</span>
+          <button
+            type="button"
+            className="theme-pill-btn"
+            onClick={() => setReloadToken((current) => current + 1)}
+          >
+            Tentar novamente
+          </button>
+        </div>
       )}
       {!loading && !error && items.length === 0 && (
-        <p style={{ color: 'var(--text-muted)' }}>
-          Nenhuma geração registrada para esta modalidade.
-        </p>
+        <div
+          style={{
+            border: '1px dashed rgba(0,240,255,0.2)',
+            borderRadius: 8,
+            padding: '0.8rem',
+            color: 'var(--text-muted)',
+            fontSize: '0.75rem',
+          }}
+        >
+          <p style={{ marginTop: 0 }}>
+            Nenhuma geração registrada para esta modalidade.
+          </p>
+          {onStartGenerating && (
+            <button
+              type="button"
+              className="theme-pill-btn active"
+              onClick={onStartGenerating}
+            >
+              Gerar um jogo agora
+            </button>
+          )}
+        </div>
       )}
       <div style={{ display: 'grid', gap: '0.5rem' }}>
         {items.map((item) => (

@@ -12,7 +12,7 @@ const props: LoteriaPageProps = {
   glowColor: 'rgba(166, 19, 36, 0.4)',
   title: 'Gerador e Estatísticas da Dupla Sena',
   description:
-    'Acompanhe resultados, simule dezenas históricas e use fechamentos combinatórios para potencializar seus jogos na loteria que sorteia duas vezes por concurso.',
+    'Acompanhe resultados, simule dezenas históricas e use fechamentos combinatórios para organizar seus jogos na loteria que sorteia duas vezes por concurso.',
   keywords: [
     'dupla sena',
     'resultado dupla sena',
@@ -52,9 +52,9 @@ const props: LoteriaPageProps = {
     },
     {
       icon: '🔮',
-      title: 'Fechamentos Otimizados',
+      title: 'Fechamentos combinatórios',
       description:
-        'Gere cartões que garantem premiações na Dupla Sena com cobertura matemática.',
+        'Distribua combinações com cobertura condicional e consulte claramente os limites de cada fechamento.',
     },
   ],
 };

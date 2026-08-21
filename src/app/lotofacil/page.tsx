@@ -87,7 +87,7 @@ export default async function LotofacilLanding() {
                     name: 'Como funcionam os fechamentos da Lotofácil?',
                     acceptedAnswer: {
                       '@type': 'Answer',
-                      text: 'Os fechamentos da Lotofácil consistem em selecionar um grupo maior de dezenas (ex: 18 a 21 dezenas) e gerar cartões simples de 15 números garantindo premiações caso você acerte as dezenas. Por exemplo, um fechamento de 18 dezenas garante 14 acertos se você acertar as 15 dezenas sorteadas dentro das suas 18 selecionadas.',
+                      text: 'Os fechamentos da Lotofácil selecionam um grupo maior de dezenas, como 18 a 21, e distribuem combinações de 15 números. A garantia é condicional ao grupo conter as dezenas sorteadas e ao fechamento atender à faixa informada; ela não prevê resultados nem garante premiação fora dessas condições.',
                     },
                   },
                   {
@@ -211,9 +211,8 @@ export default async function LotofacilLanding() {
               Gerador e Estatísticas da Lotofácil
             </h1>
             <p className="landing-hero-lead">
-              Confira os números oficiais da Lotofácil em tempo real, use
-              simulador inteligente para testar jogos e gere cartões com filtros
-              inteligentes baseados em estatísticas históricas.
+              Confira os números oficiais da Lotofácil, teste jogos no simulador
+              e gere cartões com filtros baseados em estatísticas históricas.
             </p>
 
             <div className="landing-proof-row" aria-label="Destaques Lotofácil">
@@ -224,7 +223,7 @@ export default async function LotofacilLanding() {
                 <strong>Par/Ímpar</strong> equilibrado
               </span>
               <span>
-                <strong>Exportador</strong> TXT otimizado
+                <strong>Exportador</strong> TXT formatado
               </span>
             </div>
 
@@ -308,8 +307,10 @@ export default async function LotofacilLanding() {
                 </strong>
               </div>
               <div>
-                <span>Status Atual</span>
-                <strong>{result?.acumulado ? 'Acumulado' : 'Premiado'}</strong>
+                <span>Status do concurso</span>
+                <strong>
+                  {result?.acumulado ? 'Concurso acumulado' : 'Houve premiação'}
+                </strong>
               </div>
               <div>
                 <span>Data do Concurso</span>
@@ -328,7 +329,7 @@ export default async function LotofacilLanding() {
         {/* Content Section */}
         <section style={{ padding: '2rem 0' }}>
           <h2 className="landing-section-title">
-            <span>📊</span> COMO O MEU TREVO OTIMIZA SEUS JOGOS DA LOTOFÁCIL
+            <span>📊</span> COMO O MEU TREVO ORGANIZA SEUS JOGOS DA LOTOFÁCIL
           </h2>
           <p
             style={{
@@ -403,7 +404,7 @@ export default async function LotofacilLanding() {
                 🔮
               </div>
               <div className="feature-info">
-                <h3>Desdobramentos com Garantia</h3>
+                <h3>Desdobramentos com condição explícita</h3>
                 <p>
                   Projete bolões cobrindo até 21 dezenas e filtre as melhores
                   combinações para caber no seu orçamento de aposta.
@@ -544,9 +545,8 @@ export default async function LotofacilLanding() {
                 lineHeight: 1.6,
               }}
             >
-              Inteligência estatística, combinatória matemática avançada e
-              análise histórica em tempo real para otimizar seus jogos de
-              loteria de forma inteligente.
+              Dados históricos, combinatória matemática e análise histórica para
+              organizar seus jogos de loteria com critérios claros.
             </p>
           </div>
           <div style={{ display: 'flex', gap: '4rem', flexWrap: 'wrap' }}>
@@ -726,7 +726,7 @@ export default async function LotofacilLanding() {
               reservados.
             </span>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Feito com ⚡ para apostadores estatísticos.
+              Dados históricos e organização para suas decisões.
             </span>
           </div>
         </footer>

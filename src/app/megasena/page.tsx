@@ -68,10 +68,10 @@ export default async function MegaSenaLanding() {
                 mainEntity: [
                   {
                     '@type': 'Question',
-                    name: 'Como aumentar minhas chances na Mega-Sena?',
+                    name: 'Como organizar um jogo da Mega-Sena?',
                     acceptedAnswer: {
                       '@type': 'Answer',
-                      text: 'A forma mais eficiente matematicamente é o fechamento combinatório. Ao invés de fazer apostas aleatórias, você seleciona um grupo maior de dezenas e o Meu Trevo distribui essas dezenas em cartões que garantem prêmios menores (como quadra ou quina) se as condições forem atendidas, barateando o custo total do jogo.',
+                      text: 'O fechamento combinatório distribui um grupo maior de dezenas em cartões. A cobertura é condicional: quadra ou quina só são atendidas se as dezenas sorteadas estiverem dentro do grupo e a configuração escolhida contemplar a faixa correspondente. Isso organiza as combinações, mas não prevê o sorteio nem garante premiação.',
                     },
                   },
                   {
@@ -193,7 +193,7 @@ export default async function MegaSenaLanding() {
             </h1>
             <p className="landing-hero-lead">
               Acompanhe resultados, simule dezenas históricas e use fechamentos
-              combinatórios matemáticos para potencializar seus jogos na
+              combinatórios matemáticos para organizar suas combinações na
               principal loteria do Brasil.
             </p>
 
@@ -278,8 +278,10 @@ export default async function MegaSenaLanding() {
                 </strong>
               </div>
               <div>
-                <span>Status Atual</span>
-                <strong>{result?.acumulado ? 'Acumulado' : 'Premiado'}</strong>
+                <span>Status do concurso</span>
+                <strong>
+                  {result?.acumulado ? 'Concurso acumulado' : 'Houve premiação'}
+                </strong>
               </div>
               <div>
                 <span>Data do Concurso</span>
@@ -312,8 +314,8 @@ export default async function MegaSenaLanding() {
             sorteadas 6 dezenas. A chance de acertar a Sena com uma aposta
             simples de 6 números é de exatamente{' '}
             <strong>1 em 50.063.860</strong>. Com o Meu Trevo, você pode
-            analisar as tendências estatísticas dos números mais atrasados e
-            quentes antes de formular sua estratégia.
+            analisar frequência recente, atraso histórico e composição antes de
+            formular sua estratégia.
           </p>
 
           <div
@@ -338,7 +340,7 @@ export default async function MegaSenaLanding() {
                 <p>
                   Monitore quais números saem com mais regularidade nas últimas
                   dezenas e quais estão em maior período de atraso para
-                  equilibrar seus palpites.
+                  equilibrar seus jogos.
                 </p>
               </div>
             </div>
@@ -376,8 +378,9 @@ export default async function MegaSenaLanding() {
               <div className="feature-info">
                 <h3>Fechamentos / Desdobramentos</h3>
                 <p>
-                  Gere cartões otimizados que garantem Quadra ou Quina caso você
-                  acerte as dezenas dentro de um grupo maior escolhido por você.
+                  Gere cartões com cobertura condicional de Quadra ou Quina caso
+                  você acerte as dezenas dentro de um grupo maior escolhido por
+                  você.
                 </p>
               </div>
             </div>
@@ -406,7 +409,7 @@ export default async function MegaSenaLanding() {
           <h2
             style={{ fontSize: '2rem', color: 'white', marginBottom: '1rem' }}
           >
-            Potencialize seus bolões da Mega-Sena
+            Organize seus bolões da Mega-Sena
           </h2>
           <p
             style={{
@@ -515,9 +518,8 @@ export default async function MegaSenaLanding() {
                 lineHeight: 1.6,
               }}
             >
-              Inteligência estatística, combinatória matemática avançada e
-              análise histórica em tempo real para otimizar seus jogos de
-              loteria de forma inteligente.
+              Dados históricos, combinatória matemática e análise histórica para
+              organizar seus jogos de loteria com critérios claros.
             </p>
           </div>
           <div style={{ display: 'flex', gap: '4rem', flexWrap: 'wrap' }}>
@@ -697,7 +699,7 @@ export default async function MegaSenaLanding() {
               reservados.
             </span>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Feito com ⚡ para apostadores estatísticos.
+              Dados históricos e organização para suas decisões.
             </span>
           </div>
         </footer>

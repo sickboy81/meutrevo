@@ -43,6 +43,8 @@ export default React.memo(function FinanceTab({
 }: FinanceTabProps) {
   const [bets, setBets] = useState<BetRecord[]>([]);
   const [betsLoading, setBetsLoading] = useState(true);
+  const [betsError, setBetsError] = useState('');
+  const [reloadToken, setReloadToken] = useState(0);
   const [betForm, setBetForm] = useState({
     lottery: 'megasena',
     numbers: '',
@@ -59,9 +61,23 @@ export default React.memo(function FinanceTab({
     async function loadBets() {
       try {
         const res = await fetchWithCsrf('/api/bets');
-        if (res.ok && !cancelled) {
-          const data = await res.json();
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(
+            data.error || 'Não foi possível carregar suas apostas.'
+          );
+        }
+        if (!cancelled) {
           setBets(data.bets || []);
+          setBetsError('');
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setBetsError(
+            error instanceof Error
+              ? error.message
+              : 'Não foi possível carregar suas apostas.'
+          );
         }
       } finally {
         if (!cancelled) setBetsLoading(false);
@@ -71,7 +87,7 @@ export default React.memo(function FinanceTab({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadToken]);
 
   const handleExportCSV = () => {
     if (bets.length === 0) return;
@@ -207,6 +223,35 @@ export default React.memo(function FinanceTab({
         </div>
       ) : (
         <>
+          {betsError && (
+            <div
+              role="alert"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '0.75rem',
+                flexWrap: 'wrap',
+                padding: '0.7rem',
+                borderRadius: 8,
+                border: '1px solid rgba(255,107,138,0.45)',
+                color: '#ffb3c2',
+                fontSize: '0.75rem',
+              }}
+            >
+              <span>{betsError}</span>
+              <button
+                type="button"
+                className="theme-pill-btn"
+                onClick={() => {
+                  setBetsLoading(true);
+                  setReloadToken((current) => current + 1);
+                }}
+              >
+                Tentar novamente
+              </button>
+            </div>
+          )}
           {/* Header */}
           <div
             style={{

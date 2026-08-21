@@ -12,7 +12,7 @@ const props: LoteriaPageProps = {
   glowColor: 'rgba(164, 129, 46, 0.4)',
   title: 'Gerador e Estatísticas da Super Sete',
   description:
-    'Acompanhe resultados da Super Sete, a loteria de 7 colunas com 10 números cada. Use nosso gerador estatístico para montar suas apostas.',
+    'Acompanhe resultados da Super Sete, a loteria de 7 colunas com 10 números cada. Use os dados históricos para montar e revisar suas apostas.',
   keywords: [
     'super sete',
     'resultado super sete',
@@ -48,7 +48,7 @@ const props: LoteriaPageProps = {
       icon: '⚡',
       title: 'Formato Especial',
       description:
-        'Volante com 7 colunas de 10 números. Nosso gerador inteligente respeita esse formato único.',
+        'Volante com 7 colunas de 10 números. O gerador respeita esse formato e mostra cada escolha por coluna.',
     },
     {
       icon: '🔮',

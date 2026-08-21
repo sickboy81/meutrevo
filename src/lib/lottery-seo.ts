@@ -183,9 +183,9 @@ export const LOTTERY_SEO_CONFIGS = {
     id: 'loteca',
     path: '/loteca',
     name: 'Loteca',
-    title: 'Resultado da Loteca e Palpites dos Jogos',
+    title: 'Resultado da Loteca e Jogos',
     description:
-      'Veja o resultado da Loteca, placares dos 14 jogos, prognósticos, prêmio e concursos recentes com informações oficiais atualizadas.',
+      'Veja o resultado da Loteca, os placares dos 14 jogos, a premiação e os concursos recentes com informações oficiais atualizadas.',
     keywords: [
       'resultado loteca',
       'loteca hoje',

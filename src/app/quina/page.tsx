@@ -71,7 +71,7 @@ export default async function QuinaLanding() {
                     name: 'Quantos números preciso acertar para ganhar na Quina?',
                     acceptedAnswer: {
                       '@type': 'Answer',
-                      text: 'A Quina premia apostas que acertam 2 (Duque), 3 (Terno), 4 (Quadra) ou 5 números (Quina). As faixas menores possuem probabilidades significativamente mais altas e são ideais para otimização com fechamentos.',
+                      text: 'A Quina premia apostas que acertam 2 (Duque), 3 (Terno), 4 (Quadra) ou 5 números (Quina). As faixas menores têm probabilidades oficiais diferentes, e os fechamentos apenas organizam combinações dentro de uma cobertura definida.',
                     },
                   },
                   {
@@ -79,7 +79,7 @@ export default async function QuinaLanding() {
                     name: 'Como funcionam os fechamentos da Quina?',
                     acceptedAnswer: {
                       '@type': 'Answer',
-                      text: 'Um fechamento de Quina permite que você selecione, por exemplo, 10 dezenas, e gere apenas as combinações necessárias de 5 números para garantir matematicamente o Terno ou a Quadra caso as 5 dezenas sorteadas estejam dentro do seu grupo de 10.',
+                      text: 'Um fechamento de Quina permite selecionar, por exemplo, 10 dezenas e distribuir combinações de 5 números. A cobertura de Terno ou Quadra é condicional: depende de as dezenas sorteadas estarem dentro do grupo e da configuração escolhida.',
                     },
                   },
                 ],
@@ -196,7 +196,7 @@ export default async function QuinaLanding() {
             </h1>
             <p className="landing-hero-lead">
               Confira os últimos números sorteados na Quina, analise a
-              distribuição de quadrantes e gere palpites de forma científica
+              distribuição de quadrantes e gere jogos com critérios históricos
               para concursos diários.
             </p>
             {result?.statusNotice && (
@@ -338,8 +338,10 @@ export default async function QuinaLanding() {
                 </strong>
               </div>
               <div>
-                <span>Status Atual</span>
-                <strong>{result?.acumulado ? 'Acumulado' : 'Premiado'}</strong>
+                <span>Status do concurso</span>
+                <strong>
+                  {result?.acumulado ? 'Concurso acumulado' : 'Houve premiação'}
+                </strong>
               </div>
               <div>
                 <span>Data do Concurso</span>
@@ -482,8 +484,8 @@ export default async function QuinaLanding() {
               margin: '0 auto 2rem auto',
             }}
           >
-            Acesse as ferramentas premium de geração e exportação de bolões
-            otimizados e ciclos estatísticos da Quina no Meu Trevo Pro.
+            Acesse as ferramentas premium de geração, exportação e organização
+            de bolões, além dos ciclos estatísticos da Quina no Meu Trevo Pro.
           </p>
           <AppEntryLink
             className="landing-btn-primary"
@@ -581,9 +583,8 @@ export default async function QuinaLanding() {
                 lineHeight: 1.6,
               }}
             >
-              Inteligência estatística, combinatória matemática avançada e
-              análise histórica em tempo real para otimizar seus jogos de
-              loteria de forma inteligente.
+              Dados históricos, combinatória matemática e análise histórica para
+              organizar seus jogos de loteria com critérios claros.
             </p>
           </div>
           <div style={{ display: 'flex', gap: '4rem', flexWrap: 'wrap' }}>
@@ -763,7 +764,7 @@ export default async function QuinaLanding() {
               reservados.
             </span>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Feito com ⚡ para apostadores estatísticos.
+              Dados históricos e organização para suas decisões.
             </span>
           </div>
         </footer>

@@ -12,7 +12,7 @@ const props: LoteriaPageProps = {
   glowColor: 'rgba(203, 158, 12, 0.4)',
   title: 'Gerador e Estatísticas do Dia de Sorte',
   description:
-    'Acompanhe resultados, simule dezenas históricas e use fechamentos matemáticos para potencializar seus jogos na loteria que sorteia 7 números por concurso.',
+    'Acompanhe resultados, simule dezenas históricas e use fechamentos matemáticos para organizar seus jogos na loteria que sorteia 7 números por concurso.',
   keywords: [
     'dia de sorte',
     'resultado dia de sorte',

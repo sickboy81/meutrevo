@@ -25,7 +25,7 @@ const props: LoteriaPageProps = {
   fallbackNumbers: [],
   probabilityText:
     'Na Loteca, o apostador indica vitória do time da casa, empate ou vitória do visitante em 14 partidas. Como os resultados dependem de eventos esportivos, o Meu Trevo apresenta os dados oficiais disponíveis sem prometer previsão de placares.',
-  sumRange: '14 prognósticos',
+  sumRange: '14 jogos',
   showSimulator: false,
   ctaTitle: 'Organize seus acompanhamentos da Loteca',
   ctaDescription:
