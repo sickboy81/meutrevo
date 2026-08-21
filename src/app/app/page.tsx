@@ -477,6 +477,19 @@ export default function Home() {
     setActiveTab('generator');
   };
 
+  const goToPoolGenerator = () => {
+    if (!user) {
+      redirectToLogin();
+      return;
+    }
+    trackProductEvent('generator_opened', {
+      lottery: activeLottery,
+      mode: 'pool',
+    });
+    setGenSubTab('bolao');
+    setActiveTab('generator');
+  };
+
   // Advanced filters map: number -> 'fixed' | 'excluded' | 'none'
   const [filtersMap, setFiltersMap] = useState<
     Record<number, 'fixed' | 'excluded' | 'none'>
@@ -1800,10 +1813,7 @@ export default function Home() {
                       'Organizar um bolão',
                       'Divida cotas, custos e concurso-alvo.',
                       'Bolão',
-                      () => {
-                        goToGenerator();
-                        setGenSubTab('bolao');
-                      },
+                      goToPoolGenerator,
                     ],
                   ] as const
                 ).map(([title, description, label, action]) => (
