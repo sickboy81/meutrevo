@@ -1676,7 +1676,7 @@ export default function Home() {
           </div>
         )}
 
-        {user && activeTab !== 'results' && (
+        {user && activeTab === 'plans' && !planDraft && (
           <section
             aria-label="Próximas etapas"
             style={{
