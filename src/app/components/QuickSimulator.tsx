@@ -6,7 +6,6 @@ import {
   generateSmartGame,
   analyzeGame,
 } from '../../lib/lottery-math';
-import ScoreGauge from './ScoreGauge';
 import QualityBreakdown from './QualityBreakdown';
 
 interface LotteryResult {
@@ -509,7 +508,26 @@ export default function QuickSimulator({
                   marginBottom: '0.75rem',
                 }}
               >
-                <ScoreGauge score={gameMetrics.score} size={64} />
+                <div
+                  style={{
+                    minWidth: 64,
+                    height: 64,
+                    borderRadius: '50%',
+                    border: '2px solid var(--accent-color)',
+                    display: 'grid',
+                    placeItems: 'center',
+                    textAlign: 'center',
+                    color: 'var(--accent-color)',
+                    fontSize: '0.62rem',
+                    fontWeight: 800,
+                    lineHeight: 1.1,
+                  }}
+                  aria-label="Análise descritiva do jogo"
+                >
+                  ANÁLISE
+                  <br />
+                  DESCRITIVA
+                </div>
                 <QualityBreakdown metrics={gameMetrics} config={config} />
               </div>
             )}

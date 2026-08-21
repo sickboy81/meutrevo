@@ -52,7 +52,7 @@ const props: LoteriaPageProps = {
     },
     {
       icon: '🔮',
-      title: 'Fechamentos Inteligentes',
+      title: 'Fechamentos combinatórios',
       description:
         'Use desdobramentos combinatórios para cobrir mais números com menos cartões.',
     },

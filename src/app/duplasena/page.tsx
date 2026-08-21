@@ -23,7 +23,7 @@ const props: LoteriaPageProps = {
   canonical: '/duplasena',
   fallbackNumbers: ['08', '15', '23', '31', '42', '49'],
   probabilityText:
-    'A Dupla Sena possui 50 dezenas disponíveis na cartela, onde são sorteadas 6 dezenas em dois sorteios (1º e 2º). A chance de acertar a Sena no 1º sorteio com uma aposta simples de 6 números é de 1 em 15.890.700. Com o Meu Trevo, você pode analisar as tendências estatísticas antes de formular sua estratégia.',
+    'A Dupla Sena possui 50 dezenas e realiza dois sorteios por concurso. O Meu Trevo organiza os resultados, custos e critérios históricos para você revisar seus jogos sem transformar histórico em previsão.',
   sumRange: '100 a 200',
   faq: [
     {
@@ -48,7 +48,7 @@ const props: LoteriaPageProps = {
       icon: '⚡',
       title: 'Soma Ponderada',
       description:
-        'Mantenha a soma das suas dezenas entre 100 e 200 para aumentar a aderência estatística.',
+        'Compare a soma das suas dezenas com a faixa histórica de 100 a 200 como referência descritiva, sem promessa de vantagem.',
     },
     {
       icon: '🔮',

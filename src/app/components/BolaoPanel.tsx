@@ -7,6 +7,7 @@ import {
 } from '../../lib/lottery-math';
 import { fetchWithCsrf } from '@/lib/fetch';
 import { getSimpleBetPrice } from '@/lib/lottery-prices';
+import { trackProductEvent } from '@/lib/product-analytics';
 import type { SavedGame } from '../types';
 
 interface Bolao {
@@ -35,6 +36,7 @@ interface Props {
   activeLottery: string;
   isPro: boolean;
   user: { id: string; name: string; role?: string } | null;
+  nextContest?: number | null;
   onUpgrade: () => void;
   playSound: (type: 'click' | 'success' | 'delete') => void;
   onShowShareQR: (bolao: {
@@ -50,6 +52,7 @@ export default function BolaoPanel({
   activeLottery,
   isPro,
   user,
+  nextContest = null,
   onUpgrade,
   playSound,
   onShowShareQR,
@@ -57,6 +60,7 @@ export default function BolaoPanel({
   const [subView, setSubView] = useState<'create' | 'my' | 'join'>('create');
   const [selectedGames, setSelectedGames] = useState<string[]>([]);
   const [bolaoTitle, setBolaoTitle] = useState('');
+  const [contestTarget, setContestTarget] = useState('');
   const [cotasTotal, setCotasTotal] = useState('5');
   const [taxaPct, setTaxaPct] = useState('0');
   const [createdBolao, setCreatedBolao] = useState<{
@@ -84,6 +88,8 @@ export default function BolaoPanel({
     ? Math.max(0, Number.parseFloat(taxaPct) || 0)
     : 0;
   const bolaoTotal = selectedCost * (1 + organizationFee / 100);
+  const resolvedContest =
+    contestTarget || (nextContest ? String(nextContest) : '');
 
   const handleAutoGenerate = () => {
     playSound('click');
@@ -180,6 +186,7 @@ export default function BolaoPanel({
           lottery: activeLottery,
           title: bolaoTitle.trim(),
           games: gamesArrays,
+          contest_num: resolvedContest ? Number(resolvedContest) : 0,
           cotas_total: parseInt(cotasTotal) || 5,
           taxa_pct: isPro ? parseFloat(taxaPct) || 0 : 0,
         }),
@@ -187,6 +194,11 @@ export default function BolaoPanel({
 
       if (res.ok) {
         const data = await res.json();
+        trackProductEvent('pool_created', {
+          lottery: activeLottery,
+          games: selectedGames.length,
+          quotas: parseInt(cotasTotal) || 5,
+        });
         setCreatedBolao({ id: data.id, shareCode: data.shareCode });
         setFeedback('✓ Bolão criado com sucesso!');
         playSound('success');
@@ -280,6 +292,10 @@ export default function BolaoPanel({
   };
 
   const handleCopyMessage = (bolao: Bolao) => {
+    trackProductEvent('pool_shared', {
+      lottery: bolao.lottery,
+      channel: 'copy',
+    });
     const msg = generateBolaoMessage(bolao);
     navigator.clipboard.writeText(msg);
     setFeedback('✓ Mensagem copiada!');
@@ -287,6 +303,10 @@ export default function BolaoPanel({
   };
 
   const handleShareWhatsApp = (bolao: Bolao) => {
+    trackProductEvent('pool_shared', {
+      lottery: bolao.lottery,
+      channel: 'whatsapp',
+    });
     const msg = generateBolaoMessage(bolao);
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
   };
@@ -322,7 +342,7 @@ export default function BolaoPanel({
             margin: 0,
           }}
         >
-          BOLÃO INTELIGENTE
+          BOLÃO ORGANIZADO
         </h3>
         <p
           style={{
@@ -477,7 +497,7 @@ export default function BolaoPanel({
             <strong style={{ color: 'white' }}>Resumo antes de criar</strong>
             <br />
             Modalidade: {config?.name || activeLottery} · Concurso: próximo
-            concurso disponível.
+            {resolvedContest ? ` #${resolvedContest}` : ' concurso disponível'}.
             <br />
             Divisão: prêmio líquido dividido proporcionalmente entre as cotas
             participantes. Taxa de organização:{' '}
@@ -489,6 +509,35 @@ export default function BolaoPanel({
               : 'selecione cartões para calcular custo e cobertura.'}
           </div>
           {/* Title */}
+          <div>
+            <label
+              style={{
+                fontSize: '0.7rem',
+                color: 'var(--text-muted)',
+                marginBottom: '0.25rem',
+                display: 'block',
+              }}
+            >
+              Concurso-alvo
+            </label>
+            <input
+              type="number"
+              min={1}
+              value={contestTarget || (nextContest ? String(nextContest) : '')}
+              onChange={(event) => setContestTarget(event.target.value)}
+              placeholder="Próximo concurso"
+              style={{
+                width: '100%',
+                background: 'rgba(0,0,0,0.3)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '8px',
+                padding: '0.6rem',
+                color: 'white',
+                fontSize: '0.85rem',
+                outline: 'none',
+              }}
+            />
+          </div>
           <div>
             <label
               style={{

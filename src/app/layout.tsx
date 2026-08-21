@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     'fechamentos',
     'resultados da caixa',
     'estatística lotérica',
-    'palpites de loteria',
+    'organização de jogos de loteria',
     'meu trevo',
   ],
   authors: [{ name: 'Meu Trevo' }],
@@ -62,9 +62,9 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: 'Meu Trevo - Assistente Lotérico Inteligente & Resultados da Caixa',
+    title: 'Meu Trevo - Resultados e organização de jogos da Caixa',
     description:
-      'Resultados em tempo real e gerador de apostas baseado em inteligência estatística e fechamentos matemáticos reais.',
+      'Resultados oficiais, análise histórica e fechamentos combinatórios para organizar jogos da Caixa.',
     url: 'https://www.meutrevo.com',
     siteName: 'Meu Trevo',
     locale: 'pt_BR',
@@ -82,7 +82,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Meu Trevo - Gerador Estatístico de Loterias',
     description:
-      'Resultados em tempo real e desdobramentos combinatórios otimizados.',
+      'Resultados oficiais e desdobramentos combinatórios para organizar seus jogos.',
     images: ['/og/meutrevo'],
   },
   robots: {

@@ -121,7 +121,7 @@ export function printGames(
       .footer { margin-top: 20px; font-size: 10px; color: #9ca3af; text-align: center; }
     </style></head><body>
     <h1 style="font-family: 'Orbitron', sans-serif; color: #1f2937; font-size: 24px; margin-bottom: 8px;">Meu Trevo</h1>
-    <h2 style="font-size: 16px; color: #6b7280; font-weight: 400; margin-bottom: 20px;">${lotName} • ${gamesList.length} Jogos Otimizados</h2>
+    <h2 style="font-size: 16px; color: #6b7280; font-weight: 400; margin-bottom: 20px;">${lotName} • ${gamesList.length} jogos organizados</h2>
     ${gamesHtml}
     <div class="footer">Meu Trevo © ${new Date().getFullYear()} • Gerado em ${new Date().toLocaleDateString('pt-BR')} • Aviso: loteria é jogo de azar. Jogue com responsabilidade.</div>
     </body></html>

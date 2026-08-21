@@ -68,7 +68,8 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { lottery, title, games, cotas_total, taxa_pct } = await req.json();
+    const { lottery, title, games, cotas_total, taxa_pct, contest_num } =
+      await req.json();
 
     if (!lottery || !title || !games || games.length === 0) {
       return NextResponse.json({ error: 'Dados incompletos' }, { status: 400 });
@@ -83,8 +84,8 @@ export async function POST(req: Request) {
     // Keep the bolão, its share record and the creator's cota atomic.
     await db.batch([
       {
-        sql: `INSERT INTO boloes (id, creator_id, lottery, title, games_json, total_cost, cotas_total, cotas_taken, taxa_pct, share_code)
-              VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+        sql: `INSERT INTO boloes (id, creator_id, lottery, title, games_json, total_cost, cotas_total, cotas_taken, taxa_pct, share_code, contest_num)
+              VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)
               ON CONFLICT (id) DO NOTHING`,
         args: [
           id,
@@ -96,6 +97,7 @@ export async function POST(req: Request) {
           cotas_total || 1,
           taxa_pct || 0,
           shareCode,
+          Number.isInteger(Number(contest_num)) ? Number(contest_num) : 0,
         ],
       },
       {

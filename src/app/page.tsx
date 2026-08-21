@@ -70,7 +70,7 @@ export default async function LandingHome() {
                 url: 'https://www.meutrevo.com',
                 name: 'Meu Trevo',
                 description:
-                  'Resultados em tempo real e gerador de dezenas estatístico para loterias do Brasil.',
+                  'Acompanhe resultados oficiais, planeje jogos dentro do orçamento e confira suas combinações das loterias da Caixa.',
                 publisher: {
                   '@id': 'https://www.meutrevo.com/#organization',
                 },
@@ -189,6 +189,39 @@ export default async function LandingHome() {
             style={{ display: 'flex', gap: '1.2rem', alignItems: 'center' }}
             className="landing-nav-links"
           >
+            <a
+              href="#como-funciona"
+              style={{
+                color: '#9fb4d8',
+                textDecoration: 'none',
+                fontSize: '0.8rem',
+                fontWeight: '600',
+              }}
+            >
+              Como funciona
+            </a>
+            <a
+              href="#recursos"
+              style={{
+                color: '#9fb4d8',
+                textDecoration: 'none',
+                fontSize: '0.8rem',
+                fontWeight: '600',
+              }}
+            >
+              Recursos
+            </a>
+            <a
+              href="#planos"
+              style={{
+                color: '#9fb4d8',
+                textDecoration: 'none',
+                fontSize: '0.8rem',
+                fontWeight: '600',
+              }}
+            >
+              Planos
+            </a>
             <AppEntryLink
               href="/megasena"
               style={{
@@ -361,6 +394,157 @@ export default async function LandingHome() {
               <span className="pulse-dot"></span>
               Jogos montados com critérios visíveis antes da aposta
             </div>
+          </div>
+        </section>
+
+        {/* Decision path: explain the product before exposing its technical depth. */}
+        <section
+          id="como-funciona"
+          aria-labelledby="como-funciona-title"
+          style={{ padding: '2.2rem 1rem 1.5rem' }}
+        >
+          <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+            <p
+              style={{
+                color: 'var(--accent-color)',
+                fontSize: '0.72rem',
+                fontWeight: 800,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                margin: '0 0 0.45rem',
+              }}
+            >
+              Um caminho simples para decidir
+            </p>
+            <h2
+              id="como-funciona-title"
+              style={{
+                margin: 0,
+                color: '#fff',
+                fontSize: 'clamp(1.35rem, 3vw, 2rem)',
+              }}
+            >
+              Do resultado ao jogo organizado em quatro passos
+            </h2>
+            <p
+              style={{
+                color: 'var(--text-muted)',
+                maxWidth: '680px',
+                lineHeight: 1.6,
+                margin: '0.6rem 0 1.2rem',
+              }}
+            >
+              Você não precisa começar por estatísticas. Primeiro escolha o que
+              quer fazer; o Meu Trevo mostra custo, critérios e limites antes da
+              geração.
+            </p>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+                gap: '0.75rem',
+              }}
+            >
+              {[
+                [
+                  '01',
+                  'Escolha a modalidade',
+                  'Veja o último resultado, o próximo concurso e o preço do jogo simples.',
+                ],
+                [
+                  '02',
+                  'Defina objetivo e orçamento',
+                  'Escolha equilíbrio, cobertura, economia ou conferência e limite o valor.',
+                ],
+                [
+                  '03',
+                  'Revise a estratégia',
+                  'Entenda frequência, recência, repetição e o que os dados não podem prever.',
+                ],
+                [
+                  '04',
+                  'Gere, salve e confira',
+                  'Organize seus jogos, exporte ou compare com o resultado oficial depois do sorteio.',
+                ],
+              ].map(([number, title, description]) => (
+                <article
+                  key={number}
+                  style={{
+                    border: '1px solid var(--glass-border)',
+                    background: 'rgba(255,255,255,0.025)',
+                    borderRadius: '14px',
+                    padding: '1rem',
+                  }}
+                >
+                  <span
+                    style={{
+                      color: 'var(--accent-color)',
+                      fontSize: '0.72rem',
+                      fontWeight: 900,
+                    }}
+                  >
+                    {number}
+                  </span>
+                  <h3
+                    style={{
+                      color: '#fff',
+                      fontSize: '0.95rem',
+                      margin: '0.45rem 0',
+                    }}
+                  >
+                    {title}
+                  </h3>
+                  <p
+                    style={{
+                      color: 'var(--text-muted)',
+                      fontSize: '0.78rem',
+                      lineHeight: 1.55,
+                      margin: 0,
+                    }}
+                  >
+                    {description}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="recursos"
+          aria-label="Recursos do Meu Trevo"
+          style={{ padding: '0.5rem 1rem 1.8rem' }}
+        >
+          <div
+            style={{
+              maxWidth: '1120px',
+              margin: '0 auto',
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '0.5rem',
+            }}
+          >
+            {[
+              'Resultados oficiais',
+              'Planejamento por orçamento',
+              'Meus Jogos',
+              'Conferência',
+              'Histórico transparente',
+              'Exportação e impressão',
+            ].map((item) => (
+              <span
+                key={item}
+                style={{
+                  border: '1px solid rgba(0,240,255,0.22)',
+                  borderRadius: '999px',
+                  color: '#b9d5ee',
+                  padding: '0.42rem 0.7rem',
+                  fontSize: '0.72rem',
+                }}
+              >
+                {item}
+              </span>
+            ))}
           </div>
         </section>
 
@@ -651,7 +835,7 @@ export default async function LandingHome() {
           </div>
         </section>
 
-        <div className="section-divider" id="pricing" />
+        <div className="section-divider" id="planos" />
 
         {/* Pricing Section */}
         <section style={{ padding: '1rem 0' }}>

@@ -218,7 +218,7 @@ export default async function LotomaniaLanding() {
             <p className="landing-hero-lead">
               Confira os números oficiais da Lotomania em tempo real, simule
               desdobramentos de 60 ou 70 dezenas e gere cartões com filtros
-              inteligentes baseados em estatísticas históricas.
+              organizados com base em critérios históricos descritivos.
             </p>
 
             <div className="landing-proof-row" aria-label="Destaques Lotomania">

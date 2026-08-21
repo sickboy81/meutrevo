@@ -72,7 +72,6 @@ const AdminPanel = lazy(() => import('../components/AdminPanel'));
 const ResultsTab = lazy(() => import('../components/ResultsTab'));
 const StatsTab = lazy(() => import('../components/StatsTab'));
 const FinanceTab = lazy(() => import('../components/FinanceTab'));
-const LandingPage = lazy(() => import('../components/LandingPage'));
 const RankingPanel = lazy(() => import('../components/RankingPanel'));
 const BolaoPanel = lazy(() => import('../components/BolaoPanel'));
 const LotofacilStrategyPanel = lazy(
@@ -98,6 +97,7 @@ import VolanteGrid from '../components/VolanteGrid';
 import JsonLd from '../components/JsonLd';
 import GameScoreCard from '../components/GameScoreCard';
 import NumberIntelligencePanel from '../components/NumberIntelligencePanel';
+import { trackProductEvent } from '@/lib/product-analytics';
 
 // Lightweight fallback for lazy-loaded tabs
 function TabFallback() {
@@ -127,52 +127,21 @@ type ActiveTab =
   | 'profile'
   | 'admin'
   | 'finance'
-  | 'ranking';
+  | 'ranking'
+  | 'conference';
 type GeneratorTab = 'smart' | 'wheeling' | 'mystic' | 'bolao' | 'advanced';
+type PlanDraft = {
+  title: string;
+  budget: string;
+  contestsCount: string;
+  lottery: string;
+  objective: 'economy' | 'coverage' | 'balance' | 'conference';
+  strategy: 'balanced' | 'aggressive' | 'delayed' | 'random';
+};
 
 export default function Home() {
   const [activeLottery, setActiveLottery] = useState<string>('megasena');
   const [loading, setLoading] = useState<boolean>(true);
-  const [viewMode, setViewMode] = useState<'landing' | 'app'>('app');
-  const [landingQuickNums, setLandingQuickNums] = useState<number[]>([]);
-  const [landingQuickResult, setLandingQuickResult] = useState<string>('');
-
-  // Real-time analysis for landing quick test board
-  const landingQuickStats = useMemo(() => {
-    if (landingQuickNums.length === 0) {
-      return { sum: 0, even: 0, odd: 0, q1: 0, q2: 0, q3: 0, q4: 0 };
-    }
-    const sum = landingQuickNums.reduce((a, b) => a + b, 0);
-    const even = landingQuickNums.filter((n) => n % 2 === 0).length;
-    const odd = landingQuickNums.length - even;
-
-    // Calculate quadrantes
-    let q1 = 0,
-      q2 = 0,
-      q3 = 0,
-      q4 = 0;
-    if (activeLottery === 'megasena') {
-      landingQuickNums.forEach((n) => {
-        const row = Math.floor((n - 1) / 10);
-        const col = (n - 1) % 10;
-        if (row < 3 && col < 5) q1++;
-        else if (row < 3 && col >= 5) q2++;
-        else if (row >= 3 && col < 5) q3++;
-        else q4++;
-      });
-    } else if (activeLottery === 'lotofacil') {
-      landingQuickNums.forEach((n) => {
-        if (n <= 13) {
-          if (n % 5 <= 2 && n % 5 > 0) q1++;
-          else q2++;
-        } else {
-          if (n % 5 <= 2 && n % 5 > 0) q3++;
-          else q4++;
-        }
-      });
-    }
-    return { sum, even, odd, q1, q2, q3, q4 };
-  }, [landingQuickNums, activeLottery]);
 
   const [result, setResult] = useState<LotteryResult | null>(null);
   const [history, setHistory] = useState<LotteryResult[]>([]);
@@ -196,6 +165,7 @@ export default function Home() {
       'admin',
       'finance',
       'ranking',
+      'conference',
     ];
     const stored = sessionStorage.getItem('meu-trevo-activetab');
     return stored && validTabs.includes(stored as ActiveTab)
@@ -243,76 +213,14 @@ export default function Home() {
 
   // --- PREMIUM FREEMIUM MODAL ---
   const [showUpgradeModal, setShowUpgradeModal] = useState<boolean>(false);
-  const [isAnnual, setIsAnnual] = useState<boolean>(false);
-  const [priceMonthly, setPriceMonthly] = useState<number>(14.9);
-  const [priceAnnualEquivalent, setPriceAnnualEquivalent] =
-    useState<number>(129.9);
+  const [, setPriceMonthly] = useState<number>(14.9);
+  const [, setPriceAnnualEquivalent] = useState<number>(129.9);
 
   // --- PREMIUM FASE 3: THEME & SETTINGS ---
   const [theme, setTheme] = useState<ThemeType>('meganeon');
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [historyLimit, setHistoryLimit] = useState<number>(30);
   const [enableSounds, setEnableSounds] = useState<boolean>(false);
-  const [activeFaqIndex, setActiveFaqIndex] = useState<number | null>(null);
-
-  // Toggle number in the quick test board
-  const handleToggleLandingNum = (num: number) => {
-    playSound('click');
-    const maxSel = activeLottery === 'lotofacil' ? 15 : 6;
-    if (landingQuickNums.includes(num)) {
-      setLandingQuickNums((prev) => prev.filter((x) => x !== num));
-      setLandingQuickResult('');
-    } else {
-      if (landingQuickNums.length >= maxSel) {
-        return;
-      }
-      setLandingQuickNums((prev) => [...prev, num]);
-      setLandingQuickResult('');
-    }
-  };
-
-  // Run the quick test against latest result
-  const handleTestLandingGame = () => {
-    playSound('click');
-    if (!result) return;
-    const cleanDrawn = getCleanDezenas(result).map((x) => parseInt(x, 10));
-    const hits = landingQuickNums.filter((n) => cleanDrawn.includes(n));
-
-    let message = '';
-    if (landingQuickNums.length === 0) {
-      message = 'Selecione dezenas no volante acima para testar!';
-    } else {
-      message = `Você marcou ${landingQuickNums.length} números e acertou ${hits.length} no Concurso ${result.numero} (${
-        hits.length > 0
-          ? hits
-              .sort((a, b) => a - b)
-              .map((x) => String(x).padStart(2, '0'))
-              .join(', ')
-          : 'Nenhum'
-      }). Quer testar contra todo o histórico de sorteios da Caixa? Inicie no app!`;
-    }
-    setLandingQuickResult(message);
-  };
-
-  // Generate a quick smart game on the landing page using actual logic
-  const handleGenerateLandingSmart = async () => {
-    playSound('click');
-    const math = await loadMath();
-    const game = math.generateSmartGame(
-      config,
-      [],
-      [],
-      'balanced',
-      [],
-      [],
-      [],
-      {}
-    );
-    setLandingQuickNums(game.numbers);
-    setLandingQuickResult(
-      'Jogo gerado com critérios básicos. Clique em "Testar Jogo" para conferir contra o último concurso.'
-    );
-  };
 
   const handleGenerateSmart = async () => {
     if (!user) {
@@ -361,6 +269,10 @@ export default function Home() {
         games.push({ numbers: game.numbers, metrics: game.metrics });
       }
       setGeneratedGames(games);
+      trackProductEvent('games_generated', {
+        lottery: activeLottery,
+        quantity: games.length,
+      });
       void persistGeneratedHistory(
         games.map((game) => game.numbers),
         'smart_generator'
@@ -431,6 +343,7 @@ export default function Home() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
+        trackProductEvent('game_saved', { lottery: activeLottery });
         playSound('success');
         setSavedGames((current) => [
           {
@@ -533,14 +446,36 @@ export default function Home() {
   >('balanced');
   const [gameQuantity, setGameQuantity] = useState<number>(1);
   const [generatingSmart, setGeneratingSmart] = useState(false);
-  const [planDraft, setPlanDraft] = useState<{
-    title: string;
-    budget: string;
-    contestsCount: string;
-    lottery: string;
-    objective: 'economy' | 'coverage' | 'balance' | 'conference';
-    strategy: 'balanced' | 'aggressive' | 'delayed' | 'random';
-  } | null>(null);
+  const [planDraft, setPlanDraft] = useState<PlanDraft | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const stored = sessionStorage.getItem('meu-trevo-plan-draft');
+      if (!stored) return null;
+      const parsed = JSON.parse(stored) as PlanDraft & { savedAt?: number };
+      if (parsed.savedAt && Date.now() - parsed.savedAt > 24 * 60 * 60 * 1000) {
+        sessionStorage.removeItem('meu-trevo-plan-draft');
+        return null;
+      }
+      return parsed;
+    } catch {
+      return null;
+    }
+  });
+
+  const goToGenerator = () => {
+    if (!user) {
+      redirectToLogin();
+      return;
+    }
+    if (!planDraft) {
+      trackProductEvent('planning_started', { lottery: activeLottery });
+      setActiveTab('plans');
+      setSaveFeedback('Defina objetivo e orçamento antes de gerar um jogo.');
+      return;
+    }
+    trackProductEvent('generator_opened', { lottery: activeLottery });
+    setActiveTab('generator');
+  };
 
   // Advanced filters map: number -> 'fixed' | 'excluded' | 'none'
   const [filtersMap, setFiltersMap] = useState<
@@ -923,9 +858,6 @@ export default function Home() {
   }, [showSettings]);
 
   useEffect(() => {
-    if (viewMode !== 'app') {
-      return;
-    }
     const onboardingDone = localStorage.getItem('meu-trevo-onboarding-done');
     if (!onboardingDone) {
       const timer = setTimeout(() => {
@@ -934,7 +866,7 @@ export default function Home() {
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [viewMode]);
+  }, []);
 
   useEffect(() => {
     const abort = { cancelled: false };
@@ -1364,1116 +1296,1150 @@ export default function Home() {
       {/* JSON-LD Structured Data */}
       <JsonLd />
 
-      {viewMode === 'landing' ? (
-        <Suspense fallback={<TabFallback />}>
-          <LandingPage
-            result={result}
-            history={history}
-            isAnnual={isAnnual}
-            setIsAnnual={setIsAnnual}
-            priceMonthly={priceMonthly}
-            priceAnnualEquivalent={priceAnnualEquivalent}
-            activeFaqIndex={activeFaqIndex}
-            setActiveFaqIndex={setActiveFaqIndex}
-            setShowUpgradeModal={setShowUpgradeModal}
-            landingQuickNums={landingQuickNums}
-            setLandingQuickNums={setLandingQuickNums}
-            landingQuickResult={landingQuickResult}
-            setLandingQuickResult={setLandingQuickResult}
-            landingQuickStats={landingQuickStats}
-            activeLottery={activeLottery}
-            setActiveLottery={setActiveLottery}
-            config={config}
-            playSound={playSound}
-            setViewMode={setViewMode}
-            getCleanDezenas={getCleanDezenas}
-            handleToggleLandingNum={handleToggleLandingNum}
-            handleGenerateLandingSmart={handleGenerateLandingSmart}
-            handleTestLandingGame={handleTestLandingGame}
-          />
-        </Suspense>
-      ) : (
-        <>
-          {/* Header */}
-          <header
-            className="app-header"
-            style={{ position: 'relative', padding: '0.85rem 1rem' }}
-          >
-            <div className="logo-container">
-              <Link
-                href="/"
-                style={{
-                  textDecoration: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                }}
-              >
-                <svg
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  style={{
-                    filter: 'drop-shadow(0 0 6px rgba(0, 255, 136, 0.8))',
-                  }}
-                >
-                  <path
-                    d="M12 12c0 3.5 1 6.5 2.5 8"
-                    stroke="#00ff88"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                  <g
-                    fill="#00ff88"
-                    stroke="#00ff88"
-                    strokeWidth="1.5"
-                    strokeLinejoin="round"
-                    fillOpacity="0.2"
-                  >
-                    <path d="M12 12 C 10.5 9.5, 8.5 9.5, 8.5 7.5 C 8.5 5.5, 10.5 5.5, 12 7.5 C 13.5 5.5, 15.5 5.5, 15.5 7.5 C 15.5 9.5, 13.5 9.5, 12 12 Z" />
-                    <path
-                      d="M12 12 C 10.5 9.5, 8.5 9.5, 8.5 7.5 C 8.5 5.5, 10.5 5.5, 12 7.5 C 13.5 5.5, 15.5 5.5, 15.5 7.5 C 15.5 9.5, 13.5 9.5, 12 12 Z"
-                      transform="rotate(90 12 12)"
-                    />
-                    <path
-                      d="M12 12 C 10.5 9.5, 8.5 9.5, 8.5 7.5 C 8.5 5.5, 10.5 5.5, 12 7.5 C 13.5 5.5, 15.5 5.5, 15.5 7.5 C 15.5 9.5, 13.5 9.5, 12 12 Z"
-                      transform="rotate(180 12 12)"
-                    />
-                    <path
-                      d="M12 12 C 10.5 9.5, 8.5 9.5, 8.5 7.5 C 8.5 5.5, 10.5 5.5, 12 7.5 C 13.5 5.5, 15.5 5.5, 15.5 7.5 C 15.5 9.5, 13.5 9.5, 12 12 Z"
-                      transform="rotate(270 12 12)"
-                    />
-                  </g>
-                </svg>
-                <div className="logo-text">Meu Trevo</div>
-              </Link>
-            </div>
-
-            {/* Centered Desktop Top Navigation */}
-            <div className="header-nav-desktop">
-              <button
-                className={`nav-item-desktop ${activeTab === 'results' ? 'active' : ''}`}
-                aria-current={activeTab === 'results' ? 'page' : undefined}
-                onClick={() => {
-                  playSound('click');
-                  setActiveTab('results');
-                }}
-              >
-                Resultados
-              </button>
-              <button
-                className={`nav-item-desktop ${activeTab === 'generator' ? 'active' : ''}`}
-                aria-current={activeTab === 'generator' ? 'page' : undefined}
-                onClick={() => {
-                  playSound('click');
-                  setActiveTab('generator');
-                }}
-              >
-                Planejar
-              </button>
-              <button
-                className={`nav-item-desktop ${activeTab === 'games' ? 'active' : ''}`}
-                aria-current={activeTab === 'games' ? 'page' : undefined}
-                onClick={() => {
-                  playSound('click');
-                  setActiveTab('games');
-                }}
-              >
-                Meus Jogos
-              </button>
-              <button
-                className={`nav-item-desktop ${activeTab === 'plans' ? 'active' : ''}`}
-                aria-current={activeTab === 'plans' ? 'page' : undefined}
-                onClick={() => {
-                  playSound('click');
-                  setActiveTab('plans');
-                }}
-              >
-                Plano e orçamento
-              </button>
-              <button
-                className={`nav-item-desktop ${activeTab === 'simulator' ? 'active' : ''}`}
-                aria-current={activeTab === 'simulator' ? 'page' : undefined}
-                onClick={() => {
-                  playSound('click');
-                  setActiveTab('simulator');
-                }}
-              >
-                Simulador
-              </button>
-              <button
-                className={`nav-item-desktop ${activeTab === 'stats' ? 'active' : ''}`}
-                aria-current={activeTab === 'stats' ? 'page' : undefined}
-                onClick={() => {
-                  playSound('click');
-                  setActiveTab('stats');
-                }}
-              >
-                Estatísticas
-              </button>
-              <button
-                className={`nav-item-desktop ${activeTab === 'finance' ? 'active' : ''}`}
-                aria-current={activeTab === 'finance' ? 'page' : undefined}
-                onClick={() => {
-                  playSound('click');
-                  setActiveTab('finance');
-                }}
-              >
-                Finanças
-              </button>
-              <button
-                className={`nav-item-desktop ${activeTab === 'ranking' ? 'active' : ''}`}
-                aria-current={activeTab === 'ranking' ? 'page' : undefined}
-                onClick={() => {
-                  playSound('click');
-                  setActiveTab('ranking');
-                }}
-              >
-                Ranking
-              </button>
-
-              {user?.role === 'admin' && (
-                <button
-                  className={`nav-item-desktop ${activeTab === 'admin' ? 'active' : ''}`}
-                  aria-current={activeTab === 'admin' ? 'page' : undefined}
-                  onClick={() => {
-                    playSound('click');
-                    setActiveTab('admin');
-                  }}
-                >
-                  Admin
-                </button>
-              )}
-            </div>
-
-            <div
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-            >
-              {!user && (
-                <button
-                  onClick={() => {
-                    playSound('click');
-                    redirectToLogin();
-                  }}
-                  style={{
-                    background: 'var(--accent-color)',
-                    border: 'none',
-                    color: '#000',
-                    fontSize: '0.7rem',
-                    cursor: 'pointer',
-                    padding: '0.35rem 0.65rem',
-                    borderRadius: '8px',
-                    fontWeight: 'bold',
-                    boxShadow: '0 0 8px var(--accent-glow)',
-                  }}
-                >
-                  Entrar
-                </button>
-              )}
-
-              {/* Botão de Configurações */}
-              <button
-                onClick={() => setShowSettings(!showSettings)}
-                className="settings-toggle-btn"
-                aria-label="Abrir configurações do aplicativo"
-                aria-expanded={showSettings}
-                style={{
-                  background: showSettings
-                    ? 'rgba(0,229,255,0.14)'
-                    : 'rgba(255,255,255,0.04)',
-                  border: '1px solid',
-                  borderColor: showSettings
-                    ? 'rgba(0,229,255,0.7)'
-                    : 'var(--glass-border)',
-                  color: showSettings
-                    ? 'var(--accent-color)'
-                    : 'var(--text-main)',
-                  cursor: 'pointer',
-                  width: '2.35rem',
-                  height: '2.35rem',
-                  borderRadius: '10px',
-                  padding: '0.45rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'all 0.2s ease',
-                  boxShadow: showSettings
-                    ? '0 0 14px rgba(0,229,255,0.18)'
-                    : 'none',
-                }}
-                title="Configurações do App"
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                  />
-                  <path
-                    d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.8 1.8-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56v.1h-2.55v-.1a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.06.06-1.8-1.8.06-.06A1.7 1.7 0 0 0 8.1 15a1.7 1.7 0 0 0-1.56-1.03h-.1v-2.55h.1A1.7 1.7 0 0 0 8.1 10.4a1.7 1.7 0 0 0-.34-1.88L7.7 8.46l1.8-1.8.06.06a1.7 1.7 0 0 0 1.88.34 1.7 1.7 0 0 0 1.03-1.56v-.1h2.55v.1a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.88-.34l.06-.06 1.8 1.8-.06.06A1.7 1.7 0 0 0 19.4 10.4a1.7 1.7 0 0 0 1.56 1.03h.1v2.55h-.1A1.7 1.7 0 0 0 19.4 15Z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            {/* Settings Panel */}
-            {showSettings && (
-              <Suspense fallback={<TabFallback />}>
-                <SettingsPanel
-                  playSound={playSound}
-                  showInRanking={showInRanking}
-                  onSetShowInRanking={setShowInRanking}
-                  emailAlerts={emailAlerts}
-                  onSetEmailAlerts={setEmailAlertsPersisted}
-                  enableSounds={enableSounds}
-                  onSetEnableSounds={setEnableSounds}
-                  theme={theme}
-                  onSetTheme={setTheme}
-                  historyLimit={historyLimit}
-                  onSetHistoryLimit={setHistoryLimit}
-                  onShowTutorial={() => setShowTutorial(true)}
-                  onLogout={async () => {
-                    await fetch('/api/auth/logout', { method: 'POST' });
-                    window.location.href = '/';
-                  }}
-                  onDeleteAccount={async () => {
-                    if (
-                      !window.confirm('Tem certeza? Esta ação é irreversível.')
-                    )
-                      return;
-                    const res = await fetchWithCsrf('/api/auth/delete', {
-                      method: 'POST',
-                    });
-                    if (res.ok) {
-                      window.location.href = '/';
-                    }
-                  }}
-                  onSaveProfile={handleSaveProfile}
-                  profileFeedback={profileFeedback}
-                  profileLoading={profileLoading}
-                  onFactoryReset={async () => {
-                    if (!window.confirm('Resetar todos os dados?')) return;
-                    await fetchWithCsrf('/api/user/factory-reset', {
-                      method: 'POST',
-                    });
-                    window.location.reload();
-                  }}
-                  user={user}
-                  isPro={isPro}
-                  onShowUpgrade={() => setShowUpgradeModal(true)}
-                  setShowSettings={setShowSettings}
-                  settingsRef={settingsRef}
-                />
-              </Suspense>
-            )}
-          </header>
-
-          {/* Selector Slider */}
-          <div className="lottery-slider">
-            {Object.values(LOTTERY_CONFIGS).map((lot) => (
-              <button
-                key={lot.id}
-                className={`lottery-pill ${activeLottery === lot.id ? 'active' : ''}`}
-                aria-pressed={activeLottery === lot.id}
-                aria-label={`Selecionar ${lot.name}`}
-                onClick={() => setActiveLottery(lot.id)}
-                style={
-                  {
-                    '--active-color': lot.color,
-                    '--active-glow': lot.accentColor,
-                  } as React.CSSProperties
-                }
-              >
-                <span
-                  style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    background: lot.accentColor,
-                  }}
-                />
-                {lot.name}
-              </button>
-            ))}
-          </div>
-          <div className="lottery-scroll-hint" aria-hidden="true">
-            Arraste para ver outras loterias →
-          </div>
-
-          {saveFeedback && (
-            <div
-              role="status"
+      <>
+        {/* Header */}
+        <header
+          className="app-header"
+          style={{ position: 'relative', padding: '0.85rem 1rem' }}
+        >
+          <div className="logo-container">
+            <Link
+              href="/"
               style={{
-                position: 'fixed',
-                left: '50%',
-                bottom: '1.25rem',
-                zIndex: 2500,
-                transform: 'translateX(-50%)',
-                maxWidth: 'calc(100% - 2rem)',
-                padding: '0.7rem 1rem',
-                borderRadius: '9px',
-                border: `1px solid ${saveFeedback.startsWith('✓') ? 'rgba(0,230,118,0.35)' : saveFeedback.startsWith('⚠️') ? 'rgba(255,214,0,0.35)' : 'rgba(0,240,255,0.3)'}`,
-                background: 'rgba(8,8,15,0.95)',
-                color: saveFeedback.startsWith('✓')
-                  ? '#00e676'
-                  : saveFeedback.startsWith('⚠️')
-                    ? '#ffd600'
-                    : 'var(--accent-color)',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.45)',
-                fontSize: '0.72rem',
-                fontWeight: 700,
-              }}
-            >
-              {saveFeedback}
-            </div>
-          )}
-
-          {/* Welcome User Banner */}
-          {user && (
-            <div
-              style={{
-                maxWidth: '1200px',
-                margin: '0.75rem auto 1.25rem auto',
-                padding: '0 1rem',
+                textDecoration: 'none',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.4rem',
-                fontSize: '0.8rem',
-                color: 'var(--text-muted)',
-                animation: 'fade-in 0.3s ease-out',
+                gap: '0.5rem',
               }}
             >
-              <span className="user-mark" aria-hidden="true">
-                {user.name?.trim().charAt(0).toUpperCase() || 'U'}
-              </span>
-              <span>
-                Olá,{' '}
-                <strong style={{ color: 'var(--text-main)' }}>
-                  {user.name}
-                </strong>
-                ! Bem-vindo ao seu painel.
-              </span>
-            </div>
-          )}
-
-          {/* Main Content Area */}
-          <div className="main-content" style={{ position: 'relative' }}>
-            {/* Subtle loading bar when switching lotteries (only if we already have data) */}
-            {loading && result && (
-              <div
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
                 style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: '2px',
-                  background: `linear-gradient(90deg, transparent, ${config?.accentColor || '#00f0ff'}, transparent)`,
-                  animation: 'loading-bar 1.2s ease-in-out infinite',
-                  zIndex: 10,
+                  filter: 'drop-shadow(0 0 6px rgba(0, 255, 136, 0.8))',
+                }}
+              >
+                <path
+                  d="M12 12c0 3.5 1 6.5 2.5 8"
+                  stroke="#00ff88"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+                <g
+                  fill="#00ff88"
+                  stroke="#00ff88"
+                  strokeWidth="1.5"
+                  strokeLinejoin="round"
+                  fillOpacity="0.2"
+                >
+                  <path d="M12 12 C 10.5 9.5, 8.5 9.5, 8.5 7.5 C 8.5 5.5, 10.5 5.5, 12 7.5 C 13.5 5.5, 15.5 5.5, 15.5 7.5 C 15.5 9.5, 13.5 9.5, 12 12 Z" />
+                  <path
+                    d="M12 12 C 10.5 9.5, 8.5 9.5, 8.5 7.5 C 8.5 5.5, 10.5 5.5, 12 7.5 C 13.5 5.5, 15.5 5.5, 15.5 7.5 C 15.5 9.5, 13.5 9.5, 12 12 Z"
+                    transform="rotate(90 12 12)"
+                  />
+                  <path
+                    d="M12 12 C 10.5 9.5, 8.5 9.5, 8.5 7.5 C 8.5 5.5, 10.5 5.5, 12 7.5 C 13.5 5.5, 15.5 5.5, 15.5 7.5 C 15.5 9.5, 13.5 9.5, 12 12 Z"
+                    transform="rotate(180 12 12)"
+                  />
+                  <path
+                    d="M12 12 C 10.5 9.5, 8.5 9.5, 8.5 7.5 C 8.5 5.5, 10.5 5.5, 12 7.5 C 13.5 5.5, 15.5 5.5, 15.5 7.5 C 15.5 9.5, 13.5 9.5, 12 12 Z"
+                    transform="rotate(270 12 12)"
+                  />
+                </g>
+              </svg>
+              <div className="logo-text">Meu Trevo</div>
+            </Link>
+          </div>
+
+          {/* Centered Desktop Top Navigation */}
+          <div className="header-nav-desktop">
+            <button
+              className={`nav-item-desktop ${activeTab === 'results' ? 'active' : ''}`}
+              aria-current={activeTab === 'results' ? 'page' : undefined}
+              onClick={() => {
+                playSound('click');
+                setActiveTab('results');
+              }}
+            >
+              Resultados
+            </button>
+            <button
+              className={`nav-item-desktop ${activeTab === 'generator' ? 'active' : ''}`}
+              aria-current={activeTab === 'generator' ? 'page' : undefined}
+              onClick={() => {
+                playSound('click');
+                goToGenerator();
+              }}
+            >
+              Planejar
+            </button>
+            <button
+              className={`nav-item-desktop ${activeTab === 'games' ? 'active' : ''}`}
+              aria-current={activeTab === 'games' ? 'page' : undefined}
+              onClick={() => {
+                playSound('click');
+                setActiveTab('games');
+              }}
+            >
+              Meus Jogos
+            </button>
+            <button
+              className={`nav-item-desktop ${activeTab === 'conference' ? 'active' : ''}`}
+              aria-current={activeTab === 'conference' ? 'page' : undefined}
+              onClick={() => {
+                playSound('click');
+                trackProductEvent('conference_opened', {
+                  lottery: activeLottery,
+                });
+                setActiveTab('conference');
+              }}
+            >
+              Conferir
+            </button>
+            <button
+              className={`nav-item-desktop ${activeTab === 'plans' ? 'active' : ''}`}
+              aria-current={activeTab === 'plans' ? 'page' : undefined}
+              onClick={() => {
+                playSound('click');
+                setActiveTab('plans');
+              }}
+            >
+              Plano e orçamento
+            </button>
+            <button
+              className={`nav-item-desktop ${activeTab === 'simulator' ? 'active' : ''}`}
+              aria-current={activeTab === 'simulator' ? 'page' : undefined}
+              onClick={() => {
+                playSound('click');
+                setActiveTab('simulator');
+              }}
+            >
+              Simulador
+            </button>
+            <button
+              className={`nav-item-desktop ${activeTab === 'stats' ? 'active' : ''}`}
+              aria-current={activeTab === 'stats' ? 'page' : undefined}
+              onClick={() => {
+                playSound('click');
+                setActiveTab('stats');
+              }}
+            >
+              Estatísticas
+            </button>
+            <button
+              className={`nav-item-desktop ${activeTab === 'finance' ? 'active' : ''}`}
+              aria-current={activeTab === 'finance' ? 'page' : undefined}
+              onClick={() => {
+                playSound('click');
+                setActiveTab('finance');
+              }}
+            >
+              Finanças
+            </button>
+            <button
+              className={`nav-item-desktop ${activeTab === 'ranking' ? 'active' : ''}`}
+              aria-current={activeTab === 'ranking' ? 'page' : undefined}
+              onClick={() => {
+                playSound('click');
+                setActiveTab('ranking');
+              }}
+            >
+              Ranking
+            </button>
+
+            {user?.role === 'admin' && (
+              <button
+                className={`nav-item-desktop ${activeTab === 'admin' ? 'active' : ''}`}
+                aria-current={activeTab === 'admin' ? 'page' : undefined}
+                onClick={() => {
+                  playSound('click');
+                  setActiveTab('admin');
+                }}
+              >
+                Admin
+              </button>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {!user && (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  redirectToLogin();
+                }}
+                style={{
+                  background: 'var(--accent-color)',
+                  border: 'none',
+                  color: '#000',
+                  fontSize: '0.7rem',
+                  cursor: 'pointer',
+                  padding: '0.35rem 0.65rem',
+                  borderRadius: '8px',
+                  fontWeight: 'bold',
+                  boxShadow: '0 0 8px var(--accent-glow)',
+                }}
+              >
+                Entrar
+              </button>
+            )}
+
+            {/* Botão de Configurações */}
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className="settings-toggle-btn"
+              aria-label="Abrir configurações do aplicativo"
+              aria-expanded={showSettings}
+              style={{
+                background: showSettings
+                  ? 'rgba(0,229,255,0.14)'
+                  : 'rgba(255,255,255,0.04)',
+                border: '1px solid',
+                borderColor: showSettings
+                  ? 'rgba(0,229,255,0.7)'
+                  : 'var(--glass-border)',
+                color: showSettings
+                  ? 'var(--accent-color)'
+                  : 'var(--text-main)',
+                cursor: 'pointer',
+                width: '2.35rem',
+                height: '2.35rem',
+                borderRadius: '10px',
+                padding: '0.45rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease',
+                boxShadow: showSettings
+                  ? '0 0 14px rgba(0,229,255,0.18)'
+                  : 'none',
+              }}
+              title="Configurações do App"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                />
+                <path
+                  d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.8 1.8-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56v.1h-2.55v-.1a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.06.06-1.8-1.8.06-.06A1.7 1.7 0 0 0 8.1 15a1.7 1.7 0 0 0-1.56-1.03h-.1v-2.55h.1A1.7 1.7 0 0 0 8.1 10.4a1.7 1.7 0 0 0-.34-1.88L7.7 8.46l1.8-1.8.06.06a1.7 1.7 0 0 0 1.88.34 1.7 1.7 0 0 0 1.03-1.56v-.1h2.55v.1a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.88-.34l.06-.06 1.8 1.8-.06.06A1.7 1.7 0 0 0 19.4 10.4a1.7 1.7 0 0 0 1.56 1.03h.1v2.55h-.1A1.7 1.7 0 0 0 19.4 15Z"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
+
+          {/* Settings Panel */}
+          {showSettings && (
+            <Suspense fallback={<TabFallback />}>
+              <SettingsPanel
+                playSound={playSound}
+                showInRanking={showInRanking}
+                onSetShowInRanking={setShowInRanking}
+                emailAlerts={emailAlerts}
+                onSetEmailAlerts={setEmailAlertsPersisted}
+                enableSounds={enableSounds}
+                onSetEnableSounds={setEnableSounds}
+                theme={theme}
+                onSetTheme={setTheme}
+                historyLimit={historyLimit}
+                onSetHistoryLimit={setHistoryLimit}
+                onShowTutorial={() => setShowTutorial(true)}
+                onLogout={async () => {
+                  await fetch('/api/auth/logout', { method: 'POST' });
+                  window.location.href = '/';
+                }}
+                onDeleteAccount={async () => {
+                  if (!window.confirm('Tem certeza? Esta ação é irreversível.'))
+                    return;
+                  const res = await fetchWithCsrf('/api/auth/delete', {
+                    method: 'POST',
+                  });
+                  if (res.ok) {
+                    window.location.href = '/';
+                  }
+                }}
+                onSaveProfile={handleSaveProfile}
+                profileFeedback={profileFeedback}
+                profileLoading={profileLoading}
+                onFactoryReset={async () => {
+                  if (!window.confirm('Resetar todos os dados?')) return;
+                  await fetchWithCsrf('/api/user/factory-reset', {
+                    method: 'POST',
+                  });
+                  window.location.reload();
+                }}
+                user={user}
+                isPro={isPro}
+                onShowUpgrade={() => setShowUpgradeModal(true)}
+                setShowSettings={setShowSettings}
+                settingsRef={settingsRef}
+              />
+            </Suspense>
+          )}
+        </header>
+
+        {/* Selector Slider */}
+        <div className="lottery-slider">
+          {Object.values(LOTTERY_CONFIGS).map((lot) => (
+            <button
+              key={lot.id}
+              className={`lottery-pill ${activeLottery === lot.id ? 'active' : ''}`}
+              aria-pressed={activeLottery === lot.id}
+              aria-label={`Selecionar ${lot.name}`}
+              onClick={() => setActiveLottery(lot.id)}
+              style={
+                {
+                  '--active-color': lot.color,
+                  '--active-glow': lot.accentColor,
+                } as React.CSSProperties
+              }
+            >
+              <span
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: lot.accentColor,
                 }}
               />
-            )}
-            {!result && activeTab === 'results' ? (
-              resultError ? (
-                <div
-                  role="alert"
+              {lot.name}
+            </button>
+          ))}
+        </div>
+        <div className="lottery-scroll-hint" aria-hidden="true">
+          Arraste para ver outras loterias →
+        </div>
+
+        {saveFeedback && (
+          <div
+            role="status"
+            style={{
+              position: 'fixed',
+              left: '50%',
+              bottom: '1.25rem',
+              zIndex: 2500,
+              transform: 'translateX(-50%)',
+              maxWidth: 'calc(100% - 2rem)',
+              padding: '0.7rem 1rem',
+              borderRadius: '9px',
+              border: `1px solid ${saveFeedback.startsWith('✓') ? 'rgba(0,230,118,0.35)' : saveFeedback.startsWith('⚠️') ? 'rgba(255,214,0,0.35)' : 'rgba(0,240,255,0.3)'}`,
+              background: 'rgba(8,8,15,0.95)',
+              color: saveFeedback.startsWith('✓')
+                ? '#00e676'
+                : saveFeedback.startsWith('⚠️')
+                  ? '#ffd600'
+                  : 'var(--accent-color)',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.45)',
+              fontSize: '0.72rem',
+              fontWeight: 700,
+            }}
+          >
+            {saveFeedback}
+          </div>
+        )}
+
+        {/* Welcome User Banner */}
+        {user && (
+          <div
+            style={{
+              maxWidth: '1200px',
+              margin: '0.75rem auto 1.25rem auto',
+              padding: '0 1rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              fontSize: '0.8rem',
+              color: 'var(--text-muted)',
+              animation: 'fade-in 0.3s ease-out',
+            }}
+          >
+            <span className="user-mark" aria-hidden="true">
+              {user.name?.trim().charAt(0).toUpperCase() || 'U'}
+            </span>
+            <span>
+              Olá,{' '}
+              <strong style={{ color: 'var(--text-main)' }}>{user.name}</strong>
+              ! Bem-vindo ao seu painel.
+            </span>
+          </div>
+        )}
+
+        {user && (
+          <section
+            aria-label="Próximas etapas"
+            style={{
+              maxWidth: '1200px',
+              margin: '0 auto 1rem',
+              padding: '0 1rem',
+            }}
+          >
+            <div
+              style={{
+                border: '1px solid rgba(0,240,255,0.18)',
+                background:
+                  'linear-gradient(110deg, rgba(0,240,255,0.07), rgba(0,255,136,0.035))',
+                borderRadius: '14px',
+                padding: '0.8rem 0.9rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.8rem',
+                flexWrap: 'wrap',
+              }}
+            >
+              <div style={{ flex: '1 1 220px' }}>
+                <strong style={{ color: '#fff', fontSize: '0.82rem' }}>
+                  Próximo passo
+                </strong>
+                <p
                   style={{
-                    display: 'flex',
-                    flex: 1,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    minHeight: '300px',
-                    flexDirection: 'column',
-                    gap: '0.75rem',
-                    textAlign: 'center',
-                    padding: '1rem',
+                    margin: '0.2rem 0 0',
+                    color: 'var(--text-muted)',
+                    fontSize: '0.72rem',
                   }}
                 >
-                  <strong style={{ color: '#ffd600', fontSize: '0.9rem' }}>
-                    Não foi possível carregar os resultados
-                  </strong>
-                  <p
-                    style={{
-                      color: 'var(--text-muted)',
-                      fontSize: '0.78rem',
-                      margin: 0,
-                    }}
-                  >
-                    {resultError}
-                  </p>
+                  {savedGames.length > 0
+                    ? 'Você já tem jogos organizados. Confira ou monte uma nova combinação.'
+                    : 'Escolha um objetivo e um limite de gasto antes de gerar.'}
+                </p>
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '0.35rem',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                }}
+              >
+                {(
+                  [
+                    ['1', 'Modalidade', () => setActiveTab('results')],
+                    ['2', 'Objetivo e orçamento', () => setActiveTab('plans')],
+                    ['3', 'Gerar e salvar', goToGenerator],
+                    [
+                      '4',
+                      'Conferir',
+                      () => {
+                        trackProductEvent('conference_opened', {
+                          lottery: activeLottery,
+                        });
+                        setActiveTab('conference');
+                      },
+                    ],
+                  ] as const
+                ).map(([number, label, action]) => (
                   <button
+                    key={label}
                     type="button"
-                    className="theme-pill-btn active"
-                    onClick={() => void fetchResult(activeLottery)}
+                    onClick={action}
+                    style={{
+                      border: '1px solid var(--glass-border)',
+                      background: 'rgba(0,0,0,0.18)',
+                      color: 'var(--text-main)',
+                      borderRadius: '8px',
+                      padding: '0.42rem 0.55rem',
+                      fontSize: '0.68rem',
+                      cursor: 'pointer',
+                    }}
                   >
-                    Tentar novamente
+                    <span
+                      style={{ color: 'var(--accent-color)', fontWeight: 800 }}
+                    >
+                      {number}
+                    </span>{' '}
+                    {label}
                   </button>
-                </div>
-              ) : (
-                <div
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Main Content Area */}
+        <div className="main-content" style={{ position: 'relative' }}>
+          {/* Subtle loading bar when switching lotteries (only if we already have data) */}
+          {loading && result && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '2px',
+                background: `linear-gradient(90deg, transparent, ${config?.accentColor || '#00f0ff'}, transparent)`,
+                animation: 'loading-bar 1.2s ease-in-out infinite',
+                zIndex: 10,
+              }}
+            />
+          )}
+          {!result && activeTab === 'results' ? (
+            resultError ? (
+              <div
+                role="alert"
+                style={{
+                  display: 'flex',
+                  flex: 1,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  minHeight: '300px',
+                  flexDirection: 'column',
+                  gap: '0.75rem',
+                  textAlign: 'center',
+                  padding: '1rem',
+                }}
+              >
+                <strong style={{ color: '#ffd600', fontSize: '0.9rem' }}>
+                  Não foi possível carregar os resultados
+                </strong>
+                <p
                   style={{
-                    display: 'flex',
-                    flex: 1,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    minHeight: '300px',
-                    flexDirection: 'column',
-                    gap: '1rem',
+                    color: 'var(--text-muted)',
+                    fontSize: '0.78rem',
+                    margin: 0,
                   }}
                 >
-                  <span
-                    className="loader"
-                    style={
-                      {
-                        '--accent-color': config?.accentColor,
-                      } as React.CSSProperties
-                    }
+                  {resultError}
+                </p>
+                <button
+                  type="button"
+                  className="theme-pill-btn active"
+                  onClick={() => void fetchResult(activeLottery)}
+                >
+                  Tentar novamente
+                </button>
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: 'flex',
+                  flex: 1,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  minHeight: '300px',
+                  flexDirection: 'column',
+                  gap: '1rem',
+                }}
+              >
+                <span
+                  className="loader"
+                  style={
+                    {
+                      '--accent-color': config?.accentColor,
+                    } as React.CSSProperties
+                  }
+                />
+                <p
+                  style={{
+                    color: 'var(--text-muted)',
+                    fontFamily: 'var(--font-body)',
+                    fontSize: '0.85rem',
+                  }}
+                >
+                  Carregando resultados...
+                </p>
+              </div>
+            )
+          ) : (
+            <>
+              {/* TAB: RESULTADOS */}
+              {activeTab === 'results' && result && (
+                <Suspense fallback={<TabFallback />}>
+                  <ResultsTab
+                    result={result}
+                    config={config}
+                    getCleanDezenas={getCleanDezenas}
+                    activeLottery={activeLottery}
+                    customConcurso={customConcurso}
+                    setCustomConcurso={setCustomConcurso}
+                    fetchResult={fetchResult}
+                    showRateio={showRateio}
+                    setShowRateio={setShowRateio}
+                    history={history}
                   />
+                </Suspense>
+              )}
+
+              {/* TAB: ESTATÍSTICAS / HEATMAP */}
+              {activeTab === 'stats' && (
+                <Suspense fallback={<TabFallback />}>
+                  <StatsTab
+                    history={history}
+                    activeLottery={activeLottery}
+                    statsData={statsData}
+                    isPro={isPro}
+                    playSound={playSound}
+                    setShowUpgradeModal={setShowUpgradeModal}
+                  />
+                </Suspense>
+              )}
+
+              {/* TAB: SIMULADOR RÁPIDO */}
+              {activeTab === 'simulator' && (
+                <Suspense fallback={<TabFallback />}>
+                  <QuickSimulator
+                    initialResult={result}
+                    initialLottery={activeLottery}
+                    history={history}
+                    isAuthenticated={Boolean(user)}
+                    isPro={isPro}
+                    onUpgrade={() => setShowUpgradeModal(true)}
+                  />
+                </Suspense>
+              )}
+
+              {/* TAB: GERADOR INTELIGENTE / DESDOBRAMENTOS */}
+              {activeTab === 'generator' && !user && (
+                <div
+                  className="glass-panel"
+                  style={{
+                    animation: 'fade-in 0.3s ease',
+                    textAlign: 'center',
+                    padding: '1.25rem',
+                  }}
+                >
+                  <div style={{ fontSize: '2.2rem', marginBottom: '0.4rem' }}>
+                    🔒
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '1rem',
+                      fontWeight: 800,
+                      color: 'white',
+                      marginBottom: '0.35rem',
+                    }}
+                  >
+                    Faça login para gerar jogos
+                  </div>
                   <p
                     style={{
+                      fontSize: '0.78rem',
                       color: 'var(--text-muted)',
-                      fontFamily: 'var(--font-body)',
-                      fontSize: '0.85rem',
+                      lineHeight: 1.6,
+                      margin: '0 auto 1rem auto',
+                      maxWidth: '420px',
                     }}
                   >
-                    Carregando resultados...
+                    O gerador Smart, desdobramentos, gerador por temas e bolões
+                    agora exigem conta para uso no app. Assim seus jogos,
+                    filtros e recursos ficam vinculados ao seu perfil.
                   </p>
-                </div>
-              )
-            ) : (
-              <>
-                {/* TAB: RESULTADOS */}
-                {activeTab === 'results' && result && (
-                  <Suspense fallback={<TabFallback />}>
-                    <ResultsTab
-                      result={result}
-                      config={config}
-                      getCleanDezenas={getCleanDezenas}
-                      activeLottery={activeLottery}
-                      customConcurso={customConcurso}
-                      setCustomConcurso={setCustomConcurso}
-                      fetchResult={fetchResult}
-                      showRateio={showRateio}
-                      setShowRateio={setShowRateio}
-                      history={history}
-                    />
-                  </Suspense>
-                )}
-
-                {/* TAB: ESTATÍSTICAS / HEATMAP */}
-                {activeTab === 'stats' && (
-                  <Suspense fallback={<TabFallback />}>
-                    <StatsTab
-                      history={history}
-                      activeLottery={activeLottery}
-                      statsData={statsData}
-                      isPro={isPro}
-                      playSound={playSound}
-                      setShowUpgradeModal={setShowUpgradeModal}
-                    />
-                  </Suspense>
-                )}
-
-                {/* TAB: SIMULADOR RÁPIDO */}
-                {activeTab === 'simulator' && (
-                  <Suspense fallback={<TabFallback />}>
-                    <QuickSimulator
-                      initialResult={result}
-                      initialLottery={activeLottery}
-                      history={history}
-                      isAuthenticated={Boolean(user)}
-                      isPro={isPro}
-                      onUpgrade={() => setShowUpgradeModal(true)}
-                    />
-                  </Suspense>
-                )}
-
-                {/* TAB: GERADOR INTELIGENTE / DESDOBRAMENTOS */}
-                {activeTab === 'generator' && !user && (
                   <div
-                    className="glass-panel"
                     style={{
-                      animation: 'fade-in 0.3s ease',
-                      textAlign: 'center',
-                      padding: '1.25rem',
+                      display: 'flex',
+                      gap: '0.6rem',
+                      justifyContent: 'center',
+                      flexWrap: 'wrap',
                     }}
                   >
-                    <div style={{ fontSize: '2.2rem', marginBottom: '0.4rem' }}>
-                      🔒
-                    </div>
-                    <div
+                    <button
+                      className="btn-action"
+                      onClick={redirectToLogin}
+                      style={{ minWidth: '180px', fontWeight: 700 }}
+                    >
+                      Entrar para continuar
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (typeof window !== 'undefined') {
+                          window.location.assign(
+                            '/login?mode=register&next=/app'
+                          );
+                        }
+                      }}
                       style={{
-                        fontSize: '1rem',
-                        fontWeight: 800,
+                        minWidth: '180px',
+                        padding: '0.75rem 1rem',
+                        borderRadius: '10px',
+                        border: '1px solid var(--glass-border)',
+                        background: 'rgba(255,255,255,0.04)',
                         color: 'white',
-                        marginBottom: '0.35rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
                       }}
                     >
-                      Faça login para gerar jogos
-                    </div>
-                    <p
-                      style={{
-                        fontSize: '0.78rem',
-                        color: 'var(--text-muted)',
-                        lineHeight: 1.6,
-                        margin: '0 auto 1rem auto',
-                        maxWidth: '420px',
-                      }}
-                    >
-                      O gerador Smart, desdobramentos, gerador por temas e
-                      bolões agora exigem conta para uso no app. Assim seus
-                      jogos, filtros e recursos ficam vinculados ao seu perfil.
-                    </p>
-                    <div
-                      style={{
-                        display: 'flex',
-                        gap: '0.6rem',
-                        justifyContent: 'center',
-                        flexWrap: 'wrap',
-                      }}
-                    >
-                      <button
-                        className="btn-action"
-                        onClick={redirectToLogin}
-                        style={{ minWidth: '180px', fontWeight: 700 }}
-                      >
-                        Entrar para continuar
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (typeof window !== 'undefined') {
-                            window.location.assign(
-                              '/login?mode=register&next=/app'
-                            );
-                          }
-                        }}
-                        style={{
-                          minWidth: '180px',
-                          padding: '0.75rem 1rem',
-                          borderRadius: '10px',
-                          border: '1px solid var(--glass-border)',
-                          background: 'rgba(255,255,255,0.04)',
-                          color: 'white',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        Criar conta grátis
-                      </button>
-                    </div>
+                      Criar conta grátis
+                    </button>
                   </div>
-                )}
+                </div>
+              )}
 
-                {activeTab === 'generator' && user && (
-                  <div
-                    className="glass-panel"
-                    style={{ animation: 'fade-in 0.3s ease' }}
-                  >
-                    {/* Mode Selector Sub-Tabs */}
-                    <div className="sub-tabs-container">
+              {activeTab === 'generator' && user && (
+                <div
+                  className="glass-panel"
+                  style={{ animation: 'fade-in 0.3s ease' }}
+                >
+                  {/* Mode Selector Sub-Tabs */}
+                  <div className="sub-tabs-container">
+                    <button
+                      className={`sub-tab-btn ${genSubTab === 'smart' ? 'active' : ''}`}
+                      onClick={() => setGenSubTab('smart')}
+                    >
+                      Gerador Smart
+                    </button>
+                    <button
+                      className={`sub-tab-btn ${genSubTab === 'wheeling' ? 'active' : ''}`}
+                      onClick={() => setGenSubTab('wheeling')}
+                    >
+                      Desdobramento
+                    </button>
+                    {(activeLottery === 'lotofacil' ||
+                      NUMERIC_STRATEGY_LOTTERIES.includes(
+                        activeLottery as (typeof NUMERIC_STRATEGY_LOTTERIES)[number]
+                      )) && (
                       <button
-                        className={`sub-tab-btn ${genSubTab === 'smart' ? 'active' : ''}`}
-                        onClick={() => setGenSubTab('smart')}
-                      >
-                        Gerador Smart
-                      </button>
-                      <button
-                        className={`sub-tab-btn ${genSubTab === 'wheeling' ? 'active' : ''}`}
-                        onClick={() => setGenSubTab('wheeling')}
-                      >
-                        Desdobramento
-                      </button>
-                      {(activeLottery === 'lotofacil' ||
-                        NUMERIC_STRATEGY_LOTTERIES.includes(
-                          activeLottery as (typeof NUMERIC_STRATEGY_LOTTERIES)[number]
-                        )) && (
-                        <button
-                          className={`sub-tab-btn ${genSubTab === 'advanced' ? 'active' : ''}`}
-                          onClick={() => {
-                            if (!isPro) {
-                              setShowUpgradeModal(true);
-                              return;
-                            }
-                            setHistoryLimit(100);
-                            setGenSubTab('advanced');
-                          }}
-                        >
-                          Estratégia avançada
-                        </button>
-                      )}
-                      <button
-                        className={`sub-tab-btn ${genSubTab === 'mystic' ? 'active' : ''}`}
+                        className={`sub-tab-btn ${genSubTab === 'advanced' ? 'active' : ''}`}
                         onClick={() => {
-                          if (isPro) {
-                            setGenSubTab('mystic');
-                          } else {
+                          if (!isPro) {
                             setShowUpgradeModal(true);
+                            return;
                           }
+                          setHistoryLimit(100);
+                          setGenSubTab('advanced');
                         }}
                       >
-                        Gerador por Temas
+                        Estratégia avançada
                       </button>
-                      <button
-                        className={`sub-tab-btn ${genSubTab === 'bolao' ? 'active' : ''}`}
-                        onClick={() => {
-                          setGenSubTab('bolao');
-                        }}
-                      >
-                        Gerador de Bolão
-                      </button>
-                    </div>
-
-                    <div
-                      style={{
-                        margin: '0.55rem 0 0.8rem',
-                        fontSize: '0.72rem',
+                    )}
+                    <button
+                      className={`sub-tab-btn ${genSubTab === 'mystic' ? 'active' : ''}`}
+                      onClick={() => {
+                        if (isPro) {
+                          setGenSubTab('mystic');
+                        } else {
+                          setShowUpgradeModal(true);
+                        }
                       }}
                     >
-                      <Link
-                        href={`/estrategias/${activeLottery}`}
-                        style={{ color: 'var(--accent-color)' }}
-                      >
-                        Ver metodologia e limites desta modalidade
-                      </Link>
-                    </div>
-
-                    {/* SUB-TAB: SMART GENERATOR */}
-                    <div
-                      style={{
-                        display: genSubTab === 'smart' ? undefined : 'none',
+                      Gerador por Temas
+                    </button>
+                    <button
+                      className={`sub-tab-btn ${genSubTab === 'bolao' ? 'active' : ''}`}
+                      onClick={() => {
+                        setGenSubTab('bolao');
                       }}
                     >
-                      <div className="panel-header">
-                        <div className="panel-title">
-                          <span style={{ color: 'var(--accent-color)' }}>
-                            ✦
-                          </span>{' '}
-                          SUGERIR JOGO COM CRITÉRIOS
-                        </div>
-                        <span className="contest-badge">{config.name}</span>
+                      Gerador de Bolão
+                    </button>
+                  </div>
+
+                  <div
+                    style={{
+                      margin: '0.55rem 0 0.8rem',
+                      fontSize: '0.72rem',
+                    }}
+                  >
+                    <Link
+                      href={`/estrategias/${activeLottery}`}
+                      style={{ color: 'var(--accent-color)' }}
+                    >
+                      Ver metodologia e limites desta modalidade
+                    </Link>
+                  </div>
+
+                  {/* SUB-TAB: SMART GENERATOR */}
+                  <div
+                    style={{
+                      display: genSubTab === 'smart' ? undefined : 'none',
+                    }}
+                  >
+                    <div className="panel-header">
+                      <div className="panel-title">
+                        <span style={{ color: 'var(--accent-color)' }}>✦</span>{' '}
+                        SUGERIR JOGO COM CRITÉRIOS
                       </div>
+                      <span className="contest-badge">{config.name}</span>
+                    </div>
 
-                      {planDraft && planDraft.lottery === activeLottery && (
-                        <div
-                          role="status"
-                          style={{
-                            marginBottom: '0.75rem',
-                            padding: '0.65rem',
-                            border: '1px solid rgba(0,240,255,0.2)',
-                            borderRadius: 8,
-                            color: 'var(--text-muted)',
-                            fontSize: '0.72rem',
-                          }}
+                    {planDraft && planDraft.lottery === activeLottery && (
+                      <div
+                        role="status"
+                        style={{
+                          marginBottom: '0.75rem',
+                          padding: '0.65rem',
+                          border: '1px solid rgba(0,240,255,0.2)',
+                          borderRadius: 8,
+                          color: 'var(--text-muted)',
+                          fontSize: '0.72rem',
+                        }}
+                      >
+                        <strong style={{ color: 'var(--accent-color)' }}>
+                          Plano: {planDraft.title}
+                        </strong>{' '}
+                        · objetivo:{' '}
+                        {planDraft.objective === 'economy'
+                          ? 'economizar'
+                          : planDraft.objective === 'coverage'
+                            ? 'ampliar cobertura'
+                            : planDraft.objective === 'conference'
+                              ? 'conferir histórico'
+                              : 'equilibrar critérios'}{' '}
+                        · orçamento: {planDraft.budget || 'não informado'} ·{' '}
+                        {planDraft.contestsCount} concurso(s)
+                      </div>
+                    )}
+
+                    {/* Explanation */}
+                    <div
+                      style={{
+                        fontSize: '0.6rem',
+                        color: 'var(--text-muted)',
+                        lineHeight: 1.5,
+                        marginBottom: '0.75rem',
+                        padding: '0.5rem',
+                        borderRadius: '6px',
+                        background: 'rgba(255,255,255,0.02)',
+                        border: '1px solid rgba(255,255,255,0.04)',
+                      }}
+                    >
+                      <strong style={{ color: 'white' }}>
+                        Como funciona o gerador:
+                      </strong>{' '}
+                      O sistema analisa o histórico de sorteios e gera jogos
+                      usando critérios descritivos, como soma, paridade,
+                      sequências e distribuição por quadrantes. Cada jogo recebe
+                      uma{' '}
+                      <strong style={{ color: 'var(--accent-color)' }}>
+                        pontuação (score)
+                      </strong>{' '}
+                      de 0 a 100. O score indica aderência aos critérios
+                      configurados; não prevê resultados nem altera as
+                      probabilidades oficiais.
+                    </div>
+
+                    {/* Strategy Selector */}
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <label
+                        style={{
+                          display: 'block',
+                          fontSize: '0.7rem',
+                          color: 'var(--text-muted)',
+                          marginBottom: '0.35rem',
+                          fontWeight: 600,
+                        }}
+                      >
+                        Critério de seleção
+                      </label>
+                      <div
+                        className="options-selector"
+                        style={{ marginBottom: '0' }}
+                      >
+                        <button
+                          className={`option-btn ${intensity === 'balanced' ? 'active' : ''}`}
+                          onClick={() => setIntensity('balanced')}
                         >
-                          <strong style={{ color: 'var(--accent-color)' }}>
-                            Plano: {planDraft.title}
-                          </strong>{' '}
-                          · objetivo:{' '}
-                          {planDraft.objective === 'economy'
-                            ? 'economizar'
-                            : planDraft.objective === 'coverage'
-                              ? 'ampliar cobertura'
-                              : planDraft.objective === 'conference'
-                                ? 'conferir histórico'
-                                : 'equilibrar critérios'}{' '}
-                          · orçamento: {planDraft.budget || 'não informado'} ·{' '}
-                          {planDraft.contestsCount} concurso(s)
-                        </div>
-                      )}
-
-                      {/* Explanation */}
+                          Equilibrado
+                        </button>
+                        <button
+                          className={`option-btn ${intensity === 'aggressive' ? 'active' : ''}`}
+                          onClick={() => setIntensity('aggressive')}
+                        >
+                          Quentes
+                        </button>
+                        <button
+                          className={`option-btn ${intensity === 'delayed' ? 'active' : ''}`}
+                          onClick={() => setIntensity('delayed')}
+                        >
+                          Atrasadas ⏳
+                        </button>
+                        <button
+                          className={`option-btn ${intensity === 'surpresa' ? 'active' : ''}`}
+                          onClick={() => setIntensity('surpresa')}
+                        >
+                          Surpresa
+                        </button>
+                      </div>
                       <div
                         style={{
-                          fontSize: '0.6rem',
+                          fontSize: '0.55rem',
                           color: 'var(--text-muted)',
-                          lineHeight: 1.5,
-                          marginBottom: '0.75rem',
-                          padding: '0.5rem',
-                          borderRadius: '6px',
-                          background: 'rgba(255,255,255,0.02)',
-                          border: '1px solid rgba(255,255,255,0.04)',
+                          marginTop: '0.25rem',
+                          padding: '0.3rem 0.4rem',
+                          borderRadius: '4px',
+                          background: 'rgba(0,0,0,0.15)',
                         }}
                       >
-                        <strong style={{ color: 'white' }}>
-                          Como funciona o gerador:
-                        </strong>{' '}
-                        O sistema analisa o histórico de sorteios e gera jogos
-                        que seguem padrões estatísticos (soma, primos,
-                        Fibonacci, pares/ímpares, distribuição por quadrantes).
-                        Cada jogo recebe uma{' '}
-                        <strong style={{ color: 'var(--accent-color)' }}>
-                          pontuação (score)
-                        </strong>{' '}
-                        de 0 a 100. O score indica aderência aos critérios
-                        configurados; não prevê resultados nem altera as
-                        probabilidades oficiais.
+                        {intensity === 'balanced' &&
+                          'Mistura frequência recente e atraso histórico, sem indicar maior chance.'}
+                        {intensity === 'aggressive' &&
+                          'Prioriza números com maior frequência recente para comparação histórica.'}
+                        {intensity === 'delayed' &&
+                          'Prioriza números com maior atraso histórico para comparação, não previsão.'}
+                        {intensity === 'surpresa' &&
+                          'Sem preferência — todos os números têm o mesmo peso.'}
                       </div>
+                    </div>
 
-                      {/* Strategy Selector */}
-                      <div style={{ marginBottom: '0.5rem' }}>
-                        <label
-                          style={{
-                            display: 'block',
-                            fontSize: '0.7rem',
-                            color: 'var(--text-muted)',
-                            marginBottom: '0.35rem',
-                            fontWeight: 600,
-                          }}
-                        >
-                          Estratégia de Pesos
-                        </label>
-                        <div
-                          className="options-selector"
-                          style={{ marginBottom: '0' }}
-                        >
+                    {/* Quantity Selector */}
+                    <div style={{ marginBottom: '1rem' }}>
+                      <label
+                        style={{
+                          display: 'block',
+                          fontSize: '0.75rem',
+                          color: 'var(--text-muted)',
+                          marginBottom: '0.35rem',
+                          fontWeight: 600,
+                        }}
+                      >
+                        Quantidade de Jogos
+                      </label>
+                      <div
+                        className="options-selector"
+                        style={{ marginBottom: '0' }}
+                      >
+                        {[1, 3, 5].map((qty) => (
                           <button
-                            className={`option-btn ${intensity === 'balanced' ? 'active' : ''}`}
-                            onClick={() => setIntensity('balanced')}
+                            key={qty}
+                            className={`option-btn ${gameQuantity === qty ? 'active' : ''}`}
+                            onClick={() => setGameQuantity(qty)}
                           >
-                            Equilibrado
+                            {qty} {qty === 1 ? 'Jogo' : 'Jogos'}
                           </button>
-                          <button
-                            className={`option-btn ${intensity === 'aggressive' ? 'active' : ''}`}
-                            onClick={() => setIntensity('aggressive')}
-                          >
-                            Quentes
-                          </button>
-                          <button
-                            className={`option-btn ${intensity === 'delayed' ? 'active' : ''}`}
-                            onClick={() => setIntensity('delayed')}
-                          >
-                            Atrasadas ⏳
-                          </button>
-                          <button
-                            className={`option-btn ${intensity === 'surpresa' ? 'active' : ''}`}
-                            onClick={() => setIntensity('surpresa')}
-                          >
-                            Surpresa
-                          </button>
-                        </div>
-                        <div
-                          style={{
-                            fontSize: '0.55rem',
-                            color: 'var(--text-muted)',
-                            marginTop: '0.25rem',
-                            padding: '0.3rem 0.4rem',
-                            borderRadius: '4px',
-                            background: 'rgba(0,0,0,0.15)',
-                          }}
-                        >
-                          {intensity === 'balanced' &&
-                            '⚖️ Balanceia números quentes e frios. Mais usado e recomendado.'}
-                          {intensity === 'aggressive' &&
-                            '🔥 Prioriza números que mais saíram recentemente (quentes).'}
-                          {intensity === 'delayed' &&
-                            '⏳ Prioriza números com maior atraso (não saem há mais tempo).'}
-                          {intensity === 'surpresa' &&
-                            'Sem preferência — todos os números têm o mesmo peso.'}
-                        </div>
+                        ))}
                       </div>
+                    </div>
 
-                      {/* Quantity Selector */}
-                      <div style={{ marginBottom: '1rem' }}>
-                        <label
-                          style={{
-                            display: 'block',
-                            fontSize: '0.75rem',
-                            color: 'var(--text-muted)',
-                            marginBottom: '0.35rem',
-                            fontWeight: 600,
-                          }}
-                        >
-                          Quantidade de Jogos
-                        </label>
-                        <div
-                          className="options-selector"
-                          style={{ marginBottom: '0' }}
-                        >
-                          {[1, 3, 5].map((qty) => (
+                    {/* PREMIUM: ADVANCED FILTERS & CO-OCCURRENCE */}
+                    <div style={{ marginBottom: '1.25rem' }}>
+                      <button
+                        className="filter-toggle-btn"
+                        onClick={() => setShowFilters(!showFilters)}
+                      >
+                        ⚙️{' '}
+                        {showFilters
+                          ? 'Esconder Filtros Avançados'
+                          : 'Mostrar Filtros Avançados (Fixar/Excluir)'}
+                      </button>
+
+                      {showFilters && (
+                        <div className="advanced-filters-panel">
+                          <span
+                            style={{
+                              fontSize: '0.7rem',
+                              color: 'var(--text-muted)',
+                              display: 'block',
+                              lineHeight: 1.3,
+                            }}
+                          >
+                            Clique nas dezenas do volante abaixo:
+                            <br />
+                            🟢 <strong>Uma vez (Verde):</strong> Fixar dezena no
+                            jogo.
+                            <br />
+                            🔴 <strong>Duas vezes (Vermelho):</strong> Excluir
+                            dezena do sorteio.
+                          </span>
+
+                          <div
+                            style={{
+                              display: 'flex',
+                              gap: '0.5rem',
+                              alignItems: 'center',
+                              flexWrap: 'wrap',
+                              marginBottom: '0.5rem',
+                            }}
+                          >
+                            <VolanteGrid
+                              mode="filter"
+                              minNum={config.minNum}
+                              maxNum={config.maxNum}
+                              selectedList={[]}
+                              filtersMap={filtersMap}
+                              onSelect={toggleFilterNumber}
+                            />
                             <button
-                              key={qty}
-                              className={`option-btn ${gameQuantity === qty ? 'active' : ''}`}
-                              onClick={() => setGameQuantity(qty)}
-                            >
-                              {qty} {qty === 1 ? 'Jogo' : 'Jogos'}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* PREMIUM: ADVANCED FILTERS & CO-OCCURRENCE */}
-                      <div style={{ marginBottom: '1.25rem' }}>
-                        <button
-                          className="filter-toggle-btn"
-                          onClick={() => setShowFilters(!showFilters)}
-                        >
-                          ⚙️{' '}
-                          {showFilters
-                            ? 'Esconder Filtros Avançados'
-                            : 'Mostrar Filtros Avançados (Fixar/Excluir)'}
-                        </button>
-
-                        {showFilters && (
-                          <div className="advanced-filters-panel">
-                            <span
+                              className="theme-pill-btn"
+                              onClick={() => {
+                                if (
+                                  activeLottery === 'loteca' ||
+                                  activeLottery === 'loteriafederal'
+                                ) {
+                                  window.alert(
+                                    'Leitura de volante não suportada para Loteca e Loteria Federal.'
+                                  );
+                                  return;
+                                }
+                                setShowCamera(true);
+                              }}
                               style={{
                                 fontSize: '0.7rem',
-                                color: 'var(--text-muted)',
-                                display: 'block',
-                                lineHeight: 1.3,
+                                padding: '0.25rem 0.5rem',
+                                height: 'fit-content',
+                                whiteSpace: 'nowrap',
                               }}
                             >
-                              Clique nas dezenas do volante abaixo:
-                              <br />
-                              🟢 <strong>Uma vez (Verde):</strong> Fixar dezena
-                              no jogo.
-                              <br />
-                              🔴 <strong>Duas vezes (Vermelho):</strong> Excluir
-                              dezena do sorteio.
-                            </span>
+                              📷 Ler volante
+                            </button>
+                          </div>
 
+                          {/* CO-OCCURRENCE DEZENAS PARCEIRAS */}
+                          {partnerNumbers.length > 0 && (
                             <div
                               style={{
-                                display: 'flex',
-                                gap: '0.5rem',
-                                alignItems: 'center',
-                                flexWrap: 'wrap',
-                                marginBottom: '0.5rem',
-                              }}
-                            >
-                              <VolanteGrid
-                                mode="filter"
-                                minNum={config.minNum}
-                                maxNum={config.maxNum}
-                                selectedList={[]}
-                                filtersMap={filtersMap}
-                                onSelect={toggleFilterNumber}
-                              />
-                              <button
-                                className="theme-pill-btn"
-                                onClick={() => {
-                                  if (
-                                    activeLottery === 'loteca' ||
-                                    activeLottery === 'loteriafederal'
-                                  ) {
-                                    window.alert(
-                                      'Leitura de volante não suportada para Loteca e Loteria Federal.'
-                                    );
-                                    return;
-                                  }
-                                  setShowCamera(true);
-                                }}
-                                style={{
-                                  fontSize: '0.7rem',
-                                  padding: '0.25rem 0.5rem',
-                                  height: 'fit-content',
-                                  whiteSpace: 'nowrap',
-                                }}
-                              >
-                                📷 Ler volante
-                              </button>
-                            </div>
-
-                            {/* CO-OCCURRENCE DEZENAS PARCEIRAS */}
-                            {partnerNumbers.length > 0 && (
-                              <div
-                                style={{
-                                  marginTop: '0.5rem',
-                                  borderTop: '1px solid rgba(255,255,255,0.05)',
-                                  paddingTop: '0.5rem',
-                                }}
-                              >
-                                <span
-                                  style={{
-                                    fontSize: '0.7rem',
-                                    color: 'var(--accent-color)',
-                                    fontWeight: 'bold',
-                                    display: 'block',
-                                    marginBottom: '0.25rem',
-                                  }}
-                                >
-                                  👯 Dezenas Parceiras (Costumam Sair Juntas):
-                                </span>
-                                <div className="partner-balls-container">
-                                  {partnerNumbers.map((item) => (
-                                    <button
-                                      key={item.num}
-                                      className="partner-ball-btn"
-                                      onClick={() =>
-                                        setFiltersMap({
-                                          ...filtersMap,
-                                          [item.num]: 'fixed',
-                                        })
-                                      }
-                                      style={
-                                        {
-                                          '--active-color': config.color,
-                                        } as React.CSSProperties
-                                      }
-                                    >
-                                      +{String(item.num).padStart(2, '0')}
-                                      <span
-                                        style={{
-                                          opacity: 0.6,
-                                          fontSize: '0.6rem',
-                                        }}
-                                      >
-                                        ({item.freq}x)
-                                      </span>
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            <div
-                              style={{
-                                marginTop: '0.75rem',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '0.5rem',
+                                marginTop: '0.5rem',
                                 borderTop: '1px solid rgba(255,255,255,0.05)',
-                                paddingTop: '0.75rem',
-                                width: '100%',
+                                paddingTop: '0.5rem',
                               }}
                             >
                               <span
                                 style={{
-                                  fontSize: '0.75rem',
+                                  fontSize: '0.7rem',
+                                  color: 'var(--accent-color)',
                                   fontWeight: 'bold',
-                                  color: 'white',
+                                  display: 'block',
+                                  marginBottom: '0.25rem',
                                 }}
                               >
-                                🧮 Regras de Distribuição Matemática
+                                👯 Dezenas Parceiras (Costumam Sair Juntas):
                               </span>
-
-                              <label
-                                style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '0.5rem',
-                                  cursor: 'pointer',
-                                  fontSize: '0.75rem',
-                                  color: 'var(--text-main)',
-                                }}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={avoidConsecutive}
-                                  onChange={(e) =>
-                                    setAvoidConsecutive(e.target.checked)
-                                  }
-                                  style={{
-                                    width: '16px',
-                                    height: '16px',
-                                    accentColor: 'var(--accent-color)',
-                                  }}
-                                />
-                                <span>
-                                  Evitar Sequências (Máx. 2 consecutivos
-                                  seguidos)
-                                </span>
-                              </label>
-
-                              <div
-                                style={{
-                                  display: 'grid',
-                                  gridTemplateColumns: '1fr 1fr',
-                                  gap: '0.5rem',
-                                  marginTop: '0.25rem',
-                                }}
-                              >
-                                <div>
-                                  <label
-                                    style={{
-                                      display: 'block',
-                                      fontSize: '0.65rem',
-                                      color: 'var(--text-muted)',
-                                      marginBottom: '0.2rem',
-                                    }}
+                              <div className="partner-balls-container">
+                                {partnerNumbers.map((item) => (
+                                  <button
+                                    key={item.num}
+                                    className="partner-ball-btn"
+                                    onClick={() =>
+                                      setFiltersMap({
+                                        ...filtersMap,
+                                        [item.num]: 'fixed',
+                                      })
+                                    }
+                                    style={
+                                      {
+                                        '--active-color': config.color,
+                                      } as React.CSSProperties
+                                    }
                                   >
-                                    Soma das Dezenas
-                                  </label>
-                                  <div
-                                    style={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      gap: '0.25rem',
-                                    }}
-                                  >
-                                    <input
-                                      type="number"
-                                      placeholder="Min"
-                                      value={customSumMin}
-                                      onChange={(e) =>
-                                        setCustomSumMin(e.target.value)
-                                      }
-                                      style={{
-                                        width: '100%',
-                                        background: 'rgba(255,255,255,0.05)',
-                                        border: '1px solid var(--glass-border)',
-                                        color: 'white',
-                                        fontSize: '0.75rem',
-                                        padding: '0.25rem 0.5rem',
-                                        borderRadius: '4px',
-                                      }}
-                                    />
+                                    +{String(item.num).padStart(2, '0')}
                                     <span
                                       style={{
-                                        fontSize: '0.75rem',
-                                        color: 'var(--text-muted)',
+                                        opacity: 0.6,
+                                        fontSize: '0.6rem',
                                       }}
                                     >
-                                      a
+                                      ({item.freq}x)
                                     </span>
-                                    <input
-                                      type="number"
-                                      placeholder="Max"
-                                      value={customSumMax}
-                                      onChange={(e) =>
-                                        setCustomSumMax(e.target.value)
-                                      }
-                                      style={{
-                                        width: '100%',
-                                        background: 'rgba(255,255,255,0.05)',
-                                        border: '1px solid var(--glass-border)',
-                                        color: 'white',
-                                        fontSize: '0.75rem',
-                                        padding: '0.25rem 0.5rem',
-                                        borderRadius: '4px',
-                                      }}
-                                    />
-                                  </div>
-                                </div>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
 
-                                <div>
-                                  <label
-                                    style={{
-                                      display: 'block',
-                                      fontSize: '0.65rem',
-                                      color: 'var(--text-muted)',
-                                      marginBottom: '0.2rem',
-                                    }}
-                                  >
-                                    Limitar Repetidos Anterior
-                                  </label>
+                          <div
+                            style={{
+                              marginTop: '0.75rem',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '0.5rem',
+                              borderTop: '1px solid rgba(255,255,255,0.05)',
+                              paddingTop: '0.75rem',
+                              width: '100%',
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: '0.75rem',
+                                fontWeight: 'bold',
+                                color: 'white',
+                              }}
+                            >
+                              🧮 Regras de Distribuição Matemática
+                            </span>
+
+                            <label
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                cursor: 'pointer',
+                                fontSize: '0.75rem',
+                                color: 'var(--text-main)',
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={avoidConsecutive}
+                                onChange={(e) =>
+                                  setAvoidConsecutive(e.target.checked)
+                                }
+                                style={{
+                                  width: '16px',
+                                  height: '16px',
+                                  accentColor: 'var(--accent-color)',
+                                }}
+                              />
+                              <span>
+                                Evitar Sequências (Máx. 2 consecutivos seguidos)
+                              </span>
+                            </label>
+
+                            <div
+                              style={{
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 1fr',
+                                gap: '0.5rem',
+                                marginTop: '0.25rem',
+                              }}
+                            >
+                              <div>
+                                <label
+                                  style={{
+                                    display: 'block',
+                                    fontSize: '0.65rem',
+                                    color: 'var(--text-muted)',
+                                    marginBottom: '0.2rem',
+                                  }}
+                                >
+                                  Soma das Dezenas
+                                </label>
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.25rem',
+                                  }}
+                                >
                                   <input
                                     type="number"
-                                    placeholder="Qtd Máxima"
-                                    value={maxRepeats}
+                                    placeholder="Min"
+                                    value={customSumMin}
                                     onChange={(e) =>
-                                      setMaxRepeats(e.target.value)
+                                      setCustomSumMin(e.target.value)
+                                    }
+                                    style={{
+                                      width: '100%',
+                                      background: 'rgba(255,255,255,0.05)',
+                                      border: '1px solid var(--glass-border)',
+                                      color: 'white',
+                                      fontSize: '0.75rem',
+                                      padding: '0.25rem 0.5rem',
+                                      borderRadius: '4px',
+                                    }}
+                                  />
+                                  <span
+                                    style={{
+                                      fontSize: '0.75rem',
+                                      color: 'var(--text-muted)',
+                                    }}
+                                  >
+                                    a
+                                  </span>
+                                  <input
+                                    type="number"
+                                    placeholder="Max"
+                                    value={customSumMax}
+                                    onChange={(e) =>
+                                      setCustomSumMax(e.target.value)
                                     }
                                     style={{
                                       width: '100%',
@@ -2487,113 +2453,165 @@ export default function Home() {
                                   />
                                 </div>
                               </div>
-                              {!isPro && (
-                                <span
+
+                              <div>
+                                <label
                                   style={{
+                                    display: 'block',
                                     fontSize: '0.65rem',
-                                    color: '#ffd600',
-                                    fontWeight: 'bold',
-                                    background: 'rgba(255,214,0,0.1)',
-                                    padding: '0.1rem 0.3rem',
-                                    borderRadius: '4px',
+                                    color: 'var(--text-muted)',
+                                    marginBottom: '0.2rem',
                                   }}
                                 >
-                                  PRO
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* GENERATE BUTTON */}
-                        <button
-                          onClick={handleGenerateSmart}
-                          disabled={generatingSmart}
-                          className="btn-action"
-                          style={{
-                            width: '100%',
-                            padding: '0.65rem',
-                            fontSize: '0.85rem',
-                            marginBottom: '1rem',
-                            fontWeight: 'bold',
-                            borderRadius: '8px',
-                          }}
-                        >
-                          {generatingSmart
-                            ? 'Gerando jogos...'
-                            : `Gerar ${gameQuantity > 1 ? `${gameQuantity} Jogos` : 'Jogo'} com critérios históricos`}
-                        </button>
-
-                        {/* Generated Games Display */}
-                        {generatedGames.length > 0 && (
-                          <div style={{ marginBottom: '1rem' }}>
-                            <div
-                              style={{
-                                fontSize: '0.75rem',
-                                fontWeight: 'bold',
-                                color: 'var(--accent-color)',
-                                marginBottom: '0.4rem',
-                              }}
-                            >
-                              ✦ JOGOS GERADOS ({generatedGames.length})
-                            </div>
-                            <div
-                              style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '0.4rem',
-                              }}
-                            >
-                              {generatedGames.map((game, idx) => (
-                                <div
-                                  key={idx}
+                                  Limitar Repetidos Anterior
+                                </label>
+                                <input
+                                  type="number"
+                                  placeholder="Qtd Máxima"
+                                  value={maxRepeats}
+                                  onChange={(e) =>
+                                    setMaxRepeats(e.target.value)
+                                  }
                                   style={{
-                                    padding: '0.5rem 0.6rem',
-                                    borderRadius: '8px',
-                                    background: 'rgba(0,240,255,0.03)',
-                                    border: '1px solid rgba(255,255,255,0.05)',
+                                    width: '100%',
+                                    background: 'rgba(255,255,255,0.05)',
+                                    border: '1px solid var(--glass-border)',
+                                    color: 'white',
+                                    fontSize: '0.75rem',
+                                    padding: '0.25rem 0.5rem',
+                                    borderRadius: '4px',
+                                  }}
+                                />
+                              </div>
+                            </div>
+                            {!isPro && (
+                              <span
+                                style={{
+                                  fontSize: '0.65rem',
+                                  color: '#ffd600',
+                                  fontWeight: 'bold',
+                                  background: 'rgba(255,214,0,0.1)',
+                                  padding: '0.1rem 0.3rem',
+                                  borderRadius: '4px',
+                                }}
+                              >
+                                PRO
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* GENERATE BUTTON */}
+                      <button
+                        onClick={handleGenerateSmart}
+                        disabled={generatingSmart}
+                        className="btn-action"
+                        style={{
+                          width: '100%',
+                          padding: '0.65rem',
+                          fontSize: '0.85rem',
+                          marginBottom: '1rem',
+                          fontWeight: 'bold',
+                          borderRadius: '8px',
+                        }}
+                      >
+                        {generatingSmart
+                          ? 'Gerando jogos...'
+                          : `Gerar ${gameQuantity > 1 ? `${gameQuantity} Jogos` : 'Jogo'} com critérios históricos`}
+                      </button>
+
+                      {/* Generated Games Display */}
+                      {generatedGames.length > 0 && (
+                        <div style={{ marginBottom: '1rem' }}>
+                          <div
+                            style={{
+                              fontSize: '0.75rem',
+                              fontWeight: 'bold',
+                              color: 'var(--accent-color)',
+                              marginBottom: '0.4rem',
+                            }}
+                          >
+                            ✦ JOGOS GERADOS ({generatedGames.length})
+                          </div>
+                          <div
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '0.4rem',
+                            }}
+                          >
+                            {generatedGames.map((game, idx) => (
+                              <div
+                                key={idx}
+                                style={{
+                                  padding: '0.5rem 0.6rem',
+                                  borderRadius: '8px',
+                                  background: 'rgba(0,240,255,0.03)',
+                                  border: '1px solid rgba(255,255,255,0.05)',
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
                                   }}
                                 >
                                   <div
+                                    className="balls-container"
                                     style={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      gap: '0.5rem',
+                                      flex: 1,
+                                      margin: 0,
+                                      justifyContent: 'flex-start',
                                     }}
                                   >
-                                    <div
-                                      className="balls-container"
-                                      style={{
-                                        flex: 1,
-                                        margin: 0,
-                                        justifyContent: 'flex-start',
-                                      }}
-                                    >
-                                      {game.numbers
-                                        .sort((a, b) => a - b)
-                                        .map((n, i) => (
-                                          <span
-                                            key={i}
-                                            className="ball"
-                                            style={
-                                              {
-                                                '--ball-color': config.color,
-                                                width: '24px',
-                                                height: '24px',
-                                                fontSize: '0.65rem',
-                                                borderColor: config.color,
-                                              } as React.CSSProperties
-                                            }
-                                          >
-                                            {String(n).padStart(2, '0')}
-                                          </span>
-                                        ))}
-                                    </div>
-                                    <button
-                                      onClick={() =>
-                                        handleSaveGeneratedGame(game.numbers)
-                                      }
-                                      disabled={
+                                    {game.numbers
+                                      .sort((a, b) => a - b)
+                                      .map((n, i) => (
+                                        <span
+                                          key={i}
+                                          className="ball"
+                                          style={
+                                            {
+                                              '--ball-color': config.color,
+                                              width: '24px',
+                                              height: '24px',
+                                              fontSize: '0.65rem',
+                                              borderColor: config.color,
+                                            } as React.CSSProperties
+                                          }
+                                        >
+                                          {String(n).padStart(2, '0')}
+                                        </span>
+                                      ))}
+                                  </div>
+                                  <button
+                                    onClick={() =>
+                                      handleSaveGeneratedGame(game.numbers)
+                                    }
+                                    disabled={
+                                      savingAllGeneratedGames ||
+                                      savingGameSignatures.includes(
+                                        getGameSaveSignature(
+                                          activeLottery,
+                                          game.numbers
+                                        )
+                                      )
+                                    }
+                                    style={{
+                                      background: 'rgba(0,230,118,0.1)',
+                                      border: '1px solid rgba(0,230,118,0.2)',
+                                      color: '#00e676',
+                                      fontSize: '0.6rem',
+                                      fontWeight: 600,
+                                      padding: '0.25rem 0.5rem',
+                                      borderRadius: '4px',
+                                      cursor: savingAllGeneratedGames
+                                        ? 'wait'
+                                        : 'pointer',
+                                      whiteSpace: 'nowrap',
+                                      opacity:
                                         savingAllGeneratedGames ||
                                         savingGameSignatures.includes(
                                           getGameSaveSignature(
@@ -2601,1151 +2619,1123 @@ export default function Home() {
                                             game.numbers
                                           )
                                         )
-                                      }
-                                      style={{
-                                        background: 'rgba(0,230,118,0.1)',
-                                        border: '1px solid rgba(0,230,118,0.2)',
-                                        color: '#00e676',
-                                        fontSize: '0.6rem',
-                                        fontWeight: 600,
-                                        padding: '0.25rem 0.5rem',
-                                        borderRadius: '4px',
-                                        cursor: savingAllGeneratedGames
-                                          ? 'wait'
-                                          : 'pointer',
-                                        whiteSpace: 'nowrap',
-                                        opacity:
-                                          savingAllGeneratedGames ||
-                                          savingGameSignatures.includes(
-                                            getGameSaveSignature(
-                                              activeLottery,
-                                              game.numbers
-                                            )
-                                          )
-                                            ? 0.55
-                                            : 1,
-                                      }}
-                                    >
-                                      {savingGameSignatures.includes(
-                                        getGameSaveSignature(
-                                          activeLottery,
-                                          game.numbers
-                                        )
+                                          ? 0.55
+                                          : 1,
+                                    }}
+                                  >
+                                    {savingGameSignatures.includes(
+                                      getGameSaveSignature(
+                                        activeLottery,
+                                        game.numbers
                                       )
-                                        ? 'Salvando...'
-                                        : 'Salvar nos Meus Jogos'}
-                                    </button>
-                                  </div>
-                                  {/* Metrics Row */}
-                                  <div
-                                    style={{
-                                      display: 'flex',
-                                      gap: '0.4rem',
-                                      marginTop: '0.3rem',
-                                      flexWrap: 'wrap',
-                                    }}
-                                  >
-                                    <span
-                                      style={{
-                                        fontSize: '0.5rem',
-                                        padding: '0.1rem 0.3rem',
-                                        borderRadius: '3px',
-                                        background: 'rgba(255,255,255,0.06)',
-                                        color: 'var(--text-muted)',
-                                        fontWeight: 700,
-                                        fontFamily: 'var(--font-numbers)',
-                                      }}
-                                    >
-                                      Métricas descritivas
-                                    </span>
-                                    <span
-                                      style={{
-                                        fontSize: '0.5rem',
-                                        color: 'var(--text-muted)',
-                                        fontFamily: 'var(--font-numbers)',
-                                      }}
-                                    >
-                                      Soma: {game.metrics.sum}
-                                    </span>
-                                    <span
-                                      style={{
-                                        fontSize: '0.5rem',
-                                        color: 'var(--text-muted)',
-                                      }}
-                                    >
-                                      {game.metrics.evenCount}P/
-                                      {game.metrics.oddCount}I
-                                    </span>
-                                    <span
-                                      style={{
-                                        fontSize: '0.5rem',
-                                        color: 'var(--text-muted)',
-                                      }}
-                                    >
-                                      {game.metrics.primeCount} primos
-                                    </span>
-                                    <span
-                                      style={{
-                                        fontSize: '0.5rem',
-                                        color: 'var(--text-muted)',
-                                      }}
-                                    >
-                                      {game.metrics.quadrantsCount} quad.
-                                    </span>
-                                  </div>
-                                  {historicalAnalysis && (
-                                    <div style={{ marginTop: '0.55rem' }}>
-                                      {(() => {
-                                        const score = scoreGame({
-                                          lottery:
-                                            activeLottery as NumericHistoricalAnalysis['lottery'],
-                                          numbers: game.numbers,
-                                          analysis: historicalAnalysis,
-                                        });
-                                        return (
-                                          <>
-                                            <GameScoreCard score={score} />
-                                            <NumberIntelligencePanel
-                                              selectedNumbers={game.numbers}
-                                              numberTemperatures={
-                                                historicalAnalysis.numberTemperatures
-                                              }
-                                            />
-                                          </>
-                                        );
-                                      })()}
-                                    </div>
-                                  )}
+                                    )
+                                      ? 'Salvando...'
+                                      : 'Salvar nos Meus Jogos'}
+                                  </button>
                                 </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        <Suspense fallback={<TabFallback />}>
-                          <SavedGamesPanel
-                            savedGames={savedGames}
-                            selectedForPool={selectedForPool}
-                            setSelectedForPool={setSelectedForPool}
-                            setBolaoText={setBolaoText}
-                            latestResultsMap={latestResultsMap}
-                            getCleanDezenas={getCleanDezenas}
-                            handleDeleteGame={handleDeleteGame}
-                            downloadTXT={downloadTXT}
-                            downloadPDF={downloadPDF}
-                            handlePrintGames={handlePrintGames}
-                            isPro={isPro}
-                            bolaoCotas={bolaoCotas}
-                            setBolaoCotas={setBolaoCotas}
-                            bolaoTaxa={bolaoTaxa}
-                            setBolaoTaxa={setBolaoTaxa}
-                            setShowUpgradeModal={setShowUpgradeModal}
-                            handleBuildBolao={handleBuildBolao}
-                            bolaoText={bolaoText}
-                            handleCopyText={handleCopyText}
-                            copyFeedback={copyFeedback}
-                            bolaoShareUrl={bolaoShareUrl}
-                            onScanQR={() => setShowQRScanner(true)}
-                            onGoToGenerator={() => setActiveTab('generator')}
-                          />
-                        </Suspense>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === 'generator' &&
-                  user &&
-                  genSubTab === 'advanced' &&
-                  activeLottery === 'lotofacil' && (
-                    <div
-                      className="glass-panel"
-                      style={{ animation: 'fade-in 0.3s ease' }}
-                    >
-                      <Suspense fallback={<TabFallback />}>
-                        <LotofacilStrategyPanel
-                          history={history}
-                          onSaveGame={handleSaveGeneratedGame}
-                          onGeneratedGame={(games) =>
-                            void persistGeneratedHistory(games, 'strategy')
-                          }
-                        />
-                      </Suspense>
-                    </div>
-                  )}
-
-                {activeTab === 'generator' &&
-                  user &&
-                  genSubTab === 'advanced' &&
-                  NUMERIC_STRATEGY_LOTTERIES.includes(
-                    activeLottery as (typeof NUMERIC_STRATEGY_LOTTERIES)[number]
-                  ) && (
-                    <div
-                      className="glass-panel"
-                      style={{ animation: 'fade-in 0.3s ease' }}
-                    >
-                      <Suspense fallback={<TabFallback />}>
-                        <NumericStrategyPanel
-                          history={history}
-                          config={config}
-                          onSaveGame={handleSaveGeneratedGame}
-                          onGeneratedGame={(games) =>
-                            void persistGeneratedHistory(games, 'strategy')
-                          }
-                        />
-                      </Suspense>
-                    </div>
-                  )}
-
-                {/* SUB-ABA: DESDOBRAMENTO / WHEELING */}
-                {activeTab === 'generator' &&
-                  user &&
-                  genSubTab === 'wheeling' && (
-                    <div
-                      className="glass-panel"
-                      style={{ animation: 'fade-in 0.3s ease' }}
-                    >
-                      {/* Title + Explanation */}
-                      <h3
-                        style={{
-                          color: 'var(--accent-color)',
-                          fontWeight: 'bold',
-                          fontSize: '0.95rem',
-                          margin: '0 0 0.3rem 0',
-                        }}
-                      >
-                        FECHAMENTO {config.name}
-                      </h3>
-                      <div
-                        style={{
-                          fontSize: '0.6rem',
-                          color: 'var(--text-muted)',
-                          lineHeight: 1.5,
-                          marginBottom: '0.75rem',
-                          padding: '0.5rem',
-                          borderRadius: '6px',
-                          background: 'rgba(255,255,255,0.02)',
-                          border: '1px solid rgba(255,255,255,0.04)',
-                        }}
-                      >
-                        <strong style={{ color: 'white' }}>
-                          Como funciona o fechamento:
-                        </strong>
-                        <br />
-                        Você escolhe <em>mais</em> números do que o jogo exige (
-                        {config.drawCount}). O sistema gera{' '}
-                        <em>múltiplos jogos</em> com esses números, cobrindo
-                        mais combinações por menos dinheiro.
-                        <br />
-                        <br />
-                        <strong style={{ color: 'var(--accent-color)' }}>
-                          Cobertura combinatória condicional:
-                        </strong>{' '}
-                        A cobertura só se aplica <em>se</em> os números
-                        sorteados estiverem no grupo que você escolheu. Isso não
-                        prevê o resultado nem garante premiação.
-                        <br />
-                        <br />
-                        <strong style={{ color: '#00e676' }}>Quadra:</strong> Se
-                        pelo menos {config.drawCount - 2} sorteados estiverem no
-                        seu grupo → ganha Quadra.
-                        <br />
-                        <strong style={{ color: '#ffd600' }}>Quina:</strong> Se
-                        pelo menos {config.drawCount - 1} sorteados estiverem →
-                        ganha Quina.
-                        <br />
-                        <strong style={{ color: 'var(--accent-color)' }}>
-                          Sena:
-                        </strong>{' '}
-                        Se todos os {config.drawCount} sorteados estiverem →
-                        ganha Sena (muito mais caro).
-                        <br />
-                        <br />
-                        <strong style={{ color: 'white' }}>
-                          Exemplo prático:
-                        </strong>{' '}
-                        Se você escolhe 10 números e o fechamento Quadra gera 15
-                        jogos (R$ 67,00), você economiza <em>muito</em>{' '}
-                        comparado a apostar todos os 210 jogos na Caixa (R$
-                        945,00). Mas se o sorteio cair fora do seu grupo de 10,
-                        você perde tudo igual.
-                      </div>
-
-                      {/* Number Grid */}
-                      <div
-                        style={{
-                          fontSize: '0.6rem',
-                          color: 'var(--text-muted)',
-                          marginBottom: '0.3rem',
-                        }}
-                      >
-                        Escolha seus números (mínimo {config.drawCount + 1}):
-                      </div>
-                      <div
-                        style={{
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(10, 1fr)',
-                          gap: '0.3rem',
-                          marginBottom: '0.75rem',
-                        }}
-                      >
-                        {Array.from(
-                          { length: config.maxNum },
-                          (_, i) => i + 1
-                        ).map((num) => {
-                          const isSelected = wheelSelectedNums.includes(num);
-                          return (
-                            <button
-                              key={num}
-                              onClick={() => {
-                                playSound('click');
-                                setWheelSelectedNums((prev) =>
-                                  isSelected
-                                    ? prev.filter((n) => n !== num)
-                                    : [...prev, num]
-                                );
-                                setWheelGeneratedGames([]); // limpa ao mudar seleção
-                              }}
-                              style={{
-                                width: '100%',
-                                aspectRatio: '1',
-                                borderRadius: '50%',
-                                border: `2px solid ${isSelected ? config.color : 'var(--glass-border)'}`,
-                                background: isSelected
-                                  ? config.color
-                                  : 'rgba(0,0,0,0.3)',
-                                color: isSelected
-                                  ? 'white'
-                                  : 'var(--text-muted)',
-                                fontWeight: 700,
-                                fontSize: '0.65rem',
-                                cursor: 'pointer',
-                                transition: 'all 0.15s',
-                                fontFamily: 'var(--font-numbers)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                boxShadow: isSelected
-                                  ? `0 0 8px ${config.color}40`
-                                  : 'none',
-                              }}
-                            >
-                              {String(num).padStart(2, '0')}
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      {/* Guarantee Type Selector */}
-                      {wheelSelectedNums.length >= config.drawCount + 1 && (
-                        <div style={{ marginBottom: '0.75rem' }}>
-                          <div
-                            style={{
-                              fontSize: '0.6rem',
-                              color: 'var(--text-muted)',
-                              marginBottom: '0.3rem',
-                            }}
-                          >
-                            Nível de garantia:
-                          </div>
-                          <div style={{ display: 'flex', gap: '0.3rem' }}>
-                            {[
-                              {
-                                value: 'quadra' as const,
-                                label: 'Quadra',
-                                desc: 'Econômico',
-                                color: '#00e676',
-                              },
-                              {
-                                value: 'quina' as const,
-                                label: 'Quina',
-                                desc: 'Equilibrado',
-                                color: '#ffd600',
-                              },
-                              {
-                                value: 'full' as const,
-                                label: 'Sena',
-                                desc: 'Completo',
-                                color: 'var(--accent-color)',
-                              },
-                            ].map((opt) => {
-                              const n = wheelSelectedNums.length;
-                              const est = inlineWheelCount(
-                                n,
-                                config.drawCount,
-                                opt.value
-                              );
-                              return (
-                                <button
-                                  key={opt.value}
-                                  onClick={() => {
-                                    playSound('click');
-                                    setWheelGuarantee(opt.value);
-                                    setWheelGeneratedGames([]);
-                                  }}
-                                  style={{
-                                    flex: 1,
-                                    padding: '0.4rem',
-                                    borderRadius: '6px',
-                                    cursor: 'pointer',
-                                    background:
-                                      wheelGuarantee === opt.value
-                                        ? `${opt.color}18`
-                                        : 'rgba(0,0,0,0.2)',
-                                    border: `1px solid ${wheelGuarantee === opt.value ? opt.color : 'var(--glass-border)'}`,
-                                    color:
-                                      wheelGuarantee === opt.value
-                                        ? opt.color
-                                        : 'var(--text-muted)',
-                                    transition: 'all 0.15s',
-                                    textAlign: 'center',
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      fontSize: '0.65rem',
-                                      fontWeight: 700,
-                                    }}
-                                  >
-                                    {opt.label}
-                                  </div>
-                                  <div
-                                    style={{ fontSize: '0.5rem', opacity: 0.7 }}
-                                  >
-                                    ~{est} jogos · R${' '}
-                                    {(est * 4.5).toFixed(2).replace('.', ',')}
-                                  </div>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Cost comparison */}
-                      {wheelSelectedNums.length >= config.drawCount + 1 && (
-                        <div
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginBottom: '0.75rem',
-                            padding: '0.4rem 0.6rem',
-                            borderRadius: '6px',
-                            background: 'rgba(0,240,255,0.03)',
-                            border: '1px solid rgba(0,240,255,0.08)',
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontSize: '0.6rem',
-                              color: 'var(--text-muted)',
-                            }}
-                          >
-                            <strong style={{ color: 'white' }}>
-                              {wheelSelectedNums.length}
-                            </strong>{' '}
-                            números · Aposta da Caixa ={' '}
-                            <strong style={{ color: '#ff4466' }}>
-                              R${' '}
-                              {(() => {
-                                let c = 1;
-                                for (let i = 0; i < config.drawCount; i++)
-                                  c =
-                                    (c * (wheelSelectedNums.length - i)) /
-                                    (i + 1);
-                                return (c * getSimpleBetPrice(activeLottery))
-                                  .toFixed(2)
-                                  .replace('.', ',');
-                              })()}
-                            </strong>
-                          </span>
-                          <span
-                            style={{ fontSize: '0.6rem', color: '#00e676' }}
-                          >
-                            Fechamento ={' '}
-                            <strong>
-                              R${' '}
-                              {(() => {
-                                const est = inlineWheelCount(
-                                  wheelSelectedNums.length,
-                                  config.drawCount,
-                                  wheelGuarantee
-                                );
-                                return (est * getSimpleBetPrice(activeLottery))
-                                  .toFixed(2)
-                                  .replace('.', ',');
-                              })()}
-                            </strong>
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Generate Button */}
-                      <button
-                        onClick={handleGenerateWheel}
-                        disabled={
-                          wheelSelectedNums.length < config.drawCount + 1
-                        }
-                        className="btn-action"
-                        style={{
-                          width: '100%',
-                          padding: '0.65rem',
-                          fontSize: '0.85rem',
-                          fontWeight: 'bold',
-                          borderRadius: '8px',
-                          marginBottom: '1rem',
-                          opacity:
-                            wheelSelectedNums.length < config.drawCount + 1
-                              ? 0.4
-                              : 1,
-                          cursor:
-                            wheelSelectedNums.length < config.drawCount + 1
-                              ? 'not-allowed'
-                              : 'pointer',
-                        }}
-                      >
-                        🔢 Gerar Fechamento
-                        {wheelSelectedNums.length >= config.drawCount + 1 &&
-                          ` (~${inlineWheelCount(wheelSelectedNums.length, config.drawCount, wheelGuarantee)} jogos)`}
-                      </button>
-
-                      {/* Generated wheel games */}
-                      {wheelGeneratedGames.length > 0 && (
-                        <div style={{ marginBottom: '1rem' }}>
-                          <div
-                            style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                              marginBottom: '0.4rem',
-                            }}
-                          >
-                            <span
-                              style={{
-                                fontSize: '0.75rem',
-                                fontWeight: 'bold',
-                                color: 'var(--accent-color)',
-                              }}
-                            >
-                              {wheelGeneratedGames.length} JOGOS GERADOS
-                            </span>
-                            <button
-                              onClick={() =>
-                                void handleSaveAllGeneratedGames(
-                                  wheelGeneratedGames
-                                )
-                              }
-                              disabled={savingAllGeneratedGames}
-                              style={{
-                                background: 'rgba(0,230,118,0.1)',
-                                border: '1px solid rgba(0,230,118,0.2)',
-                                color: '#00e676',
-                                fontSize: '0.6rem',
-                                fontWeight: 600,
-                                padding: '0.25rem 0.5rem',
-                                borderRadius: '4px',
-                                cursor: savingAllGeneratedGames
-                                  ? 'wait'
-                                  : 'pointer',
-                                opacity: savingAllGeneratedGames ? 0.55 : 1,
-                              }}
-                            >
-                              {savingAllGeneratedGames
-                                ? 'Salvando jogos...'
-                                : 'Salvar Todos em Meus Jogos ('}
-                              {!savingAllGeneratedGames &&
-                                (
-                                  wheelGeneratedGames.length *
-                                  getSimpleBetPrice(activeLottery)
-                                )
-                                  .toFixed(2)
-                                  .replace('.', ',')}
-                              {!savingAllGeneratedGames && ')'}
-                            </button>
-                          </div>
-                          <div
-                            style={{
-                              display: 'flex',
-                              flexDirection: 'column',
-                              gap: '0.3rem',
-                              maxHeight: '300px',
-                              overflowY: 'auto',
-                            }}
-                          >
-                            {wheelGeneratedGames.map((nums, idx) => (
-                              <div
-                                key={idx}
-                                style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '0.4rem',
-                                  padding: '0.35rem 0.5rem',
-                                  borderRadius: '6px',
-                                  background:
-                                    idx % 2 === 0
-                                      ? 'rgba(255,255,255,0.02)'
-                                      : 'transparent',
-                                }}
-                              >
-                                <span
-                                  style={{
-                                    fontSize: '0.55rem',
-                                    color: 'var(--text-muted)',
-                                    minWidth: '20px',
-                                    fontFamily: 'var(--font-numbers)',
-                                  }}
-                                >
-                                  #{idx + 1}
-                                </span>
+                                {/* Metrics Row */}
                                 <div
                                   style={{
                                     display: 'flex',
-                                    gap: '0.2rem',
-                                    flex: 1,
+                                    gap: '0.4rem',
+                                    marginTop: '0.3rem',
                                     flexWrap: 'wrap',
                                   }}
                                 >
-                                  {nums.map((n, i) => (
-                                    <span
-                                      key={i}
-                                      style={{
-                                        width: '22px',
-                                        height: '22px',
-                                        borderRadius: '50%',
-                                        background: config.color,
-                                        color: 'white',
-                                        fontSize: '0.55rem',
-                                        fontWeight: 700,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontFamily: 'var(--font-numbers)',
-                                      }}
-                                    >
-                                      {String(n).padStart(2, '0')}
-                                    </span>
-                                  ))}
+                                  <span
+                                    style={{
+                                      fontSize: '0.5rem',
+                                      padding: '0.1rem 0.3rem',
+                                      borderRadius: '3px',
+                                      background: 'rgba(255,255,255,0.06)',
+                                      color: 'var(--text-muted)',
+                                      fontWeight: 700,
+                                      fontFamily: 'var(--font-numbers)',
+                                    }}
+                                  >
+                                    Métricas descritivas
+                                  </span>
+                                  <span
+                                    style={{
+                                      fontSize: '0.5rem',
+                                      color: 'var(--text-muted)',
+                                      fontFamily: 'var(--font-numbers)',
+                                    }}
+                                  >
+                                    Soma: {game.metrics.sum}
+                                  </span>
+                                  <span
+                                    style={{
+                                      fontSize: '0.5rem',
+                                      color: 'var(--text-muted)',
+                                    }}
+                                  >
+                                    {game.metrics.evenCount}P/
+                                    {game.metrics.oddCount}I
+                                  </span>
+                                  <span
+                                    style={{
+                                      fontSize: '0.5rem',
+                                      color: 'var(--text-muted)',
+                                    }}
+                                  >
+                                    {game.metrics.primeCount} primos
+                                  </span>
+                                  <span
+                                    style={{
+                                      fontSize: '0.5rem',
+                                      color: 'var(--text-muted)',
+                                    }}
+                                  >
+                                    {game.metrics.quadrantsCount} quad.
+                                  </span>
                                 </div>
-                                <button
-                                  onClick={() => handleSaveGeneratedGame(nums)}
-                                  disabled={
-                                    savingAllGeneratedGames ||
-                                    savingGameSignatures.includes(
-                                      getGameSaveSignature(activeLottery, nums)
-                                    )
-                                  }
-                                  style={{
-                                    background: 'none',
-                                    border: '1px solid rgba(0,230,118,0.15)',
-                                    color: '#00e676',
-                                    fontSize: '0.55rem',
-                                    fontWeight: 600,
-                                    padding: '0.15rem 0.4rem',
-                                    borderRadius: '4px',
-                                    cursor: savingAllGeneratedGames
-                                      ? 'wait'
-                                      : 'pointer',
-                                    opacity:
-                                      savingAllGeneratedGames ||
-                                      savingGameSignatures.includes(
-                                        getGameSaveSignature(
-                                          activeLottery,
-                                          nums
-                                        )
-                                      )
-                                        ? 0.55
-                                        : 1,
-                                  }}
-                                >
-                                  {savingGameSignatures.includes(
-                                    getGameSaveSignature(activeLottery, nums)
-                                  )
-                                    ? 'Salvando...'
-                                    : 'Salvar em Meus Jogos'}
-                                </button>
+                                {historicalAnalysis && (
+                                  <div style={{ marginTop: '0.55rem' }}>
+                                    {(() => {
+                                      const score = scoreGame({
+                                        lottery:
+                                          activeLottery as NumericHistoricalAnalysis['lottery'],
+                                        numbers: game.numbers,
+                                        analysis: historicalAnalysis,
+                                      });
+                                      return (
+                                        <>
+                                          <GameScoreCard score={score} />
+                                          <NumberIntelligencePanel
+                                            selectedNumbers={game.numbers}
+                                            numberTemperatures={
+                                              historicalAnalysis.numberTemperatures
+                                            }
+                                          />
+                                        </>
+                                      );
+                                    })()}
+                                  </div>
+                                )}
                               </div>
                             ))}
                           </div>
                         </div>
                       )}
 
-                      {/* Disclaimer */}
-                      <div
-                        style={{
-                          fontSize: '0.55rem',
-                          color: '#ff4466',
-                          lineHeight: 1.5,
-                          marginTop: '0.5rem',
-                          padding: '0.5rem 0.6rem',
-                          borderRadius: '6px',
-                          background: 'rgba(255,68,102,0.05)',
-                          border: '1px solid rgba(255,68,102,0.12)',
-                        }}
-                      >
-                        ⚠️ <strong>Aviso importante:</strong> Ninguém pode
-                        prever quais números serão sorteados. O fechamento{' '}
-                        <strong>não aumenta suas chances de acertar</strong> —
-                        ele apenas <strong>organiza melhor o dinheiro</strong>{' '}
-                        que você já gastaria. Se você escolher 10 números e o
-                        sorteio cair fora do seu grupo, você não ganha nada.
-                      </div>
+                      <Suspense fallback={<TabFallback />}>
+                        <SavedGamesPanel
+                          savedGames={savedGames}
+                          selectedForPool={selectedForPool}
+                          setSelectedForPool={setSelectedForPool}
+                          setBolaoText={setBolaoText}
+                          latestResultsMap={latestResultsMap}
+                          getCleanDezenas={getCleanDezenas}
+                          handleDeleteGame={handleDeleteGame}
+                          downloadTXT={downloadTXT}
+                          downloadPDF={downloadPDF}
+                          handlePrintGames={handlePrintGames}
+                          isPro={isPro}
+                          bolaoCotas={bolaoCotas}
+                          setBolaoCotas={setBolaoCotas}
+                          bolaoTaxa={bolaoTaxa}
+                          setBolaoTaxa={setBolaoTaxa}
+                          setShowUpgradeModal={setShowUpgradeModal}
+                          handleBuildBolao={handleBuildBolao}
+                          bolaoText={bolaoText}
+                          handleCopyText={handleCopyText}
+                          copyFeedback={copyFeedback}
+                          bolaoShareUrl={bolaoShareUrl}
+                          onScanQR={() => setShowQRScanner(true)}
+                          onGoToGenerator={goToGenerator}
+                        />
+                      </Suspense>
                     </div>
-                  )}
+                  </div>
+                </div>
+              )}
 
-                {/* SUB-ABA: GERADOR POR TEMAS (dentro do Gerador) */}
-                {activeTab === 'generator' &&
-                  user &&
-                  genSubTab === 'mystic' && (
-                    <Suspense fallback={<TabFallback />}>
-                      <MysticGenerator
-                        activeLottery={activeLottery}
-                        onGenerated={async (nums) => {
-                          const lastDrawNumbers = (
-                            result?.listaDezenas ||
-                            result?.dezenasSorteadasOrdemSorteio ||
-                            []
-                          ).map(Number);
-                          const math = await loadMath();
-                          setGeneratedGames((prev) => [
-                            ...prev,
-                            {
-                              numbers: nums,
-                              metrics: math.analyzeGame(
-                                nums,
-                                config,
-                                lastDrawNumbers
-                              ),
-                            },
-                          ]);
-                          void persistGeneratedHistory([nums], 'strategy');
-                          playSound('success');
-                        }}
-                        playSound={playSound}
-                      />
-                    </Suspense>
-                  )}
-
-                {/* SUB-ABA: BOLÃO (dentro do Gerador) */}
-                {activeTab === 'generator' && user && genSubTab === 'bolao' && (
-                  <Suspense fallback={<TabFallback />}>
-                    <BolaoPanel
-                      savedGames={savedGames}
-                      activeLottery={activeLottery}
-                      isPro={isPro}
-                      user={user}
-                      onUpgrade={() => setShowUpgradeModal(true)}
-                      playSound={playSound}
-                      onShowShareQR={(bolao) => {
-                        const code = String(bolao.shareCode || '')
-                          .trim()
-                          .toLowerCase();
-                        setShareCode(code);
-                        setShareUrl(getShareUrl(code));
-                        setShareGamesCount(bolao.gamesCount);
-                        setShareCotas(bolao.cotas);
-                        setShareTaxa(bolao.taxa);
-                        setShowShareQR(true);
-                      }}
-                    />
-                  </Suspense>
-                )}
-
-                {activeTab === 'games' && (
+              {activeTab === 'generator' &&
+                user &&
+                genSubTab === 'advanced' &&
+                activeLottery === 'lotofacil' && (
                   <div
                     className="glass-panel"
                     style={{ animation: 'fade-in 0.3s ease' }}
                   >
-                    <div style={{ marginBottom: '0.75rem' }}>
-                      <h3
-                        style={{
-                          color: 'var(--accent-color)',
-                          fontWeight: 'bold',
-                          fontSize: '0.95rem',
-                          margin: '0 0 0.2rem 0',
-                        }}
-                      >
-                        MEUS JOGOS
-                      </h3>
-                      <p
-                        style={{
-                          fontSize: '0.7rem',
-                          color: 'var(--text-muted)',
-                          margin: 0,
-                          lineHeight: 1.5,
-                        }}
-                      >
-                        Acesse todos os cartões salvos, confira acertos contra o
-                        último concurso e monte bolões a partir da sua base.
-                      </p>
-                    </div>
                     <Suspense fallback={<TabFallback />}>
-                      <SavedGamesPanel
-                        savedGames={savedGames}
-                        selectedForPool={selectedForPool}
-                        setSelectedForPool={setSelectedForPool}
-                        setBolaoText={setBolaoText}
-                        latestResultsMap={latestResultsMap}
-                        getCleanDezenas={getCleanDezenas}
-                        handleDeleteGame={handleDeleteGame}
-                        downloadTXT={downloadTXT}
-                        downloadPDF={downloadPDF}
-                        handlePrintGames={handlePrintGames}
-                        isPro={isPro}
-                        bolaoCotas={bolaoCotas}
-                        setBolaoCotas={setBolaoCotas}
-                        bolaoTaxa={bolaoTaxa}
-                        setBolaoTaxa={setBolaoTaxa}
-                        setShowUpgradeModal={setShowUpgradeModal}
-                        handleBuildBolao={handleBuildBolao}
-                        bolaoText={bolaoText}
-                        handleCopyText={handleCopyText}
-                        copyFeedback={copyFeedback}
-                        bolaoShareUrl={bolaoShareUrl}
-                        onScanQR={() => setShowQRScanner(true)}
-                        onGoToGenerator={() => setActiveTab('generator')}
+                      <LotofacilStrategyPanel
+                        history={history}
+                        onSaveGame={handleSaveGeneratedGame}
+                        onGeneratedGame={(games) =>
+                          void persistGeneratedHistory(games, 'strategy')
+                        }
                       />
                     </Suspense>
-                    {user && (
-                      <Suspense fallback={<TabFallback />}>
-                        <GeneratedGamesHistory
-                          key={activeLottery}
-                          lottery={activeLottery}
-                          onStartGenerating={() => setActiveTab('generator')}
-                          onRegenerate={(item) => {
-                            setActiveTab('generator');
-                            setGenSubTab(
-                              item.source === 'closure'
-                                ? 'wheeling'
-                                : item.source === 'strategy'
-                                  ? 'advanced'
-                                  : 'smart'
-                            );
-                            setSaveFeedback(
-                              'Contexto carregado. Revise os critérios e gere um novo jogo.'
-                            );
-                          }}
-                        />
-                      </Suspense>
-                    )}
                   </div>
                 )}
 
-                {activeTab === 'plans' && (
-                  <Suspense fallback={<TabFallback />}>
-                    <GamePlansPanel
-                      lottery={activeLottery}
-                      generatedGames={generatedGames}
-                      onOpenGenerator={(draft) => {
-                        setPlanDraft(draft);
-                        setActiveLottery(draft.lottery);
-                        setIntensity(
-                          draft.strategy === 'random'
-                            ? 'balanced'
-                            : draft.strategy
-                        );
-                        sessionStorage.setItem(
-                          'meu-trevo-plan-draft',
-                          JSON.stringify({ ...draft, savedAt: Date.now() })
-                        );
-                        setActiveTab('generator');
-                        setSaveFeedback(
-                          'Orçamento registrado. Revise a estratégia antes de gerar.'
-                        );
-                      }}
-                    />
-                  </Suspense>
-                )}
-
-                {/* ==========================================
-         ABA: CENTRAL FINANCEIRA
-         ========================================== */}
-                {activeTab === 'finance' && (
-                  <Suspense fallback={<TabFallback />}>
-                    <FinanceTab
-                      isPro={isPro}
-                      playSound={playSound}
-                      setShowUpgradeModal={setShowUpgradeModal}
-                    />
-                  </Suspense>
-                )}
-
-                {/* ==========================================
-         ABA: RANKING / LIDERES
-         ========================================== */}
-                {activeTab === 'ranking' && (
-                  <Suspense fallback={<TabFallback />}>
-                    <RankingPanel user={user} savedGames={savedGames} />
-                  </Suspense>
-                )}
-
-                {/* ==========================================
-         ABA DO ADMINISTRADOR (ADMIN DASHBOARD)
-         ========================================== */}
-                {activeTab === 'admin' && user?.role === 'admin' && (
+              {activeTab === 'generator' &&
+                user &&
+                genSubTab === 'advanced' &&
+                NUMERIC_STRATEGY_LOTTERIES.includes(
+                  activeLottery as (typeof NUMERIC_STRATEGY_LOTTERIES)[number]
+                ) && (
                   <div
-                    className="profile-card"
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '1.5rem',
-                    }}
+                    className="glass-panel"
+                    style={{ animation: 'fade-in 0.3s ease' }}
                   >
-                    <div>
-                      <h2
-                        style={{
-                          fontFamily: 'var(--font-body)',
-                          fontSize: '1.2rem',
-                          fontWeight: 900,
-                          color: 'white',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                        }}
-                      >
-                        🔑 PAINEL DO ADMINISTRADOR
-                      </h2>
-                      <p
-                        style={{
-                          fontSize: '0.75rem',
-                          color: 'var(--text-muted)',
-                          marginTop: '0.2rem',
-                        }}
-                      >
-                        Gerencie preços dinâmicos, visualize estatísticas e
-                        promova ou altere funções de usuários cadastrados no
-                        banco Supabase.
-                      </p>
+                    <Suspense fallback={<TabFallback />}>
+                      <NumericStrategyPanel
+                        history={history}
+                        config={config}
+                        onSaveGame={handleSaveGeneratedGame}
+                        onGeneratedGame={(games) =>
+                          void persistGeneratedHistory(games, 'strategy')
+                        }
+                      />
+                    </Suspense>
+                  </div>
+                )}
+
+              {/* SUB-ABA: DESDOBRAMENTO / WHEELING */}
+              {activeTab === 'generator' &&
+                user &&
+                genSubTab === 'wheeling' && (
+                  <div
+                    className="glass-panel"
+                    style={{ animation: 'fade-in 0.3s ease' }}
+                  >
+                    {/* Title + Explanation */}
+                    <h3
+                      style={{
+                        color: 'var(--accent-color)',
+                        fontWeight: 'bold',
+                        fontSize: '0.95rem',
+                        margin: '0 0 0.3rem 0',
+                      }}
+                    >
+                      FECHAMENTO {config.name}
+                    </h3>
+                    <div
+                      style={{
+                        fontSize: '0.6rem',
+                        color: 'var(--text-muted)',
+                        lineHeight: 1.5,
+                        marginBottom: '0.75rem',
+                        padding: '0.5rem',
+                        borderRadius: '6px',
+                        background: 'rgba(255,255,255,0.02)',
+                        border: '1px solid rgba(255,255,255,0.04)',
+                      }}
+                    >
+                      <strong style={{ color: 'white' }}>
+                        Como funciona o fechamento:
+                      </strong>
+                      <br />
+                      Você escolhe <em>mais</em> números do que o jogo exige (
+                      {config.drawCount}). O sistema gera{' '}
+                      <em>múltiplos jogos</em> com esses números, cobrindo mais
+                      combinações por menos dinheiro.
+                      <br />
+                      <br />
+                      <strong style={{ color: 'var(--accent-color)' }}>
+                        Cobertura combinatória condicional:
+                      </strong>{' '}
+                      A cobertura só se aplica <em>se</em> os números sorteados
+                      estiverem no grupo que você escolheu. Isso não prevê o
+                      resultado nem garante premiação.
+                      <br />
+                      <br />
+                      <strong style={{ color: '#00e676' }}>Quadra:</strong> Se
+                      pelo menos {config.drawCount - 2} sorteados estiverem no
+                      seu grupo → ganha Quadra.
+                      <br />
+                      <strong style={{ color: '#ffd600' }}>Quina:</strong> Se
+                      pelo menos {config.drawCount - 1} sorteados estiverem →
+                      ganha Quina.
+                      <br />
+                      <strong style={{ color: 'var(--accent-color)' }}>
+                        Sena:
+                      </strong>{' '}
+                      Se todos os {config.drawCount} sorteados estiverem → ganha
+                      Sena (muito mais caro).
+                      <br />
+                      <br />
+                      <strong style={{ color: 'white' }}>
+                        Exemplo prático:
+                      </strong>{' '}
+                      Se você escolhe 10 números e o fechamento Quadra gera 15
+                      jogos (R$ 67,00), você economiza <em>muito</em> comparado
+                      a apostar todos os 210 jogos na Caixa (R$ 945,00). Mas se
+                      o sorteio cair fora do seu grupo de 10, você perde tudo
+                      igual.
                     </div>
 
-                    <AdminPanel playSound={playSound} />
+                    {/* Number Grid */}
+                    <div
+                      style={{
+                        fontSize: '0.6rem',
+                        color: 'var(--text-muted)',
+                        marginBottom: '0.3rem',
+                      }}
+                    >
+                      Escolha seus números (mínimo {config.drawCount + 1}):
+                    </div>
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(10, 1fr)',
+                        gap: '0.3rem',
+                        marginBottom: '0.75rem',
+                      }}
+                    >
+                      {Array.from(
+                        { length: config.maxNum },
+                        (_, i) => i + 1
+                      ).map((num) => {
+                        const isSelected = wheelSelectedNums.includes(num);
+                        return (
+                          <button
+                            key={num}
+                            onClick={() => {
+                              playSound('click');
+                              setWheelSelectedNums((prev) =>
+                                isSelected
+                                  ? prev.filter((n) => n !== num)
+                                  : [...prev, num]
+                              );
+                              setWheelGeneratedGames([]); // limpa ao mudar seleção
+                            }}
+                            style={{
+                              width: '100%',
+                              aspectRatio: '1',
+                              borderRadius: '50%',
+                              border: `2px solid ${isSelected ? config.color : 'var(--glass-border)'}`,
+                              background: isSelected
+                                ? config.color
+                                : 'rgba(0,0,0,0.3)',
+                              color: isSelected ? 'white' : 'var(--text-muted)',
+                              fontWeight: 700,
+                              fontSize: '0.65rem',
+                              cursor: 'pointer',
+                              transition: 'all 0.15s',
+                              fontFamily: 'var(--font-numbers)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              boxShadow: isSelected
+                                ? `0 0 8px ${config.color}40`
+                                : 'none',
+                            }}
+                          >
+                            {String(num).padStart(2, '0')}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Guarantee Type Selector */}
+                    {wheelSelectedNums.length >= config.drawCount + 1 && (
+                      <div style={{ marginBottom: '0.75rem' }}>
+                        <div
+                          style={{
+                            fontSize: '0.6rem',
+                            color: 'var(--text-muted)',
+                            marginBottom: '0.3rem',
+                          }}
+                        >
+                          Nível de garantia:
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.3rem' }}>
+                          {[
+                            {
+                              value: 'quadra' as const,
+                              label: 'Quadra',
+                              desc: 'Econômico',
+                              color: '#00e676',
+                            },
+                            {
+                              value: 'quina' as const,
+                              label: 'Quina',
+                              desc: 'Equilibrado',
+                              color: '#ffd600',
+                            },
+                            {
+                              value: 'full' as const,
+                              label: 'Sena',
+                              desc: 'Completo',
+                              color: 'var(--accent-color)',
+                            },
+                          ].map((opt) => {
+                            const n = wheelSelectedNums.length;
+                            const est = inlineWheelCount(
+                              n,
+                              config.drawCount,
+                              opt.value
+                            );
+                            return (
+                              <button
+                                key={opt.value}
+                                onClick={() => {
+                                  playSound('click');
+                                  setWheelGuarantee(opt.value);
+                                  setWheelGeneratedGames([]);
+                                }}
+                                style={{
+                                  flex: 1,
+                                  padding: '0.4rem',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer',
+                                  background:
+                                    wheelGuarantee === opt.value
+                                      ? `${opt.color}18`
+                                      : 'rgba(0,0,0,0.2)',
+                                  border: `1px solid ${wheelGuarantee === opt.value ? opt.color : 'var(--glass-border)'}`,
+                                  color:
+                                    wheelGuarantee === opt.value
+                                      ? opt.color
+                                      : 'var(--text-muted)',
+                                  transition: 'all 0.15s',
+                                  textAlign: 'center',
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    fontSize: '0.65rem',
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  {opt.label}
+                                </div>
+                                <div
+                                  style={{ fontSize: '0.5rem', opacity: 0.7 }}
+                                >
+                                  ~{est} jogos · R${' '}
+                                  {(est * 4.5).toFixed(2).replace('.', ',')}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Cost comparison */}
+                    {wheelSelectedNums.length >= config.drawCount + 1 && (
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          marginBottom: '0.75rem',
+                          padding: '0.4rem 0.6rem',
+                          borderRadius: '6px',
+                          background: 'rgba(0,240,255,0.03)',
+                          border: '1px solid rgba(0,240,255,0.08)',
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: '0.6rem',
+                            color: 'var(--text-muted)',
+                          }}
+                        >
+                          <strong style={{ color: 'white' }}>
+                            {wheelSelectedNums.length}
+                          </strong>{' '}
+                          números · Aposta da Caixa ={' '}
+                          <strong style={{ color: '#ff4466' }}>
+                            R${' '}
+                            {(() => {
+                              let c = 1;
+                              for (let i = 0; i < config.drawCount; i++)
+                                c =
+                                  (c * (wheelSelectedNums.length - i)) /
+                                  (i + 1);
+                              return (c * getSimpleBetPrice(activeLottery))
+                                .toFixed(2)
+                                .replace('.', ',');
+                            })()}
+                          </strong>
+                        </span>
+                        <span style={{ fontSize: '0.6rem', color: '#00e676' }}>
+                          Fechamento ={' '}
+                          <strong>
+                            R${' '}
+                            {(() => {
+                              const est = inlineWheelCount(
+                                wheelSelectedNums.length,
+                                config.drawCount,
+                                wheelGuarantee
+                              );
+                              return (est * getSimpleBetPrice(activeLottery))
+                                .toFixed(2)
+                                .replace('.', ',');
+                            })()}
+                          </strong>
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Generate Button */}
+                    <button
+                      onClick={handleGenerateWheel}
+                      disabled={wheelSelectedNums.length < config.drawCount + 1}
+                      className="btn-action"
+                      style={{
+                        width: '100%',
+                        padding: '0.65rem',
+                        fontSize: '0.85rem',
+                        fontWeight: 'bold',
+                        borderRadius: '8px',
+                        marginBottom: '1rem',
+                        opacity:
+                          wheelSelectedNums.length < config.drawCount + 1
+                            ? 0.4
+                            : 1,
+                        cursor:
+                          wheelSelectedNums.length < config.drawCount + 1
+                            ? 'not-allowed'
+                            : 'pointer',
+                      }}
+                    >
+                      🔢 Gerar Fechamento
+                      {wheelSelectedNums.length >= config.drawCount + 1 &&
+                        ` (~${inlineWheelCount(wheelSelectedNums.length, config.drawCount, wheelGuarantee)} jogos)`}
+                    </button>
+
+                    {/* Generated wheel games */}
+                    {wheelGeneratedGames.length > 0 && (
+                      <div style={{ marginBottom: '1rem' }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '0.4rem',
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: '0.75rem',
+                              fontWeight: 'bold',
+                              color: 'var(--accent-color)',
+                            }}
+                          >
+                            {wheelGeneratedGames.length} JOGOS GERADOS
+                          </span>
+                          <button
+                            onClick={() =>
+                              void handleSaveAllGeneratedGames(
+                                wheelGeneratedGames
+                              )
+                            }
+                            disabled={savingAllGeneratedGames}
+                            style={{
+                              background: 'rgba(0,230,118,0.1)',
+                              border: '1px solid rgba(0,230,118,0.2)',
+                              color: '#00e676',
+                              fontSize: '0.6rem',
+                              fontWeight: 600,
+                              padding: '0.25rem 0.5rem',
+                              borderRadius: '4px',
+                              cursor: savingAllGeneratedGames
+                                ? 'wait'
+                                : 'pointer',
+                              opacity: savingAllGeneratedGames ? 0.55 : 1,
+                            }}
+                          >
+                            {savingAllGeneratedGames
+                              ? 'Salvando jogos...'
+                              : 'Salvar Todos em Meus Jogos ('}
+                            {!savingAllGeneratedGames &&
+                              (
+                                wheelGeneratedGames.length *
+                                getSimpleBetPrice(activeLottery)
+                              )
+                                .toFixed(2)
+                                .replace('.', ',')}
+                            {!savingAllGeneratedGames && ')'}
+                          </button>
+                        </div>
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '0.3rem',
+                            maxHeight: '300px',
+                            overflowY: 'auto',
+                          }}
+                        >
+                          {wheelGeneratedGames.map((nums, idx) => (
+                            <div
+                              key={idx}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.4rem',
+                                padding: '0.35rem 0.5rem',
+                                borderRadius: '6px',
+                                background:
+                                  idx % 2 === 0
+                                    ? 'rgba(255,255,255,0.02)'
+                                    : 'transparent',
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: '0.55rem',
+                                  color: 'var(--text-muted)',
+                                  minWidth: '20px',
+                                  fontFamily: 'var(--font-numbers)',
+                                }}
+                              >
+                                #{idx + 1}
+                              </span>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  gap: '0.2rem',
+                                  flex: 1,
+                                  flexWrap: 'wrap',
+                                }}
+                              >
+                                {nums.map((n, i) => (
+                                  <span
+                                    key={i}
+                                    style={{
+                                      width: '22px',
+                                      height: '22px',
+                                      borderRadius: '50%',
+                                      background: config.color,
+                                      color: 'white',
+                                      fontSize: '0.55rem',
+                                      fontWeight: 700,
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      fontFamily: 'var(--font-numbers)',
+                                    }}
+                                  >
+                                    {String(n).padStart(2, '0')}
+                                  </span>
+                                ))}
+                              </div>
+                              <button
+                                onClick={() => handleSaveGeneratedGame(nums)}
+                                disabled={
+                                  savingAllGeneratedGames ||
+                                  savingGameSignatures.includes(
+                                    getGameSaveSignature(activeLottery, nums)
+                                  )
+                                }
+                                style={{
+                                  background: 'none',
+                                  border: '1px solid rgba(0,230,118,0.15)',
+                                  color: '#00e676',
+                                  fontSize: '0.55rem',
+                                  fontWeight: 600,
+                                  padding: '0.15rem 0.4rem',
+                                  borderRadius: '4px',
+                                  cursor: savingAllGeneratedGames
+                                    ? 'wait'
+                                    : 'pointer',
+                                  opacity:
+                                    savingAllGeneratedGames ||
+                                    savingGameSignatures.includes(
+                                      getGameSaveSignature(activeLottery, nums)
+                                    )
+                                      ? 0.55
+                                      : 1,
+                                }}
+                              >
+                                {savingGameSignatures.includes(
+                                  getGameSaveSignature(activeLottery, nums)
+                                )
+                                  ? 'Salvando...'
+                                  : 'Salvar em Meus Jogos'}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Disclaimer */}
+                    <div
+                      style={{
+                        fontSize: '0.55rem',
+                        color: '#ff4466',
+                        lineHeight: 1.5,
+                        marginTop: '0.5rem',
+                        padding: '0.5rem 0.6rem',
+                        borderRadius: '6px',
+                        background: 'rgba(255,68,102,0.05)',
+                        border: '1px solid rgba(255,68,102,0.12)',
+                      }}
+                    >
+                      ⚠️ <strong>Aviso importante:</strong> Ninguém pode prever
+                      quais números serão sorteados. O fechamento{' '}
+                      <strong>não aumenta suas chances de acertar</strong> — ele
+                      apenas <strong>organiza melhor o dinheiro</strong> que
+                      você já gastaria. Se você escolher 10 números e o sorteio
+                      cair fora do seu grupo, você não ganha nada.
+                    </div>
                   </div>
                 )}
-              </>
-            )}
 
-            {/* MODAL DE UPGRADE PREMIUM PRO */}
-            <Suspense fallback={null}>
-              <PaymentSection
-                user={user}
-                playSound={playSound}
-                onPaymentSuccess={() => {
-                  setUser((prev) => (prev ? { ...prev, role: 'pro' } : prev));
-                  setShowUpgradeModal(false);
-                }}
-                showUpgradeModal={showUpgradeModal}
-                setShowUpgradeModal={setShowUpgradeModal}
-              />
-            </Suspense>
+              {/* SUB-ABA: GERADOR POR TEMAS (dentro do Gerador) */}
+              {activeTab === 'generator' && user && genSubTab === 'mystic' && (
+                <Suspense fallback={<TabFallback />}>
+                  <MysticGenerator
+                    activeLottery={activeLottery}
+                    onGenerated={async (nums) => {
+                      const lastDrawNumbers = (
+                        result?.listaDezenas ||
+                        result?.dezenasSorteadasOrdemSorteio ||
+                        []
+                      ).map(Number);
+                      const math = await loadMath();
+                      setGeneratedGames((prev) => [
+                        ...prev,
+                        {
+                          numbers: nums,
+                          metrics: math.analyzeGame(
+                            nums,
+                            config,
+                            lastDrawNumbers
+                          ),
+                        },
+                      ]);
+                      void persistGeneratedHistory([nums], 'strategy');
+                      playSound('success');
+                    }}
+                    playSound={playSound}
+                  />
+                </Suspense>
+              )}
 
-            {/* MODAL DE TUTORIAL ONBOARDING GUIADO */}
-            {showTutorial && (
-              <Suspense fallback={<TabFallback />}>
-                <TutorialModal
-                  tutorialStep={tutorialStep}
-                  onNext={() => setTutorialStep((prev) => prev + 1)}
-                  onPrev={() => setTutorialStep((prev) => prev - 1)}
-                  onSkip={() => {
-                    setShowTutorial(false);
-                    setShowSettings(false);
-                    localStorage.setItem('meu-trevo-onboarding-done', 'true');
-                    playSound('success');
-                  }}
-                  onNavigate={(tab, subTab) => {
-                    setActiveTab(tab);
-                    if (subTab === 'smart') setGenSubTab('smart');
-                    if (subTab === 'bolao') setGenSubTab('bolao');
-                    if (tab === 'results' && tutorialStep === 5)
-                      setShowSettings(true);
-                  }}
-                  playSound={playSound}
-                />
-              </Suspense>
-            )}
+              {/* SUB-ABA: BOLÃO (dentro do Gerador) */}
+              {activeTab === 'generator' && user && genSubTab === 'bolao' && (
+                <Suspense fallback={<TabFallback />}>
+                  <BolaoPanel
+                    savedGames={savedGames}
+                    activeLottery={activeLottery}
+                    nextContest={result?.numero ? result.numero + 1 : null}
+                    isPro={isPro}
+                    user={user}
+                    onUpgrade={() => setShowUpgradeModal(true)}
+                    playSound={playSound}
+                    onShowShareQR={(bolao) => {
+                      const code = String(bolao.shareCode || '')
+                        .trim()
+                        .toLowerCase();
+                      setShareCode(code);
+                      setShareUrl(getShareUrl(code));
+                      setShareGamesCount(bolao.gamesCount);
+                      setShareCotas(bolao.cotas);
+                      setShareTaxa(bolao.taxa);
+                      setShowShareQR(true);
+                    }}
+                  />
+                </Suspense>
+              )}
 
-            {/* MODAL: EXPORTAR/IMPORTAR JOGOS */}
-            {showExportImport && (
-              <Suspense fallback={<TabFallback />}>
-                <ExportImportModal
-                  lottery={activeLottery}
-                  numbers={[]}
-                  savedGames={savedGames}
-                  onClose={() => setShowExportImport(false)}
-                />
-              </Suspense>
-            )}
+              {(activeTab === 'games' || activeTab === 'conference') && (
+                <div
+                  className="glass-panel"
+                  style={{ animation: 'fade-in 0.3s ease' }}
+                >
+                  <div style={{ marginBottom: '0.75rem' }}>
+                    <h3
+                      style={{
+                        color: 'var(--accent-color)',
+                        fontWeight: 'bold',
+                        fontSize: '0.95rem',
+                        margin: '0 0 0.2rem 0',
+                      }}
+                    >
+                      {activeTab === 'conference'
+                        ? 'CONFERIR JOGOS'
+                        : 'MEUS JOGOS'}
+                    </h3>
+                    <p
+                      style={{
+                        fontSize: '0.7rem',
+                        color: 'var(--text-muted)',
+                        margin: 0,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {activeTab === 'conference'
+                        ? 'Selecione um jogo salvo e confira os acertos usando o resultado oficial disponível.'
+                        : 'Acesse cartões salvos, confira acertos e monte bolões a partir da sua base.'}
+                    </p>
+                  </div>
+                  <Suspense fallback={<TabFallback />}>
+                    <SavedGamesPanel
+                      savedGames={savedGames}
+                      selectedForPool={selectedForPool}
+                      setSelectedForPool={setSelectedForPool}
+                      setBolaoText={setBolaoText}
+                      latestResultsMap={latestResultsMap}
+                      getCleanDezenas={getCleanDezenas}
+                      handleDeleteGame={handleDeleteGame}
+                      downloadTXT={downloadTXT}
+                      downloadPDF={downloadPDF}
+                      handlePrintGames={handlePrintGames}
+                      isPro={isPro}
+                      bolaoCotas={bolaoCotas}
+                      setBolaoCotas={setBolaoCotas}
+                      bolaoTaxa={bolaoTaxa}
+                      setBolaoTaxa={setBolaoTaxa}
+                      setShowUpgradeModal={setShowUpgradeModal}
+                      handleBuildBolao={handleBuildBolao}
+                      bolaoText={bolaoText}
+                      handleCopyText={handleCopyText}
+                      copyFeedback={copyFeedback}
+                      bolaoShareUrl={bolaoShareUrl}
+                      onScanQR={() => setShowQRScanner(true)}
+                      onGoToGenerator={goToGenerator}
+                    />
+                  </Suspense>
+                  {user && (
+                    <Suspense fallback={<TabFallback />}>
+                      <GeneratedGamesHistory
+                        key={activeLottery}
+                        lottery={activeLottery}
+                        onStartGenerating={goToGenerator}
+                        onRegenerate={(item) => {
+                          goToGenerator();
+                          setGenSubTab(
+                            item.source === 'closure'
+                              ? 'wheeling'
+                              : item.source === 'strategy'
+                                ? 'advanced'
+                                : 'smart'
+                          );
+                          setSaveFeedback(
+                            'Contexto carregado. Revise os critérios e gere um novo jogo.'
+                          );
+                        }}
+                      />
+                    </Suspense>
+                  )}
+                </div>
+              )}
 
-            {/* CAMERA SCANNER */}
-            {showCamera && (
-              <Suspense fallback={<TabFallback />}>
-                <CameraScanner
-                  activeLottery={activeLottery}
-                  onNumbersDetected={(numbers) => {
-                    const next = applyDetectedNumbersToFiltersMap(
-                      numbers,
-                      filtersMap,
-                      config.minNum,
-                      config.maxNum
-                    );
-                    setFiltersMap(next);
-                    setShowCamera(false);
-                  }}
-                  onClose={() => setShowCamera(false)}
-                />
-              </Suspense>
-            )}
-
-            {/* QR CODE SCANNER */}
-            {showQRScanner && (
-              <Suspense fallback={<TabFallback />}>
-                <QRCodeScanner
-                  isOpen={showQRScanner}
-                  onClose={() => setShowQRScanner(false)}
-                  onScan={(url) => {
-                    setShowQRScanner(false);
-                    const v = validateShareUrl(url);
-                    if (!v.safe) return;
-
-                    if (v.isMeuTrevo) {
-                      try {
-                        const parsed = new URL(v.displayUrl);
-                        const match =
-                          parsed.pathname.match(/^\/bolao\/([^/?#]+)/);
-                        if (match) {
-                          window.location.href = `/bolao/${match[1]}`;
-                          return;
-                        }
-                      } catch {}
-                    }
-
-                    if (
-                      window.confirm(`Abrir link externo?\n\n${v.displayUrl}`)
-                    ) {
-                      window.open(
-                        v.displayUrl,
-                        '_blank',
-                        'noopener,noreferrer'
+              {activeTab === 'plans' && (
+                <Suspense fallback={<TabFallback />}>
+                  <GamePlansPanel
+                    lottery={activeLottery}
+                    generatedGames={generatedGames}
+                    onOpenGenerator={(draft) => {
+                      setPlanDraft(draft);
+                      setActiveLottery(draft.lottery);
+                      setIntensity(
+                        draft.strategy === 'random'
+                          ? 'balanced'
+                          : draft.strategy
                       );
-                    }
-                  }}
-                />
-              </Suspense>
-            )}
+                      sessionStorage.setItem(
+                        'meu-trevo-plan-draft',
+                        JSON.stringify({ ...draft, savedAt: Date.now() })
+                      );
+                      trackProductEvent('planning_completed', {
+                        lottery: draft.lottery,
+                        objective: draft.objective,
+                      });
+                      setActiveTab('generator');
+                      setSaveFeedback(
+                        'Orçamento registrado. Revise a estratégia antes de gerar.'
+                      );
+                    }}
+                  />
+                </Suspense>
+              )}
 
-            {/* SHARE QR CODE */}
-            {showShareQR && (
-              <Suspense fallback={<TabFallback />}>
-                <ShareQRCode
-                  isOpen={showShareQR}
-                  onClose={() => setShowShareQR(false)}
-                  shareCode={shareCode}
-                  shareUrl={shareUrl}
-                  gamesCount={shareGamesCount}
-                  lotteryName={config?.name || activeLottery}
-                  cotas={shareCotas}
-                  taxa={shareTaxa}
-                  onRevoke={
-                    shareCode
-                      ? async () => {
-                          try {
-                            const res = await fetchWithCsrf(
-                              '/api/bolao/share/revoke',
-                              {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ shareCode }),
-                              }
-                            );
-                            if (res.ok) {
-                              setShowShareQR(false);
-                              setShareCode(null);
-                            }
-                          } catch {
-                            /* ignore */
-                          }
-                        }
-                      : undefined
-                  }
-                />
-              </Suspense>
-            )}
-          </div>
+              {/* ==========================================
+         ABA: CENTRAL FINANCEIRA
+         ========================================== */}
+              {activeTab === 'finance' && (
+                <Suspense fallback={<TabFallback />}>
+                  <FinanceTab
+                    isPro={isPro}
+                    playSound={playSound}
+                    setShowUpgradeModal={setShowUpgradeModal}
+                  />
+                </Suspense>
+              )}
 
-          {/* Bottom Nav Bar */}
-          {showMobileMore && (
-            <div className="mobile-more-menu" role="menu">
-              {[
-                ['simulator', 'Simulador'],
-                ['ranking', 'Ranking'],
-                ['finance', 'Financeiro'],
-              ].map(([tab, label]) => (
-                <button
-                  key={tab}
-                  type="button"
-                  role="menuitem"
-                  className={activeTab === tab ? 'active' : ''}
-                  onClick={() => {
-                    setActiveTab(tab as ActiveTab);
-                    setShowMobileMore(false);
+              {/* ==========================================
+         ABA: RANKING / LIDERES
+         ========================================== */}
+              {activeTab === 'ranking' && (
+                <Suspense fallback={<TabFallback />}>
+                  <RankingPanel user={user} savedGames={savedGames} />
+                </Suspense>
+              )}
+
+              {/* ==========================================
+         ABA DO ADMINISTRADOR (ADMIN DASHBOARD)
+         ========================================== */}
+              {activeTab === 'admin' && user?.role === 'admin' && (
+                <div
+                  className="profile-card"
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1.5rem',
                   }}
                 >
-                  {label}
-                </button>
-              ))}
-            </div>
+                  <div>
+                    <h2
+                      style={{
+                        fontFamily: 'var(--font-body)',
+                        fontSize: '1.2rem',
+                        fontWeight: 900,
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                      }}
+                    >
+                      🔑 PAINEL DO ADMINISTRADOR
+                    </h2>
+                    <p
+                      style={{
+                        fontSize: '0.75rem',
+                        color: 'var(--text-muted)',
+                        marginTop: '0.2rem',
+                      }}
+                    >
+                      Gerencie preços dinâmicos, visualize estatísticas e
+                      promova ou altere funções de usuários cadastrados no banco
+                      Supabase.
+                    </p>
+                  </div>
+
+                  <AdminPanel playSound={playSound} />
+                </div>
+              )}
+            </>
           )}
-          <nav className="bottom-nav">
-            <button
-              className={`nav-item ${activeTab === 'results' ? 'active' : ''}`}
-              aria-current={activeTab === 'results' ? 'page' : undefined}
-              onClick={() => {
-                setActiveTab('results');
-                setShowMobileMore(false);
+
+          {/* MODAL DE UPGRADE PREMIUM PRO */}
+          <Suspense fallback={null}>
+            <PaymentSection
+              user={user}
+              playSound={playSound}
+              onPaymentSuccess={() => {
+                setUser((prev) => (prev ? { ...prev, role: 'pro' } : prev));
+                setShowUpgradeModal(false);
               }}
-            >
-              Resultados
-            </button>
-            <button
-              className={`nav-item ${activeTab === 'generator' ? 'active' : ''}`}
-              aria-current={activeTab === 'generator' ? 'page' : undefined}
-              onClick={() => {
-                setActiveTab('generator');
-                setShowMobileMore(false);
-              }}
-            >
-              Gerador
-            </button>
-            <button
-              className={`nav-item ${activeTab === 'games' ? 'active' : ''}`}
-              aria-current={activeTab === 'games' ? 'page' : undefined}
-              onClick={() => {
-                setActiveTab('games');
-                setShowMobileMore(false);
-              }}
-            >
-              Meus Jogos
-            </button>
-            <button
-              className={`nav-item ${activeTab === 'plans' ? 'active' : ''}`}
-              aria-current={activeTab === 'plans' ? 'page' : undefined}
-              onClick={() => {
-                setActiveTab('plans');
-                setShowMobileMore(false);
-              }}
-            >
-              Meu Plano
-            </button>
-            <button
-              className={`nav-item ${['simulator', 'ranking', 'finance'].includes(activeTab) ? 'active' : ''}`}
-              aria-expanded={showMobileMore}
-              aria-haspopup="menu"
-              onClick={() => setShowMobileMore((current) => !current)}
-            >
-              Mais
-            </button>
-          </nav>
-        </>
-      )}
+              showUpgradeModal={showUpgradeModal}
+              setShowUpgradeModal={setShowUpgradeModal}
+            />
+          </Suspense>
+
+          {/* MODAL DE TUTORIAL ONBOARDING GUIADO */}
+          {showTutorial && (
+            <Suspense fallback={<TabFallback />}>
+              <TutorialModal
+                tutorialStep={tutorialStep}
+                onNext={() => setTutorialStep((prev) => prev + 1)}
+                onPrev={() => setTutorialStep((prev) => prev - 1)}
+                onSkip={() => {
+                  setShowTutorial(false);
+                  setShowSettings(false);
+                  localStorage.setItem('meu-trevo-onboarding-done', 'true');
+                  playSound('success');
+                }}
+                onNavigate={(tab, subTab) => {
+                  setActiveTab(tab);
+                  if (subTab === 'smart') setGenSubTab('smart');
+                  if (subTab === 'bolao') setGenSubTab('bolao');
+                  if (tab === 'results' && tutorialStep === 5)
+                    setShowSettings(true);
+                }}
+                playSound={playSound}
+              />
+            </Suspense>
+          )}
+
+          {/* MODAL: EXPORTAR/IMPORTAR JOGOS */}
+          {showExportImport && (
+            <Suspense fallback={<TabFallback />}>
+              <ExportImportModal
+                lottery={activeLottery}
+                numbers={[]}
+                savedGames={savedGames}
+                onClose={() => setShowExportImport(false)}
+              />
+            </Suspense>
+          )}
+
+          {/* CAMERA SCANNER */}
+          {showCamera && (
+            <Suspense fallback={<TabFallback />}>
+              <CameraScanner
+                activeLottery={activeLottery}
+                onNumbersDetected={(numbers) => {
+                  const next = applyDetectedNumbersToFiltersMap(
+                    numbers,
+                    filtersMap,
+                    config.minNum,
+                    config.maxNum
+                  );
+                  setFiltersMap(next);
+                  setShowCamera(false);
+                }}
+                onClose={() => setShowCamera(false)}
+              />
+            </Suspense>
+          )}
+
+          {/* QR CODE SCANNER */}
+          {showQRScanner && (
+            <Suspense fallback={<TabFallback />}>
+              <QRCodeScanner
+                isOpen={showQRScanner}
+                onClose={() => setShowQRScanner(false)}
+                onScan={(url) => {
+                  setShowQRScanner(false);
+                  const v = validateShareUrl(url);
+                  if (!v.safe) return;
+
+                  if (v.isMeuTrevo) {
+                    try {
+                      const parsed = new URL(v.displayUrl);
+                      const match =
+                        parsed.pathname.match(/^\/bolao\/([^/?#]+)/);
+                      if (match) {
+                        window.location.href = `/bolao/${match[1]}`;
+                        return;
+                      }
+                    } catch {}
+                  }
+
+                  if (
+                    window.confirm(`Abrir link externo?\n\n${v.displayUrl}`)
+                  ) {
+                    window.open(v.displayUrl, '_blank', 'noopener,noreferrer');
+                  }
+                }}
+              />
+            </Suspense>
+          )}
+
+          {/* SHARE QR CODE */}
+          {showShareQR && (
+            <Suspense fallback={<TabFallback />}>
+              <ShareQRCode
+                isOpen={showShareQR}
+                onClose={() => setShowShareQR(false)}
+                shareCode={shareCode}
+                shareUrl={shareUrl}
+                gamesCount={shareGamesCount}
+                lotteryName={config?.name || activeLottery}
+                cotas={shareCotas}
+                taxa={shareTaxa}
+                onRevoke={
+                  shareCode
+                    ? async () => {
+                        try {
+                          const res = await fetchWithCsrf(
+                            '/api/bolao/share/revoke',
+                            {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ shareCode }),
+                            }
+                          );
+                          if (res.ok) {
+                            setShowShareQR(false);
+                            setShareCode(null);
+                          }
+                        } catch {
+                          /* ignore */
+                        }
+                      }
+                    : undefined
+                }
+              />
+            </Suspense>
+          )}
+        </div>
+
+        {/* Bottom Nav Bar */}
+        {showMobileMore && (
+          <div className="mobile-more-menu" role="menu">
+            {[
+              ['simulator', 'Simulador'],
+              ['ranking', 'Ranking'],
+              ['finance', 'Financeiro'],
+              ['conference', 'Conferir jogos'],
+            ].map(([tab, label]) => (
+              <button
+                key={tab}
+                type="button"
+                role="menuitem"
+                className={activeTab === tab ? 'active' : ''}
+                onClick={() => {
+                  setActiveTab(tab as ActiveTab);
+                  setShowMobileMore(false);
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+        <nav className="bottom-nav">
+          <button
+            className={`nav-item ${activeTab === 'results' ? 'active' : ''}`}
+            aria-current={activeTab === 'results' ? 'page' : undefined}
+            onClick={() => {
+              setActiveTab('results');
+              setShowMobileMore(false);
+            }}
+          >
+            Resultados
+          </button>
+          <button
+            className={`nav-item ${activeTab === 'generator' ? 'active' : ''}`}
+            aria-current={activeTab === 'generator' ? 'page' : undefined}
+            onClick={() => {
+              goToGenerator();
+              setShowMobileMore(false);
+            }}
+          >
+            Gerador
+          </button>
+          <button
+            className={`nav-item ${activeTab === 'games' ? 'active' : ''}`}
+            aria-current={activeTab === 'games' ? 'page' : undefined}
+            onClick={() => {
+              setActiveTab('games');
+              setShowMobileMore(false);
+            }}
+          >
+            Meus Jogos
+          </button>
+          <button
+            className={`nav-item ${activeTab === 'plans' ? 'active' : ''}`}
+            aria-current={activeTab === 'plans' ? 'page' : undefined}
+            onClick={() => {
+              setActiveTab('plans');
+              setShowMobileMore(false);
+            }}
+          >
+            Meu Plano
+          </button>
+          <button
+            className={`nav-item ${['simulator', 'ranking', 'finance'].includes(activeTab) ? 'active' : ''}`}
+            aria-expanded={showMobileMore}
+            aria-haspopup="menu"
+            onClick={() => setShowMobileMore((current) => !current)}
+          >
+            Mais
+          </button>
+        </nav>
+      </>
     </main>
   );
 }

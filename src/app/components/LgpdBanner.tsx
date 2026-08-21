@@ -150,10 +150,12 @@ export default function LgpdBanner() {
         @media (max-width: 640px) {
           .lgpd-banner {
             right: 0.75rem;
-            bottom: 0.75rem;
+            bottom: max(0.75rem, env(safe-area-inset-bottom));
             align-items: stretch;
             gap: 0.7rem;
             width: calc(100% - 1.5rem);
+            max-height: min(180px, calc(100dvh - 1.5rem));
+            overflow: auto;
             padding: 0.8rem;
             flex-direction: column;
           }

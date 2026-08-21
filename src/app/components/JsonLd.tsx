@@ -7,7 +7,7 @@ const jsonLd = {
       url: 'https://www.meutrevo.com',
       name: 'Meu Trevo',
       description:
-        'Resultados em tempo real e gerador de dezenas estatístico para loterias do Brasil.',
+        'Resultados oficiais, planejamento de orçamento, organização e conferência de jogos das loterias da Caixa.',
       publisher: { '@id': 'https://www.meutrevo.com/#organization' },
       inLanguage: 'pt-BR',
     },

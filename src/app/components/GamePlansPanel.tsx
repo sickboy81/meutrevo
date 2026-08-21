@@ -7,6 +7,7 @@ import {
   calculateGamePlanCost,
   normalizeContestCount,
 } from '@/lib/game-plan-cost';
+import { getSimpleBetPrice } from '@/lib/lottery-prices';
 
 type GeneratedGame = { numbers: number[] };
 type Plan = {
@@ -442,11 +443,32 @@ export default function GamePlansPanel({
             marginTop: 4,
           }}
         >
-          Etapa 1: {generatedGames.length} jogo(s) gerado(s) aguardando inclusão
-          no plano. O orçamento e a quantidade de concursos ficam registrados
-          antes da geração.
+          Etapa 1: defina o objetivo, o orçamento e a quantidade de concursos.
+          Depois avance para gerar e revisar os jogos antes de salvar o plano.
         </div>
       </div>
+
+      <p
+        style={{
+          color: 'var(--text-muted)',
+          fontSize: '0.72rem',
+          lineHeight: 1.5,
+          margin: '0.65rem 0 0',
+        }}
+      >
+        Objetivo atual:{' '}
+        <strong style={{ color: 'var(--text-main)' }}>
+          {objectiveLabels[objective]}
+        </strong>{' '}
+        {objective === 'economy'
+          ? 'prioriza controlar o valor total.'
+          : objective === 'coverage'
+            ? 'prioriza distribuir combinações entre os jogos.'
+            : objective === 'conference'
+              ? 'prioriza registrar jogos para conferência posterior.'
+              : 'prioriza uma composição equilibrada entre os critérios.'}{' '}
+        A estratégia usa histórico descritivo e não prevê resultados.
+      </p>
 
       <div
         style={{
@@ -524,6 +546,19 @@ export default function GamePlansPanel({
           {budgetInsufficient
             ? ' Aumente o orçamento para cobrir todos os jogos.'
             : ''}
+        </p>
+      )}
+      {!generatedGames.length && (
+        <p
+          style={{
+            color: 'var(--text-muted)',
+            fontSize: '0.72rem',
+            marginBottom: 0,
+          }}
+        >
+          Referência: 1 jogo simples custa{' '}
+          {money.format(getSimpleBetPrice(lottery))} por concurso. O total muda
+          conforme a quantidade de jogos e concursos.
         </p>
       )}
       {status && (

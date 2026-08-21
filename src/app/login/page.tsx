@@ -282,9 +282,12 @@ export default function LoginPage() {
             }}
           >
             <span style={{ fontSize: '1.8rem' }}>🍀</span>
-            <span className="logo-text" style={{ fontSize: '1.35rem' }}>
+            <h1
+              className="logo-text"
+              style={{ fontSize: '1.35rem', margin: 0 }}
+            >
               Meu Trevo
-            </span>
+            </h1>
           </Link>
           <p
             style={{
@@ -337,6 +340,7 @@ export default function LoginPage() {
                 required
                 placeholder="Seu nome"
                 autoComplete="name"
+                autoFocus
               />
             </label>
           )}
@@ -351,6 +355,9 @@ export default function LoginPage() {
               required
               placeholder="seu@email.com"
               autoComplete="email"
+              autoFocus={mode !== 'register'}
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? 'auth-feedback' : undefined}
             />
           </label>
 
@@ -423,6 +430,8 @@ export default function LoginPage() {
                   autoComplete={
                     mode === 'register' ? 'new-password' : 'current-password'
                   }
+                  aria-invalid={Boolean(error)}
+                  aria-describedby={error ? 'auth-feedback' : undefined}
                   style={{ paddingRight: '3rem' }}
                 />
                 <button
@@ -497,6 +506,7 @@ export default function LoginPage() {
 
           {error && (
             <div
+              id="auth-feedback"
               role="alert"
               aria-live="assertive"
               style={{

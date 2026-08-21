@@ -403,7 +403,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
             }}
           >
             {props.ctaDescription ||
-              'Acesse ferramentas avançadas, histórico de concursos e recursos de organização no painel PRO.'}
+              'Acompanhe o resultado oficial, planeje seus jogos dentro do orçamento e confira suas combinações no painel.'}
           </p>
           <AppEntryLink
             href="/app?upgrade=1"

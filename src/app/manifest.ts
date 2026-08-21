@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Meu Trevo - Assistente Lotérico Inteligente',
+    name: 'Meu Trevo - Resultados e organização de jogos',
     short_name: 'Meu Trevo',
     description:
       'Resultados em tempo real, gerador de apostas e estatísticas de loterias da Caixa.',
