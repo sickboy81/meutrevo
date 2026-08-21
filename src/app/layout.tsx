@@ -30,11 +30,11 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Meu Trevo - Resultados & Gerador Estatístico de Loterias',
+    default: 'Meu Trevo - Resultados e organização de jogos da Caixa',
     template: '%s | Meu Trevo',
   },
   description:
-    'Resultados em tempo real das Loterias da Caixa (Mega-Sena, Lotofácil, Quina) e gerador de jogos com estatísticas, fechamentos matemáticos e desdobramentos.',
+    'Acompanhe resultados oficiais, planeje jogos dentro do orçamento e confira suas combinações das loterias da Caixa.',
   keywords: [
     'loterias',
     'mega-sena',
