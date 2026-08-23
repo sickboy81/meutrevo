@@ -2,7 +2,8 @@ name: Update lottery cache
 
 on:
   schedule:
-    - cron: '*/15 * * * *'
+    # 13:00 and 23:30 in Brasilia (16:00 and 02:30 UTC).
+    - cron: '30 2,16 * * *'
   workflow_dispatch:
 
 concurrency:
