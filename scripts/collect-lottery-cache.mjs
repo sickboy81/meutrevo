@@ -1,4 +1,5 @@
 import postgres from 'postgres';
+import { appendFile } from 'node:fs/promises';
 
 const CAIXA_BASES = [
   'https://servicebus3.caixa.gov.br/portaldeloterias',
@@ -26,29 +27,50 @@ const headers = {
 };
 
 const timeout = (ms) => AbortSignal.timeout(ms);
+const REQUEST_ATTEMPTS = 3;
+const RETRY_DELAYS = [500, 1_500, 3_000];
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function fetchFromCaixa(lottery) {
-  const responses = await Promise.allSettled(
-    CAIXA_BASES.map(async (base) => {
-      const response = await fetch(`${base}/api/${lottery}`, {
-        headers,
-        cache: 'no-store',
-        signal: timeout(20_000),
-      });
-      if (!response.ok) throw new Error(`${response.status} from ${base}`);
-      return response.json();
-    })
-  );
+  const failures = [];
 
-  const results = responses
-    .filter((item) => item.status === 'fulfilled')
-    .map((item) => item.value)
-    .filter((item) => Number.isInteger(item?.numero));
+  // Caixa occasionally rate-limits parallel requests. Try one endpoint at a
+  // time, then retry before falling back to the secondary endpoint.
+  for (const base of CAIXA_BASES) {
+    for (let attempt = 0; attempt < REQUEST_ATTEMPTS; attempt += 1) {
+      try {
+        const response = await fetch(`${base}/api/${lottery}`, {
+          headers,
+          cache: 'no-store',
+          signal: timeout(20_000),
+        });
+        const body = await response.text();
+        if (!response.ok) {
+          throw new Error(`${response.status} from ${base}`);
+        }
 
-  return results.reduce(
-    (latest, item) => (!latest || item.numero > latest.numero ? item : latest),
-    null
-  );
+        let result;
+        try {
+          result = JSON.parse(body);
+        } catch {
+          throw new Error(`invalid JSON from ${base}`);
+        }
+
+        if (!Number.isInteger(result?.numero)) {
+          throw new Error(`missing contest number from ${base}`);
+        }
+        return result;
+      } catch (error) {
+        failures.push(error instanceof Error ? error.message : String(error));
+        if (attempt < REQUEST_ATTEMPTS - 1) {
+          await wait(RETRY_DELAYS[attempt]);
+        }
+      }
+    }
+  }
+
+  throw new Error(`Caixa unavailable after retries: ${failures.join('; ')}`);
 }
 
 function decorateLoteca(result) {
@@ -201,5 +223,24 @@ const reports = await Promise.all(
 );
 
 for (const report of reports) console.log(JSON.stringify(report));
-if (reports.some((report) => report.status === 'error')) process.exitCode = 1;
+
+const failed = reports.filter((report) => report.status === 'error');
+if (process.env.GITHUB_STEP_SUMMARY) {
+  const lines = [
+    '## Atualização do cache das loterias',
+    '',
+    `- Atualizadas/inalteradas: ${reports.length - failed.length}/${reports.length}`,
+  ];
+  if (failed.length) {
+    lines.push('', '### Falhas parciais', '');
+    for (const report of failed) {
+      lines.push(`- **${report.lottery}**: ${report.reason}`);
+    }
+  }
+  await appendFile(process.env.GITHUB_STEP_SUMMARY, `${lines.join('\n')}\n`);
+}
+
+// A single unavailable Caixa endpoint must not discard successful updates or
+// turn the scheduled collector red. A total outage remains a hard failure.
+if (failed.length === reports.length) process.exitCode = 1;
 await db.close?.();
