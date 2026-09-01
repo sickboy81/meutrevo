@@ -594,7 +594,9 @@ export default async function LandingHome() {
                       style={{ background: '#93098f' }}
                     />
                     <strong>LOTOFÁCIL</strong>
-                    <span style={{ color: '#00f0ff', fontWeight: 600 }}>
+                    <span
+                      style={{ color: 'var(--ticker-cyan)', fontWeight: 600 }}
+                    >
                       Par/Ímpar Equilibrado
                     </span>
                   </>
@@ -613,7 +615,9 @@ export default async function LandingHome() {
                       style={{ background: '#00f0ff' }}
                     />
                     <strong>QUINA</strong>
-                    <span style={{ color: '#ffd600', fontWeight: 600 }}>
+                    <span
+                      style={{ color: 'var(--ticker-amber)', fontWeight: 600 }}
+                    >
                       Prêmio acumulado
                     </span>
                   </>
@@ -632,7 +636,9 @@ export default async function LandingHome() {
                       style={{ background: '#209869' }}
                     />
                     <strong>MEGA-SENA</strong>
-                    <span style={{ color: '#00e676', fontWeight: 600 }}>
+                    <span
+                      style={{ color: 'var(--ticker-green)', fontWeight: 600 }}
+                    >
                       Prêmio: {premio}
                     </span>
                   </>
@@ -651,7 +657,9 @@ export default async function LandingHome() {
                       style={{ background: '#ff007f' }}
                     />
                     <strong>LOTOFÁCIL</strong>
-                    <span style={{ color: '#ff4466', fontWeight: 600 }}>
+                    <span
+                      style={{ color: 'var(--ticker-pink)', fontWeight: 600 }}
+                    >
                       Distribuição Uniforme
                     </span>
                   </>
@@ -670,7 +678,9 @@ export default async function LandingHome() {
                       style={{ background: '#ffd600' }}
                     />
                     <strong>QUINA</strong>
-                    <span style={{ color: '#ffd600', fontWeight: 600 }}>
+                    <span
+                      style={{ color: 'var(--ticker-amber)', fontWeight: 600 }}
+                    >
                       Frequência histórica
                     </span>
                   </>
@@ -689,7 +699,9 @@ export default async function LandingHome() {
                       style={{ background: '#00f0ff' }}
                     />
                     <strong>LOTOFÁCIL</strong>
-                    <span style={{ color: '#00f0ff', fontWeight: 600 }}>
+                    <span
+                      style={{ color: 'var(--ticker-cyan)', fontWeight: 600 }}
+                    >
                       Atraso histórico
                     </span>
                   </>

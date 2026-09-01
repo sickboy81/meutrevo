@@ -55,6 +55,10 @@
     rgba(237, 243, 240, 0.92) 100%
   );
   --footer-highlight: rgba(255, 255, 255, 0.8);
+  --ticker-amber: #7a5900;
+  --ticker-green: #087f5b;
+  --ticker-cyan: #007c91;
+  --ticker-pink: #bc285b;
 }
 
 html[data-color-scheme='dark'] {
@@ -80,6 +84,10 @@ html[data-color-scheme='dark'] {
     rgba(10, 10, 25, 0.85) 100%
   );
   --footer-highlight: rgba(255, 255, 255, 0.05);
+  --ticker-amber: #ffd600;
+  --ticker-green: #00e676;
+  --ticker-cyan: #00f0ff;
+  --ticker-pink: #ff4466;
 }
 
 * {

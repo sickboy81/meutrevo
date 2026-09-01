@@ -569,8 +569,8 @@ export default React.memo(function ResultsTab({
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   padding: '0.5rem 0.75rem',
-                  background: 'rgba(255, 255, 255, 0.01)',
-                  border: '1px solid rgba(255, 255, 255, 0.03)',
+                  background: 'var(--surface-muted)',
+                  border: '1px solid var(--glass-border)',
                   borderRadius: '8px',
                 }}
               >
@@ -604,9 +604,9 @@ export default React.memo(function ResultsTab({
                           activeLottery === 'loteriafederal' ? '10px' : '50%',
                         padding:
                           activeLottery === 'loteriafederal' ? '0 4px' : '0',
-                        background: 'rgba(255,255,255,0.03)',
+                        background: `color-mix(in srgb, ${config.color} 10%, white)`,
                         border: `1px solid ${config.color}`,
-                        color: 'white',
+                        color: 'var(--text-main)',
                         fontSize: '0.6rem',
                         display: 'flex',
                         alignItems: 'center',

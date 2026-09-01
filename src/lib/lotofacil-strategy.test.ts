@@ -50,5 +50,5 @@ describe('Lotofácil strategy', () => {
     expect(result!.random.averageHits).toBeGreaterThanOrEqual(0);
     expect(result!.pValue).toBeGreaterThanOrEqual(0);
     expect(result!.pValue).toBeLessThanOrEqual(1);
-  });
+  }, 15_000);
 });

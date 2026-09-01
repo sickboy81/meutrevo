@@ -23,9 +23,182 @@ html[data-color-scheme='light'] .modal-content-wrapper {
   box-shadow: 0 10px 30px var(--shadow-color);
 }
 
+/* Legacy app panels were originally authored for a dark-only interface. */
+html[data-color-scheme='light'] .profile-card,
+html[data-color-scheme='light'] .stats-card,
+html[data-color-scheme='light'] .results-card,
+html[data-color-scheme='light'] .simulation-card,
+html[data-color-scheme='light'] .ranking-card,
+html[data-color-scheme='light'] .admin-card {
+  background: var(--surface-raised);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  color: var(--text-main);
+  box-shadow: 0 8px 24px rgba(28, 55, 44, 0.07);
+}
+
+html[data-color-scheme='light']
+  .app-container
+  :is(
+    .glass-panel,
+    .profile-card,
+    .settings-panel,
+    .advanced-filters-panel,
+    .bolao-builder-box,
+    .insight-card,
+    .bankroll-card,
+    .saved-game-card,
+    .generated-game-card,
+    .upgrade-plan,
+    .simulation-card,
+    .ranking-card,
+    .admin-card
+  )
+  [style*='color: white'],
+html[data-color-scheme='light']
+  .app-container
+  :is(
+    .glass-panel,
+    .profile-card,
+    .settings-panel,
+    .advanced-filters-panel,
+    .bolao-builder-box,
+    .insight-card,
+    .bankroll-card,
+    .saved-game-card,
+    .generated-game-card,
+    .upgrade-plan,
+    .simulation-card,
+    .ranking-card,
+    .admin-card
+  )
+  [style*='color: #fff'] {
+  color: var(--text-main) !important;
+}
+
+html[data-color-scheme='light']
+  .app-container
+  :is(
+    .glass-panel,
+    .profile-card,
+    .settings-panel,
+    .advanced-filters-panel,
+    .bolao-builder-box,
+    .insight-card,
+    .bankroll-card,
+    .saved-game-card,
+    .generated-game-card,
+    .upgrade-plan,
+    .simulation-card,
+    .ranking-card,
+    .admin-card
+  )
+  [style*='color: rgb(255, 255, 255)'] {
+  color: var(--text-main) !important;
+}
+
+html[data-color-scheme='light']
+  .app-container
+  :is(
+    .glass-panel,
+    .profile-card,
+    .settings-panel,
+    .advanced-filters-panel,
+    .bolao-builder-box,
+    .insight-card,
+    .bankroll-card,
+    .saved-game-card,
+    .generated-game-card,
+    .upgrade-plan,
+    .simulation-card,
+    .ranking-card,
+    .admin-card
+  )
+  [style*='background: rgba(0, 0, 0'],
+html[data-color-scheme='light']
+  .app-container
+  :is(
+    .glass-panel,
+    .profile-card,
+    .settings-panel,
+    .advanced-filters-panel,
+    .bolao-builder-box,
+    .insight-card,
+    .bankroll-card,
+    .saved-game-card,
+    .generated-game-card,
+    .upgrade-plan,
+    .simulation-card,
+    .ranking-card,
+    .admin-card
+  )
+  [style*='background: rgba(8,'] {
+  background: #f4f8f6 !important;
+  border-color: #d7e1dc !important;
+}
+
+html[data-color-scheme='light']
+  .app-container
+  :is(
+    .glass-panel,
+    .profile-card,
+    .settings-panel,
+    .advanced-filters-panel,
+    .bolao-builder-box,
+    .insight-card,
+    .bankroll-card,
+    .saved-game-card,
+    .generated-game-card,
+    .upgrade-plan,
+    .simulation-card,
+    .ranking-card,
+    .admin-card
+  )
+  [style*='background: rgba(255, 255, 255, 0.0'] {
+  background: #f7faf8 !important;
+  border-color: #d7e1dc !important;
+}
+
+html[data-color-scheme='light'] .search-input,
+html[data-color-scheme='light'] .accordion-toggle,
+html[data-color-scheme='light'] .date-range-filter,
+html[data-color-scheme='light'] .rateio-table,
+html[data-color-scheme='light'] .heatmap-container {
+  background: #ffffff;
+  border-color: #cbd8d2;
+  color: var(--text-main);
+}
+
+html[data-color-scheme='light'] .rateio-table th,
+html[data-color-scheme='light'] .rateio-table td,
+html[data-color-scheme='light'] .accordion-toggle > span:last-child {
+  color: var(--text-main);
+}
+
 html[data-color-scheme='light'] .bottom-nav {
   background: rgba(255, 255, 255, 0.97);
   box-shadow: 0 -8px 24px rgba(28, 55, 44, 0.08);
+}
+
+html[data-color-scheme='light'] .marquee-ticker-container {
+  padding: 0.35rem 0;
+  background: transparent;
+  border-top: 0;
+  border-bottom: 0;
+}
+
+html[data-color-scheme='light'] .marquee-ticker-inner {
+  gap: 0.65rem;
+}
+
+html[data-color-scheme='light'] .marquee-item {
+  color: #29473b;
+  border: 1px solid #d7e1dc;
+  box-shadow: 0 2px 6px rgba(28, 55, 44, 0.06);
+}
+
+html[data-color-scheme='light'] .marquee-ball {
+  color: #ffffff;
 }
 
 html[data-color-scheme='light'] .landing-title,
@@ -121,17 +294,23 @@ html[data-color-scheme='light'] .upgrade-plan {
   color: var(--text-main);
 }
 
-html[data-color-scheme='light'] .ball,
 html[data-color-scheme='light'] .partner-ball-btn {
   background: #f7faf8;
   border-color: #cbd8d2;
   color: #52655c;
 }
 
-html[data-color-scheme='light'] .ball:hover,
 html[data-color-scheme='light'] .partner-ball-btn:hover {
   background: #e8f5ef;
   color: #123f31;
+}
+
+html[data-color-scheme='light'] .ball,
+html[data-color-scheme='light'] .ball.neon {
+  background: var(--ball-color, var(--active-color, var(--accent-color)));
+  border-color: var(--ball-color, var(--active-color, var(--accent-color)));
+  color: #ffffff;
+  box-shadow: 0 4px 10px var(--ball-glow, rgba(8, 127, 91, 0.22));
 }
 
 html[data-color-scheme='light'] .panel-title,
