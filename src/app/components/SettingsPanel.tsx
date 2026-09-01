@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import type { User, ThemeType } from '../types';
 import ProfilePanel from './ProfilePanel';
+import ColorSchemeControl from './ColorSchemeControl';
 
 interface SettingsPanelProps {
   playSound: (type: 'click' | 'success' | 'delete') => void;
@@ -40,7 +41,7 @@ interface SettingsPanelProps {
 }
 
 const DIVIDER = {
-  borderTop: '1px solid rgba(255,255,255,0.05)',
+  borderTop: '1px solid var(--glass-border)',
   paddingTop: '0.5rem',
 } as const;
 const CHECKBOX_STYLE = {
@@ -142,7 +143,7 @@ export default function SettingsPanel({
       <div
         style={{
           display: 'flex',
-          background: 'rgba(0,0,0,0.3)',
+          background: 'var(--surface-muted)',
           padding: '0.2rem',
           borderRadius: '8px',
           border: '1px solid var(--glass-border)',
@@ -195,7 +196,23 @@ export default function SettingsPanel({
                 fontWeight: 600,
               }}
             >
-              TEMA VISUAL
+              APARÊNCIA
+            </span>
+            <ColorSchemeControl />
+          </div>
+
+          {/* Seletor de Temas */}
+          <div>
+            <span
+              style={{
+                fontSize: '0.7rem',
+                color: 'var(--text-muted)',
+                display: 'block',
+                marginBottom: '0.35rem',
+                fontWeight: 600,
+              }}
+            >
+              COR DE DESTAQUE
             </span>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
               {(
@@ -435,7 +452,7 @@ export default function SettingsPanel({
                   <strong
                     style={{
                       fontSize: '0.7rem',
-                      color: 'white',
+                      color: 'var(--text-main)',
                       wordBreak: 'break-all',
                     }}
                   >
@@ -510,7 +527,7 @@ export default function SettingsPanel({
                     style={{
                       fontSize: '0.75rem',
                       fontWeight: 'bold',
-                      color: 'white',
+                      color: 'var(--text-main)',
                       display: 'block',
                     }}
                   >
@@ -548,9 +565,9 @@ export default function SettingsPanel({
               <button
                 onClick={onLogout}
                 style={{
-                  background: 'rgba(255,255,255,0.05)',
+                  background: 'var(--surface-muted)',
                   border: '1px solid var(--glass-border)',
-                  color: 'white',
+                  color: 'var(--text-main)',
                   fontSize: '0.72rem',
                   padding: '0.55rem',
                   borderRadius: '8px',

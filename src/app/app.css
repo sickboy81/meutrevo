@@ -5,8 +5,8 @@
   padding: 0.75rem 1rem;
   background: linear-gradient(
     180deg,
-    rgba(8, 8, 15, 1) 0%,
-    rgba(8, 8, 15, 0) 100%
+    var(--surface-overlay) 0%,
+    transparent 100%
   );
   display: flex;
   align-items: center;
@@ -111,7 +111,7 @@
 
 /* Info Cards & Panels */
 .glass-panel {
-  background: rgba(12, 12, 20, 0.92);
+  background: var(--surface-raised);
   border: 1px solid var(--glass-border);
   border-radius: 16px;
   padding: 1.25rem;
@@ -119,7 +119,7 @@
 }
 
 .glass-panel:hover {
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--border-glow);
 }
 
 .panel-header {
@@ -303,7 +303,7 @@
   transform: translateX(-50%);
   width: 100%;
   max-width: 480px;
-  background: rgba(8, 8, 15, 0.97);
+  background: var(--surface-overlay);
   border-top: 1px solid var(--glass-border);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -322,8 +322,8 @@
   padding: 0.45rem;
   border: 1px solid var(--glass-border);
   border-radius: 12px;
-  background: rgba(12, 12, 22, 0.98);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  background: var(--surface-overlay);
+  box-shadow: 0 12px 32px var(--shadow-color);
 }
 
 .mobile-more-menu button {
@@ -983,7 +983,7 @@ textarea:focus-visible {
   /* Default meganeon variables */
 }
 
-.app-container.theme-cyberpunk {
+html[data-color-scheme='dark'] .app-container.theme-cyberpunk {
   --bg-primary: #0f0516;
   --glass-bg: rgba(15, 5, 22, 0.75);
   --accent-color: #ff007f;
@@ -991,11 +991,11 @@ textarea:focus-visible {
   --text-main: #fdf2ff;
   --text-muted: #d0b0df;
 }
-.app-container.theme-cyberpunk .ball.neon {
+html[data-color-scheme='dark'] .app-container.theme-cyberpunk .ball.neon {
   --ball-glow: rgba(255, 0, 127, 0.45);
 }
 
-.app-container.theme-matrix {
+html[data-color-scheme='dark'] .app-container.theme-matrix {
   --bg-primary: #020c02;
   --glass-bg: rgba(2, 12, 2, 0.8);
   --accent-color: #00ff41;
@@ -1003,11 +1003,11 @@ textarea:focus-visible {
   --text-main: #d2ffd2;
   --text-muted: #82b282;
 }
-.app-container.theme-matrix .ball.neon {
+html[data-color-scheme='dark'] .app-container.theme-matrix .ball.neon {
   --ball-glow: rgba(0, 255, 65, 0.5);
 }
 
-.app-container.theme-dracula {
+html[data-color-scheme='dark'] .app-container.theme-dracula {
   --bg-primary: #1e1e2e;
   --glass-bg: rgba(30, 30, 46, 0.8);
   --accent-color: #ff79c6;
@@ -1015,11 +1015,11 @@ textarea:focus-visible {
   --text-main: #f8f8f2;
   --text-muted: #bd93f9;
 }
-.app-container.theme-dracula .ball.neon {
+html[data-color-scheme='dark'] .app-container.theme-dracula .ball.neon {
   --ball-glow: rgba(255, 121, 198, 0.45);
 }
 
-.app-container.theme-ice {
+html[data-color-scheme='dark'] .app-container.theme-ice {
   --bg-primary: #040f16;
   --glass-bg: rgba(4, 15, 22, 0.75);
   --accent-color: #00e5ff;
@@ -1027,7 +1027,7 @@ textarea:focus-visible {
   --text-main: #e0f7fa;
   --text-muted: #80deea;
 }
-.app-container.theme-ice .ball.neon {
+html[data-color-scheme='dark'] .app-container.theme-ice .ball.neon {
   --ball-glow: rgba(0, 229, 255, 0.45);
 }
 
@@ -1037,7 +1037,7 @@ textarea:focus-visible {
   justify-content: center;
   gap: 0.4rem;
   padding: 0.5rem 1rem;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--surface-muted);
   border-bottom: 1px solid var(--glass-border);
   flex-wrap: wrap;
 }

@@ -45,9 +45,9 @@ const props: LoteriaPageProps = {
     },
     {
       icon: '⚡',
-      title: 'Soma Ponderada',
+      title: 'Faixa histórica de soma',
       description:
-        'Mantenha a soma das 6 dezenas entre 110 e 190 para maior aderência estatística.',
+        'Compare a soma das 6 dezenas com a faixa observada no histórico, sem tratar recorrência como vantagem futura.',
     },
     {
       icon: '🔮',

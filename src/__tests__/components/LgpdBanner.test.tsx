@@ -23,9 +23,8 @@ describe('LgpdBanner', () => {
       vi.advanceTimersByTime(2000);
     });
 
-    expect(
-      screen.getByText(/PRIVACIDADE E PROTEÇÃO DE DADOS/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/sua privacidade/i)).toBeInTheDocument();
+    expect(screen.queryByText(/🛡️/)).not.toBeInTheDocument();
   });
 
   it('deve esconder após aceitar', async () => {

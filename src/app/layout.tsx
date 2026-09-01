@@ -1,11 +1,13 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Orbitron, Inter, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 import './app.css';
 import './landing.css';
 import './responsive.css';
+import './light-theme.css';
 import LgpdBanner from './components/LgpdBanner';
 import PWARegistrar from './components/PWARegistrar';
+import { ColorSchemeProvider } from './components/ColorSchemeProvider';
 
 const orbitron = Orbitron({
   subsets: ['latin'],
@@ -101,8 +103,12 @@ export const metadata: Metadata = {
     : undefined,
 };
 
-export const viewport = {
-  themeColor: '#00f0ff',
+export const viewport: Viewport = {
+  colorScheme: 'light dark',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f4f7f6' },
+    { media: '(prefers-color-scheme: dark)', color: '#08080f' },
+  ],
 };
 
 export default function RootLayout({
@@ -113,12 +119,23 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
+      data-color-scheme="light"
+      suppressHydrationWarning
       className={`${orbitron.variable} ${inter.variable} ${spaceGrotesk.variable}`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var p=localStorage.getItem('meutrevo-color-scheme')||'light';var d=p==='dark'||(p==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.colorScheme=d?'dark':'light'}catch(e){document.documentElement.dataset.colorScheme='light'}})();`,
+          }}
+        />
+      </head>
       <body className={inter.className}>
-        <PWARegistrar />
-        {children}
-        <LgpdBanner />
+        <ColorSchemeProvider>
+          <PWARegistrar />
+          {children}
+          <LgpdBanner />
+        </ColorSchemeProvider>
       </body>
     </html>
   );

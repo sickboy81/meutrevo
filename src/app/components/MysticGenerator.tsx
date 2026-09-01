@@ -842,9 +842,9 @@ export default function MysticGenerator({
           border: '1px solid rgba(255,214,0,0.12)',
         }}
       >
-        ⚠️ <strong>Uso recreativo:</strong> esta ferramenta não prevê
-        resultados, não usa evidência científica para escolher dezenas e não
-        aumenta suas chances de ganhar.
+        <strong>Uso recreativo:</strong> esta ferramenta organiza dezenas por
+        temas, sem evidência científica, previsão de resultado ou alteração das
+        probabilidades oficiais.
       </div>
 
       {/* Category selector */}

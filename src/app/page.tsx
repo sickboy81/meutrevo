@@ -5,6 +5,7 @@ import {
 } from '@/lib/lottery-results';
 import AppEntryLink from './components/AppEntryLink';
 import QuickSimulator from './components/QuickSimulator';
+import ColorSchemeControl from './components/ColorSchemeControl';
 import './landing.css';
 import './responsive.css';
 
@@ -225,7 +226,7 @@ export default async function LandingHome() {
             <AppEntryLink
               href="/megasena"
               style={{
-                color: '#fff',
+                color: 'var(--text-muted)',
                 textDecoration: 'none',
                 fontSize: '0.8rem',
                 fontWeight: '600',
@@ -236,7 +237,7 @@ export default async function LandingHome() {
             <AppEntryLink
               href="/lotofacil"
               style={{
-                color: '#fff',
+                color: 'var(--text-muted)',
                 textDecoration: 'none',
                 fontSize: '0.8rem',
                 fontWeight: '600',
@@ -247,7 +248,7 @@ export default async function LandingHome() {
             <AppEntryLink
               href="/quina"
               style={{
-                color: '#fff',
+                color: 'var(--text-muted)',
                 textDecoration: 'none',
                 fontSize: '0.8rem',
                 fontWeight: '600',
@@ -258,7 +259,7 @@ export default async function LandingHome() {
             <AppEntryLink
               href="/lotomania"
               style={{
-                color: '#fff',
+                color: 'var(--text-muted)',
                 textDecoration: 'none',
                 fontSize: '0.8rem',
                 fontWeight: '600',
@@ -267,9 +268,7 @@ export default async function LandingHome() {
               Lotomania
             </AppEntryLink>
           </nav>
-          <span className="landing-nav-scroll-hint" aria-hidden="true">
-            Deslize para mais loterias →
-          </span>
+          <ColorSchemeControl compact />
           <AppEntryLink
             className="theme-pill-btn active landing-header-app-link"
             style={{
@@ -283,7 +282,7 @@ export default async function LandingHome() {
               textDecoration: 'none',
             }}
           >
-            Entrar no App ⚡
+            Entrar no app
           </AppEntryLink>
         </header>
 
@@ -420,7 +419,7 @@ export default async function LandingHome() {
               id="como-funciona-title"
               style={{
                 margin: 0,
-                color: '#fff',
+                color: 'var(--text-main)',
                 fontSize: 'clamp(1.35rem, 3vw, 2rem)',
               }}
             >
@@ -749,9 +748,7 @@ export default async function LandingHome() {
 
         {/* Bento Features Grid */}
         <section style={{ padding: '1rem 0' }}>
-          <h2 className="landing-section-title">
-            <span>⚙️</span> COMO O MEU TREVO AJUDA
-          </h2>
+          <h2 className="landing-section-title">COMO O MEU TREVO AJUDA</h2>
           <div className="landing-features-grid">
             <div className="landing-feature-card">
               <div
@@ -762,7 +759,7 @@ export default async function LandingHome() {
                   color: '#00e676',
                 }}
               >
-                📊
+                Resultados
               </div>
               <div className="feature-info">
                 <h3>Resultado oficial sem garimpar site</h3>
@@ -782,7 +779,7 @@ export default async function LandingHome() {
                   color: '#00f0ff',
                 }}
               >
-                ⚡
+                Critérios
               </div>
               <div className="feature-info">
                 <h3>Jogos gerados com critério</h3>
@@ -802,7 +799,7 @@ export default async function LandingHome() {
                   color: '#ff007f',
                 }}
               >
-                🔮
+                Cobertura
               </div>
               <div className="feature-info">
                 <h3>Desdobramentos para jogar em grupo</h3>
@@ -1037,14 +1034,13 @@ export default async function LandingHome() {
             borderTop: '1px solid var(--glass-border)',
             marginTop: '4rem',
             padding: '3rem 1.5rem 2rem 1.5rem',
-            background:
-              'linear-gradient(180deg, rgba(8, 8, 15, 0) 0%, rgba(10, 10, 25, 0.85) 100%)',
+            background: 'var(--footer-bg)',
             borderRadius: '16px',
             display: 'flex',
             flexWrap: 'wrap',
             justifyContent: 'space-between',
             gap: '2rem',
-            boxShadow: 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05)',
+            boxShadow: 'inset 0 1px 0 0 var(--footer-highlight)',
           }}
         >
           <div style={{ flex: '1 1 300px' }}>

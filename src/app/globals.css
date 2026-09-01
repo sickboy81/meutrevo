@@ -1,11 +1,16 @@
 /* Base styles — loaded on ALL routes (variables, reset, scrollbar) */
 :root {
-  --bg-primary: #08080f;
-  --bg-secondary: rgba(18, 18, 35, 0.7);
-  --bg-tertiary: rgba(30, 30, 60, 0.4);
-  --border-glow: rgba(255, 255, 255, 0.1);
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
+  color-scheme: light;
+  --bg-primary: #f4f7f6;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #edf3f0;
+  --border-glow: rgba(15, 41, 31, 0.13);
+  --text-main: #15251f;
+  --text-muted: #607169;
+  --surface-raised: #ffffff;
+  --surface-muted: #edf3f0;
+  --surface-overlay: rgba(255, 255, 255, 0.96);
+  --shadow-color: rgba(28, 55, 44, 0.12);
 
   --mega-sena: #209869;
   --mega-sena-glow: rgba(32, 152, 105, 0.4);
@@ -34,16 +39,47 @@
   --maismilionaria: #1a3b8b;
   --maismilionaria-glow: rgba(26, 59, 139, 0.4);
 
-  --accent-color: #00f0ff;
-  --accent-glow: rgba(0, 240, 255, 0.4);
+  --accent-color: #087f5b;
+  --accent-glow: rgba(8, 127, 91, 0.18);
 
   --font-display: 'Orbitron', sans-serif;
   --font-body: 'Inter', sans-serif;
   --font-numbers: 'Space Grotesk', sans-serif;
 
+  --shadow-neon: 0 8px 24px var(--shadow-color);
+  --glass-bg: rgba(255, 255, 255, 0.9);
+  --glass-border: #d7e1dc;
+  --footer-bg: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(237, 243, 240, 0.92) 100%
+  );
+  --footer-highlight: rgba(255, 255, 255, 0.8);
+}
+
+html[data-color-scheme='dark'] {
+  color-scheme: dark;
+  --bg-primary: #08080f;
+  --bg-secondary: rgba(18, 18, 35, 0.7);
+  --bg-tertiary: rgba(30, 30, 60, 0.4);
+  --border-glow: rgba(255, 255, 255, 0.1);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --surface-raised: #0c0c14;
+  --surface-muted: #121223;
+  --surface-overlay: rgba(8, 8, 15, 0.96);
+  --shadow-color: rgba(0, 0, 0, 0.58);
+  --accent-color: #00f0ff;
+  --accent-glow: rgba(0, 240, 255, 0.4);
   --shadow-neon: 0 0 15px var(--accent-glow);
   --glass-bg: rgba(10, 10, 20, 0.65);
   --glass-border: rgba(255, 255, 255, 0.08);
+  --footer-bg: linear-gradient(
+    180deg,
+    rgba(8, 8, 15, 0) 0%,
+    rgba(10, 10, 25, 0.85) 100%
+  );
+  --footer-highlight: rgba(255, 255, 255, 0.05);
 }
 
 * {
@@ -55,8 +91,8 @@
 body {
   background-color: var(--bg-primary);
   background-image:
-    radial-gradient(at 10% 20%, rgba(20, 15, 60, 0.4) 0px, transparent 50%),
-    radial-gradient(at 90% 80%, rgba(10, 45, 60, 0.3) 0px, transparent 50%);
+    radial-gradient(at 10% 20%, rgba(32, 152, 105, 0.08) 0px, transparent 50%),
+    radial-gradient(at 90% 80%, rgba(8, 127, 91, 0.06) 0px, transparent 50%);
   color: var(--text-main);
   font-family: var(--font-body);
   min-height: 100vh;
@@ -84,9 +120,63 @@ body {
   min-height: 100vh;
   max-width: 480px;
   margin: 0 auto;
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
-  background: rgba(8, 8, 15, 0.95);
+  box-shadow: 0 16px 44px var(--shadow-color);
+  background: var(--bg-primary);
   border-left: 1px solid var(--glass-border);
   border-right: 1px solid var(--glass-border);
   position: relative;
+}
+
+html[data-color-scheme='dark'] body {
+  background-image:
+    radial-gradient(at 10% 20%, rgba(20, 15, 60, 0.4) 0px, transparent 50%),
+    radial-gradient(at 90% 80%, rgba(10, 45, 60, 0.3) 0px, transparent 50%);
+}
+
+.color-scheme-control {
+  display: inline-grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.2rem;
+  padding: 0.2rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  background: var(--surface-muted);
+}
+
+.color-scheme-control button {
+  min-height: 34px;
+  padding: 0.35rem 0.6rem;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.color-scheme-control button.is-active {
+  background: var(--surface-raised);
+  color: var(--text-main);
+  box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.color-scheme-compact {
+  min-height: 32px;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 9px;
+  background: var(--surface-raised);
+  color: var(--text-main);
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .color-scheme-compact-prefix {
+    display: none;
+  }
 }

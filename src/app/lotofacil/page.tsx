@@ -7,6 +7,7 @@ import AppEntryLink from '../components/AppEntryLink';
 import QuickSimulator from '../components/QuickSimulator';
 import { createLotteryMetadata } from '@/lib/lottery-seo';
 import LotterySeoLinks from '../components/LotterySeoLinks';
+import ColorSchemeControl from '../components/ColorSchemeControl';
 
 export const revalidate = 300;
 
@@ -176,13 +177,14 @@ export default async function LotofacilLanding() {
             <a
               href="/"
               style={{
-                color: '#fff',
+                color: 'var(--text-main)',
                 textDecoration: 'none',
                 fontSize: '0.85rem',
               }}
             >
               Voltar
             </a>
+            <ColorSchemeControl compact />
             <AppEntryLink
               className="theme-pill-btn active"
               style={{
@@ -193,7 +195,7 @@ export default async function LotofacilLanding() {
                 textDecoration: 'none',
               }}
             >
-              Entrar no App ⚡
+              Entrar no app
             </AppEntryLink>
           </div>
         </header>
@@ -205,12 +207,12 @@ export default async function LotofacilLanding() {
               Loterias da Caixa
             </span>
             <h1
-              className="landing-title"
+              className="landing-title lottery-landing-title"
               style={{ fontSize: '2.5rem', lineHeight: 1.1 }}
             >
               Gerador e Estatísticas da Lotofácil
             </h1>
-            <p className="landing-hero-lead">
+            <p className="landing-hero-lead lottery-hero-lead">
               Confira os números oficiais da Lotofácil, teste jogos no simulador
               e gere cartões com filtros baseados em estatísticas históricas.
             </p>
@@ -329,7 +331,7 @@ export default async function LotofacilLanding() {
         {/* Content Section */}
         <section style={{ padding: '2rem 0' }}>
           <h2 className="landing-section-title">
-            <span>📊</span> COMO O MEU TREVO ORGANIZA SEUS JOGOS DA LOTOFÁCIL
+            COMO O MEU TREVO ORGANIZA SEUS JOGOS DA LOTOFÁCIL
           </h2>
           <p
             style={{
@@ -417,7 +419,7 @@ export default async function LotofacilLanding() {
         {/* Interactive Simulator Client Component */}
         <div style={{ margin: '2rem 0' }}>
           <h2 className="landing-section-title">
-            <span>⚙️</span> SIMULADOR EXPRESSO DA LOTOFÁCIL
+            SIMULADOR EXPRESSO DA LOTOFÁCIL
           </h2>
           <QuickSimulator initialResult={result} initialLottery="lotofacil" />
         </div>
@@ -470,14 +472,13 @@ export default async function LotofacilLanding() {
             borderTop: '1px solid var(--glass-border)',
             marginTop: '4rem',
             padding: '3rem 1.5rem 2rem 1.5rem',
-            background:
-              'linear-gradient(180deg, rgba(8, 8, 15, 0) 0%, rgba(10, 10, 25, 0.85) 100%)',
+            background: 'var(--footer-bg)',
             borderRadius: '16px',
             display: 'flex',
             flexWrap: 'wrap',
             justifyContent: 'space-between',
             gap: '2rem',
-            boxShadow: 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05)',
+            boxShadow: 'inset 0 1px 0 0 var(--footer-highlight)',
           }}
         >
           <div style={{ flex: '1 1 300px' }}>

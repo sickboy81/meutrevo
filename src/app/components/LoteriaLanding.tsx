@@ -5,6 +5,7 @@ import {
 import AppEntryLink from './AppEntryLink';
 import QuickSimulator from './QuickSimulator';
 import LotterySeoLinks from './LotterySeoLinks';
+import ColorSchemeControl from './ColorSchemeControl';
 
 export interface LoteriaPageProps {
   lotteryId: string;
@@ -163,13 +164,14 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
             <AppEntryLink
               href="/"
               style={{
-                color: '#fff',
+                color: 'var(--text-main)',
                 textDecoration: 'none',
                 fontSize: '0.85rem',
               }}
             >
               Voltar
             </AppEntryLink>
+            <ColorSchemeControl compact />
             <AppEntryLink
               className="theme-pill-btn active"
               style={{
@@ -180,7 +182,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
                 textDecoration: 'none',
               }}
             >
-              Entrar no App ⚡
+              Entrar no app
             </AppEntryLink>
           </div>
         </header>
@@ -194,12 +196,14 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
               Loterias da Caixa
             </span>
             <h1
-              className="landing-title"
+              className="landing-title lottery-landing-title"
               style={{ fontSize: '2.5rem', lineHeight: 1.1 }}
             >
               {props.title}
             </h1>
-            <p className="landing-hero-lead">{props.description}</p>
+            <p className="landing-hero-lead lottery-hero-lead">
+              {props.description}
+            </p>
 
             <div
               className="landing-proof-row"
@@ -329,7 +333,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
 
         <section style={{ padding: '2rem 0' }}>
           <h2 className="landing-section-title">
-            <span>📊</span> ANÁLISE HISTÓRICA E PROBABILIDADES
+            ANÁLISE HISTÓRICA E PROBABILIDADES OFICIAIS
           </h2>
           <p
             style={{
@@ -349,16 +353,6 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
           >
             {props.features.map((f, i) => (
               <div key={i} className="landing-feature-card">
-                <div
-                  className="feature-icon-wrapper"
-                  style={{
-                    background: `${props.glowColor.replace('0.4', '0.1')}`,
-                    borderColor: props.glowColor.replace('0.4', '0.2'),
-                    color: props.color,
-                  }}
-                >
-                  {f.icon}
-                </div>
                 <div className="feature-info">
                   <h3>{f.title}</h3>
                   <p>{f.description}</p>
@@ -371,7 +365,7 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
         {props.showSimulator !== false && (
           <div style={{ margin: '2rem 0' }}>
             <h2 className="landing-section-title">
-              <span>⚙️</span> SIMULADOR EXPRESSO DA {props.name.toUpperCase()}
+              SIMULADOR EXPRESSO DA {props.name.toUpperCase()}
             </h2>
             <QuickSimulator
               initialResult={result}
@@ -426,14 +420,13 @@ export default async function LoteriaLanding(props: LoteriaPageProps) {
             borderTop: '1px solid var(--glass-border)',
             marginTop: '4rem',
             padding: '3rem 1.5rem 2rem 1.5rem',
-            background:
-              'linear-gradient(180deg, rgba(8, 8, 15, 0) 0%, rgba(10, 10, 25, 0.85) 100%)',
+            background: 'var(--footer-bg)',
             borderRadius: '16px',
             display: 'flex',
             flexWrap: 'wrap',
             justifyContent: 'space-between',
             gap: '2rem',
-            boxShadow: 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05)',
+            boxShadow: 'inset 0 1px 0 0 var(--footer-highlight)',
           }}
         >
           <div style={{ flex: '1 1 300px' }}>

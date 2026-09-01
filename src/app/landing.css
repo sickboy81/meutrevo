@@ -768,6 +768,16 @@
   flex-shrink: 0;
 }
 
+.feature-icon-wrapper {
+  width: auto;
+  min-width: 84px;
+  padding-inline: 0.65rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .feature-info h4 {
   font-size: 0.9rem;
   font-weight: 700;
@@ -914,18 +924,18 @@
   .landing-nav-links {
     order: 3;
     width: 100%;
-    overflow-x: auto;
-    padding-bottom: 0.25rem;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.5rem !important;
-    scrollbar-width: none;
   }
 
-  .landing-nav-links::-webkit-scrollbar {
+  .landing-nav-links a:nth-of-type(n + 4) {
     display: none;
   }
 
   .landing-nav-links a {
-    flex: 0 0 auto;
+    justify-content: center;
+    min-width: 0;
     min-height: 42px;
     padding: 0.55rem 0.75rem;
     border: 1px solid var(--glass-border);
@@ -936,13 +946,7 @@
   }
 
   .landing-nav-scroll-hint {
-    display: block;
-    order: 4;
-    width: 100%;
-    margin-top: -0.35rem;
-    color: var(--text-muted);
-    font-size: 0.6rem;
-    text-align: right;
+    display: none;
   }
 
   .landing-hero-sales {

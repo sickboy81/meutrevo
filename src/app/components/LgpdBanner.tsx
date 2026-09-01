@@ -36,11 +36,10 @@ export default function LgpdBanner() {
         aria-label="Preferências de privacidade"
       >
         <div className="lgpd-banner-copy">
-          <h4>🛡️ PRIVACIDADE E PROTEÇÃO DE DADOS (LGPD)</h4>
+          <h4>Sua privacidade</h4>
           <p>
-            Usamos apenas cookies essenciais para manter sua sessão e lembrar
-            esta escolha. Consulte os <Link href="/terms">Termos de Uso</Link> e
-            a <Link href="/privacy">Política de Privacidade</Link>.
+            Usamos cookies essenciais para manter sua sessão e preferências.{' '}
+            <Link href="/privacy">Saiba como protegemos seus dados</Link>.
           </p>
         </div>
 
@@ -77,12 +76,10 @@ export default function LgpdBanner() {
           gap: 1.25rem;
           width: min(calc(100% - 2.5rem), 560px);
           padding: 0.85rem 1rem;
-          border: 1px solid rgba(0, 240, 255, 0.2);
+          border: 1px solid var(--glass-border);
           border-radius: 16px;
-          background: rgba(8, 8, 15, 0.94);
-          box-shadow:
-            0 12px 38px rgba(0, 0, 0, 0.72),
-            0 0 18px rgba(0, 240, 255, 0.1);
+          background: var(--surface-overlay);
+          box-shadow: 0 12px 38px var(--shadow-color);
           backdrop-filter: blur(16px);
           animation: slide-up-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
@@ -92,7 +89,7 @@ export default function LgpdBanner() {
         }
         .lgpd-banner-copy h4 {
           margin: 0 0 0.3rem;
-          color: #00f0ff;
+          color: var(--text-main);
           font-family: var(--font-body);
           font-size: 0.8rem;
           font-weight: 800;
@@ -100,12 +97,12 @@ export default function LgpdBanner() {
         }
         .lgpd-banner-copy p {
           margin: 0;
-          color: rgba(255, 255, 255, 0.72);
+          color: var(--text-muted);
           font-size: 0.74rem;
           line-height: 1.45;
         }
         .lgpd-banner-copy a {
-          color: #00f0ff;
+          color: var(--accent-color);
           text-decoration: underline;
         }
         .lgpd-banner-actions {
@@ -129,19 +126,19 @@ export default function LgpdBanner() {
           transform: translateY(-1px);
         }
         .lgpd-banner-decline {
-          border: 1px solid rgba(255, 255, 255, 0.16);
+          border: 1px solid var(--glass-border);
           background: transparent;
-          color: rgba(255, 255, 255, 0.7);
+          color: var(--text-muted);
         }
         .lgpd-banner-decline:hover {
-          border-color: rgba(255, 255, 255, 0.36);
-          color: #fff;
+          border-color: var(--text-muted);
+          color: var(--text-main);
         }
         .lgpd-banner-accept {
           border: 0;
-          background: linear-gradient(90deg, #00f0ff, #00e676);
-          color: #02060a;
-          box-shadow: 0 0 12px rgba(0, 240, 255, 0.28);
+          background: var(--accent-color);
+          color: #fff;
+          box-shadow: 0 6px 16px var(--accent-glow);
         }
         .lgpd-banner-accept:hover {
           box-shadow: 0 0 18px rgba(0, 240, 255, 0.46);
@@ -149,24 +146,24 @@ export default function LgpdBanner() {
 
         @media (max-width: 640px) {
           .lgpd-banner {
-            right: 0.75rem;
-            bottom: max(0.75rem, env(safe-area-inset-bottom));
+            right: 0.5rem;
+            bottom: max(0.5rem, env(safe-area-inset-bottom));
             align-items: stretch;
-            gap: 0.7rem;
-            width: calc(100% - 1.5rem);
-            max-height: min(180px, calc(100dvh - 1.5rem));
+            gap: 0.45rem;
+            width: calc(100% - 1rem);
+            max-height: min(128px, calc(100dvh - 1rem));
             overflow: auto;
-            padding: 0.8rem;
+            padding: 0.65rem;
             flex-direction: column;
           }
           .lgpd-banner-copy h4 {
-            font-size: 0.65rem;
+            font-size: 0.72rem;
           }
           .lgpd-banner-copy {
             flex: 0 1 auto;
           }
           .lgpd-banner-copy p {
-            font-size: 0.66rem;
+            font-size: 0.62rem;
             line-height: 1.35;
           }
           .lgpd-banner-actions {
@@ -176,7 +173,7 @@ export default function LgpdBanner() {
           }
           .lgpd-banner-actions button {
             width: 100%;
-            min-height: 40px;
+            min-height: 36px;
             padding-inline: 0.5rem;
             font-size: 0.68rem;
           }

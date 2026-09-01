@@ -29,7 +29,7 @@ const props: LoteriaPageProps = {
     {
       question: 'Como funciona a Dupla Sena?',
       answer:
-        'A Dupla Sena realiza dois sorteios por concurso. Você pode ganhar acertando 3, 4, 5 ou 6 números em qualquer um dos dois sorteios. Isso dobra suas chances comparado a loterias de sorteio único.',
+        'A Dupla Sena realiza dois sorteios por concurso. A mesma aposta participa dos dois resultados e pode ser premiada ao acertar 3, 4, 5 ou 6 números em qualquer um deles; consulte sempre a tabela oficial de probabilidades.',
     },
     {
       question: 'Qual a faixa histórica de soma para a Dupla Sena?',
@@ -46,7 +46,7 @@ const props: LoteriaPageProps = {
     },
     {
       icon: '⚡',
-      title: 'Soma Ponderada',
+      title: 'Faixa histórica de soma',
       description:
         'Compare a soma das suas dezenas com a faixa histórica de 100 a 200 como referência descritiva, sem promessa de vantagem.',
     },

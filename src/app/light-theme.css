@@ -1,0 +1,188 @@
+html[data-color-scheme='light'] .app-header,
+html[data-color-scheme='light'] .landing-header {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: var(--glass-border);
+  box-shadow: 0 1px 0 rgba(21, 37, 31, 0.04);
+}
+
+html[data-color-scheme='light'] .glass-panel,
+html[data-color-scheme='light'] .landing-feature-card,
+html[data-color-scheme='light'] .landing-hero-preview,
+html[data-color-scheme='light'] .landing-price-card,
+html[data-color-scheme='light'] .landing-widget-card,
+html[data-color-scheme='light'] .faq-item,
+html[data-color-scheme='light'] .saved-game-card,
+html[data-color-scheme='light'] .generated-game-card,
+html[data-color-scheme='light'] .insight-card,
+html[data-color-scheme='light'] .bankroll-card,
+html[data-color-scheme='light'] .settings-panel,
+html[data-color-scheme='light'] .mobile-more-menu,
+html[data-color-scheme='light'] .modal-content-wrapper {
+  background: var(--surface-raised);
+  border-color: var(--glass-border);
+  box-shadow: 0 10px 30px var(--shadow-color);
+}
+
+html[data-color-scheme='light'] .bottom-nav {
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 -8px 24px rgba(28, 55, 44, 0.08);
+}
+
+html[data-color-scheme='light'] .landing-title,
+html[data-color-scheme='light'] .landing-hero-lead,
+html[data-color-scheme='light'] .landing-section-title,
+html[data-color-scheme='light'] .feature-info h3,
+html[data-color-scheme='light'] .price-card-header h3,
+html[data-color-scheme='light'] .price-val,
+html[data-color-scheme='light'] .faq-question,
+html[data-color-scheme='light'] .lottery-seo-links h2 {
+  color: var(--text-main);
+  text-shadow: none;
+}
+
+html[data-color-scheme='light'] .landing-title {
+  background: none;
+  color: #123f31;
+  -webkit-text-fill-color: currentColor;
+}
+
+html[data-color-scheme='light'] #como-funciona h2,
+html[data-color-scheme='light'] #como-funciona h3 {
+  color: var(--text-main) !important;
+}
+
+html[data-color-scheme='light'] .hero-preview-grid > div,
+html[data-color-scheme='light'] .hero-preview-footer,
+html[data-color-scheme='light'] .landing-widget-tabs {
+  background: var(--surface-muted);
+  border-color: var(--glass-border);
+}
+
+html[data-color-scheme='light'] .hero-preview-grid strong,
+html[data-color-scheme='light'] .hero-preview-header strong,
+html[data-color-scheme='light'] .hero-preview-footer strong {
+  color: var(--text-main);
+}
+
+html[data-color-scheme='light'] .landing-nav-links a {
+  color: var(--text-muted) !important;
+}
+
+html[data-color-scheme='light'] .landing-proof-row strong {
+  color: var(--text-main);
+}
+
+.lottery-hero-lead {
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .lottery-landing-title {
+    font-size: clamp(2rem, 10vw, 2.35rem) !important;
+  }
+
+  .lottery-hero-lead {
+    font-size: 0.98rem;
+    line-height: 1.5;
+  }
+}
+
+html[data-color-scheme='light'] .landing-proof-row span,
+html[data-color-scheme='light'] .lottery-contest-links a,
+html[data-color-scheme='light'] .lottery-modality-links a,
+html[data-color-scheme='light'] .landing-btn-secondary,
+html[data-color-scheme='light'] .theme-pill-btn,
+html[data-color-scheme='light'] .option-btn,
+html[data-color-scheme='light'] .sim-history-card {
+  background: var(--surface-raised);
+  border-color: var(--glass-border);
+  color: var(--text-main);
+  box-shadow: none;
+}
+
+html[data-color-scheme='light'] .auth-input,
+html[data-color-scheme='light'] .filter-input,
+html[data-color-scheme='light'] .bolao-textarea,
+html[data-color-scheme='light'] .pix-input,
+html[data-color-scheme='light'] input,
+html[data-color-scheme='light'] select,
+html[data-color-scheme='light'] textarea {
+  color: #14231d;
+  background-color: #ffffff;
+  border-color: #cbd8d2;
+}
+
+html[data-color-scheme='light'] .landing-btn-primary,
+html[data-color-scheme='light'] .btn-action,
+html[data-color-scheme='light'] .primary-btn,
+html[data-color-scheme='light'] .theme-pill-btn.active {
+  color: #ffffff;
+  background: #087f5b;
+  border-color: #087f5b;
+  box-shadow: 0 8px 20px rgba(8, 127, 91, 0.18);
+}
+
+html[data-color-scheme='light'] .lottery-pill.active {
+  color: #ffffff;
+  box-shadow: 0 5px 14px var(--active-glow);
+}
+
+html[data-color-scheme='light'] .landing-hero::before,
+html[data-color-scheme='light'] .landing-hero-sales::after {
+  opacity: 0.32;
+}
+
+html[data-color-scheme='light'] .section-divider {
+  background: linear-gradient(90deg, transparent, #cbd8d2, transparent);
+}
+
+html[data-color-scheme='light'] .contest-page {
+  background:
+    radial-gradient(circle at 80% 0%, var(--contest-glow), transparent 34%),
+    #f4f7f6;
+  color: var(--text-main);
+}
+
+html[data-color-scheme='light'] .contest-header,
+html[data-color-scheme='light'] .contest-result,
+html[data-color-scheme='light'] .contest-summary-card,
+html[data-color-scheme='light'] .contest-ticket,
+html[data-color-scheme='light'] .contest-extra,
+html[data-color-scheme='light'] .contest-rateio {
+  background: #ffffff;
+  border-color: var(--glass-border);
+  color: var(--text-main);
+}
+
+html[data-color-scheme='light'] .contest-brand,
+html[data-color-scheme='light'] .contest-header a,
+html[data-color-scheme='light'] .contest-actions a,
+html[data-color-scheme='light'] .contest-breadcrumb a,
+html[data-color-scheme='light'] .contest-hero h1,
+html[data-color-scheme='light'] .contest-number,
+html[data-color-scheme='light'] .contest-result h2,
+html[data-color-scheme='light'] .contest-section-heading h2 {
+  color: var(--text-main) !important;
+}
+
+html[data-color-scheme='light'] .modal-overlay {
+  background: rgba(21, 37, 31, 0.32);
+}
+
+html[data-color-scheme='light'] .logo-text {
+  background: none;
+  color: #087f5b;
+  -webkit-text-fill-color: currentColor;
+  text-shadow: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

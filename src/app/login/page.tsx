@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { fetchWithCsrf } from '@/lib/fetch';
+import ColorSchemeControl from '../components/ColorSchemeControl';
 
 type AuthMode = 'login' | 'register' | 'recover';
 
@@ -260,6 +261,9 @@ export default function LoginPage() {
         padding: '1rem',
       }}
     >
+      <div style={{ position: 'fixed', top: '1rem', right: '1rem' }}>
+        <ColorSchemeControl compact />
+      </div>
       <section
         className="glass-panel auth-card"
         style={{
@@ -275,13 +279,12 @@ export default function LoginPage() {
             href="/"
             style={{
               textDecoration: 'none',
-              color: 'white',
+              color: 'var(--text-main)',
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.5rem',
             }}
           >
-            <span style={{ fontSize: '1.8rem' }}>🍀</span>
             <h1
               className="logo-text"
               style={{ fontSize: '1.35rem', margin: 0 }}

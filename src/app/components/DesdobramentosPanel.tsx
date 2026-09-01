@@ -336,7 +336,7 @@ export default function DesdobramentosPanel({
               marginBottom: '0.5rem',
             }}
           >
-            ✓ {generatedGames.length} jogos gerados com garantia
+            {generatedGames.length} jogos com cobertura condicional configurada
           </h4>
           <div
             style={{

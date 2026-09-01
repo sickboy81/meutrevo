@@ -7,6 +7,7 @@ import AppEntryLink from '../components/AppEntryLink';
 import QuickSimulator from '../components/QuickSimulator';
 import { createLotteryMetadata } from '@/lib/lottery-seo';
 import LotterySeoLinks from '../components/LotterySeoLinks';
+import ColorSchemeControl from '../components/ColorSchemeControl';
 
 export const revalidate = 300;
 
@@ -157,13 +158,14 @@ export default async function MegaSenaLanding() {
             <a
               href="/"
               style={{
-                color: '#fff',
+                color: 'var(--text-main)',
                 textDecoration: 'none',
                 fontSize: '0.85rem',
               }}
             >
               Voltar
             </a>
+            <ColorSchemeControl compact />
             <AppEntryLink
               className="theme-pill-btn active"
               style={{
@@ -174,7 +176,7 @@ export default async function MegaSenaLanding() {
                 textDecoration: 'none',
               }}
             >
-              Entrar no App ⚡
+              Entrar no app
             </AppEntryLink>
           </div>
         </header>
@@ -186,12 +188,12 @@ export default async function MegaSenaLanding() {
               Loterias da Caixa
             </span>
             <h1
-              className="landing-title"
+              className="landing-title lottery-landing-title"
               style={{ fontSize: '2.5rem', lineHeight: 1.1 }}
             >
               Gerador e Estatísticas da Mega-Sena
             </h1>
-            <p className="landing-hero-lead">
+            <p className="landing-hero-lead lottery-hero-lead">
               Acompanhe resultados, simule dezenas históricas e use fechamentos
               combinatórios matemáticos para organizar suas combinações na
               principal loteria do Brasil.
@@ -221,7 +223,7 @@ export default async function MegaSenaLanding() {
                   border: 'none',
                 }}
               >
-                Começar no App Mega
+                Planejar jogo da Mega-Sena
               </AppEntryLink>
               <a
                 href="/"
@@ -300,7 +302,7 @@ export default async function MegaSenaLanding() {
         {/* Content Section */}
         <section style={{ padding: '2rem 0' }}>
           <h2 className="landing-section-title">
-            <span>📊</span> ANÁLISE MATEMÁTICA E PROBABILIDADES
+            ANÁLISE HISTÓRICA DA MEGA-SENA
           </h2>
           <p
             style={{
@@ -333,14 +335,14 @@ export default async function MegaSenaLanding() {
                   color: '#209869',
                 }}
               >
-                📊
+                Frequência
               </div>
               <div className="feature-info">
-                <h3>Frequência e Atrasômetro</h3>
+                <h3>Frequência e atraso histórico</h3>
                 <p>
-                  Monitore quais números saem com mais regularidade nas últimas
-                  dezenas e quais estão em maior período de atraso para
-                  equilibrar seus jogos.
+                  Compare a frequência recente e o intervalo desde a última
+                  ocorrência. Esses dados descrevem o histórico e não antecipam
+                  o próximo sorteio.
                 </p>
               </div>
             </div>
@@ -353,14 +355,14 @@ export default async function MegaSenaLanding() {
                   color: '#00f0ff',
                 }}
               >
-                ⚡
+                Soma
               </div>
               <div className="feature-info">
-                <h3>Soma Ponderada</h3>
+                <h3>Faixa histórica de soma</h3>
                 <p>
-                  Mantenha a soma total das suas dezenas entre 120 e 240, que é
-                  a região de maior concentração de probabilidade segundo a lei
-                  dos grandes números.
+                  Consulte como a soma das dezenas se distribuiu nos concursos
+                  anteriores. Estar em uma faixa recorrente não aumenta a chance
+                  matemática do jogo.
                 </p>
               </div>
             </div>
@@ -373,7 +375,7 @@ export default async function MegaSenaLanding() {
                   color: '#ff007f',
                 }}
               >
-                🔮
+                Cobertura
               </div>
               <div className="feature-info">
                 <h3>Fechamentos / Desdobramentos</h3>
@@ -390,7 +392,7 @@ export default async function MegaSenaLanding() {
         {/* Interactive Simulator Client Component */}
         <div style={{ margin: '2rem 0' }}>
           <h2 className="landing-section-title">
-            <span>⚙️</span> SIMULADOR EXPRESSO DA MEGA-SENA
+            SIMULADOR EXPRESSO DA MEGA-SENA
           </h2>
           <QuickSimulator initialResult={result} initialLottery="megasena" />
         </div>
@@ -443,14 +445,13 @@ export default async function MegaSenaLanding() {
             borderTop: '1px solid var(--glass-border)',
             marginTop: '4rem',
             padding: '3rem 1.5rem 2rem 1.5rem',
-            background:
-              'linear-gradient(180deg, rgba(8, 8, 15, 0) 0%, rgba(10, 10, 25, 0.85) 100%)',
+            background: 'var(--footer-bg)',
             borderRadius: '16px',
             display: 'flex',
             flexWrap: 'wrap',
             justifyContent: 'space-between',
             gap: '2rem',
-            boxShadow: 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05)',
+            boxShadow: 'inset 0 1px 0 0 var(--footer-highlight)',
           }}
         >
           <div style={{ flex: '1 1 300px' }}>
