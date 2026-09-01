@@ -58,6 +58,75 @@ html[data-color-scheme='light'] .landing-widget-tabs {
   border-color: var(--glass-border);
 }
 
+html[data-color-scheme='light'] .landing-board-ball,
+html[data-color-scheme='light'] .volante-ball {
+  background: #ffffff;
+  border-color: #cbd8d2;
+  color: #52655c;
+}
+
+html[data-color-scheme='light'] .landing-board-ball:hover,
+html[data-color-scheme='light'] .volante-ball:hover:not(.disabled) {
+  background: #e8f5ef;
+  color: #123f31;
+}
+
+html[data-color-scheme='light'] .landing-board-ball.selected,
+html[data-color-scheme='light'] .volante-ball.selected {
+  background: var(--active-color, var(--accent-color));
+  border-color: var(--active-color, var(--accent-color));
+  color: #ffffff;
+}
+
+html[data-color-scheme='light'] .volante-grid {
+  background: #f7faf8;
+  border-color: #d7e1dc;
+}
+
+html[data-color-scheme='light'] .balls-container,
+html[data-color-scheme='light'] .advanced-filters-panel,
+html[data-color-scheme='light'] .bolao-builder-box,
+html[data-color-scheme='light'] .sub-tabs-container,
+html[data-color-scheme='light'] .accordion-content,
+html[data-color-scheme='light'] .insight-card,
+html[data-color-scheme='light'] .bankroll-card,
+html[data-color-scheme='light'] .bankroll-metric-box,
+html[data-color-scheme='light'] .partner-balls-container,
+html[data-color-scheme='light'] .upgrade-plan {
+  background: #ffffff;
+  border-color: var(--glass-border);
+  color: var(--text-main);
+}
+
+html[data-color-scheme='light'] .ball,
+html[data-color-scheme='light'] .partner-ball-btn {
+  background: #f7faf8;
+  border-color: #cbd8d2;
+  color: #52655c;
+}
+
+html[data-color-scheme='light'] .ball:hover,
+html[data-color-scheme='light'] .partner-ball-btn:hover {
+  background: #e8f5ef;
+  color: #123f31;
+}
+
+html[data-color-scheme='light'] .panel-title,
+html[data-color-scheme='light'] .accordion-trigger,
+html[data-color-scheme='light'] .sub-tab-btn,
+html[data-color-scheme='light'] .delay-item,
+html[data-color-scheme='light'] .saved-game-header,
+html[data-color-scheme='light'] .insight-title,
+html[data-color-scheme='light'] .upgrade-plan b {
+  color: var(--text-main);
+}
+
+html[data-color-scheme='light'] .accordion-trigger:hover,
+html[data-color-scheme='light'] .sub-tab-btn:hover,
+html[data-color-scheme='light'] .upgrade-plan:hover {
+  background: #f0f7f3;
+}
+
 html[data-color-scheme='light'] .hero-preview-grid strong,
 html[data-color-scheme='light'] .hero-preview-header strong,
 html[data-color-scheme='light'] .hero-preview-footer strong {
