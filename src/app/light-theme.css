@@ -58,6 +58,29 @@ html[data-color-scheme='light'] .landing-widget-tabs {
   border-color: var(--glass-border);
 }
 
+html[data-color-scheme='light'] .landing-widget-tabs {
+  background: #eef5f1 !important;
+  border: 1px solid #d7e1dc;
+}
+
+html[data-color-scheme='light'] .landing-widget-tab-btn {
+  color: #52655c;
+}
+
+html[data-color-scheme='light'] .landing-widget-tab-btn.active {
+  color: #ffffff;
+}
+
+html[data-color-scheme='light'] .landing-widget-card {
+  background: #ffffff !important;
+  box-shadow: 0 12px 30px rgba(28, 55, 44, 0.1);
+}
+
+html[data-color-scheme='light'] .landing-proof-row span {
+  background: #ffffff;
+  border-color: #d7e1dc;
+}
+
 html[data-color-scheme='light'] .landing-board-ball,
 html[data-color-scheme='light'] .volante-ball {
   background: #ffffff;

@@ -534,9 +534,10 @@ export default async function LandingHome() {
               <span
                 key={item}
                 style={{
-                  border: '1px solid rgba(0,240,255,0.22)',
+                  border: '1px solid var(--glass-border)',
                   borderRadius: '999px',
-                  color: '#b9d5ee',
+                  background: 'var(--surface-raised)',
+                  color: 'var(--text-muted)',
                   padding: '0.42rem 0.7rem',
                   fontSize: '0.72rem',
                 }}
